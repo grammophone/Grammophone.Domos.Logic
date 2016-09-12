@@ -21,11 +21,20 @@ namespace Grammophone.Domos.Logic
 	/// Abstract base for business logic sessions.
 	/// </summary>
 	/// <typeparam name="U">
-	/// The type of the user, derived from <see cref="User"/>.
+	/// The type of the user, derived from <see cref="Domain.User"/>.
 	/// </typeparam>
 	/// <typeparam name="D">
 	/// The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.
 	/// </typeparam>
+	/// <remarks>
+	/// Each session depends on a Unity DI container defined in a configuration section.
+	/// This container must at least provide resolutions for the following:
+	/// <list>
+	/// <item><typeparamref name="D"/></item>
+	/// <item><see cref="IUserContext"/></item>
+	/// <item><see cref="IPermissionsSetupProvider"/></item>
+	/// </list>
+	/// </remarks>
 	public class UserSession<U, D> : IDisposable
 		where U : User
 		where D : IUsersDomainContainer<U>
@@ -161,7 +170,7 @@ namespace Grammophone.Domos.Logic
 			/// log and throw a <see cref="DomainAccessDeniedException"/>.
 			/// </summary>
 			/// <param name="entity">The entity to which the access is denied.</param>
-			/// <param name="message">The verb form of the action being denied, like "read", "create" etc.</param>
+			/// <param name="action">The verb form of the action being denied, like "read", "create" etc.</param>
 			/// <exception cref="DomainAccessDeniedException">Thrown always.</exception>
 			private void LogActionAndThrowAccessDenied(object entity, string action)
 			{
@@ -239,15 +248,14 @@ namespace Grammophone.Domos.Logic
 		private static MRUCache<string, SessionEnvironment> sessionEnvironmentsCache;
 
 		/// <summary>
-		/// The name of the Unity configuration section for this session
-		/// where <see cref="diContainer"/> is defined.
+		/// The name of the Unity configuration section for this session.
 		/// </summary>
 		private string configurationSectionName;
 
 		/// <summary>
 		/// The user owning the session.
 		/// </summary>
-		private U currentUser;
+		private U user;
 
 		/// <summary>
 		/// The entity listener enforcing access checking.
@@ -278,26 +286,26 @@ namespace Grammophone.Domos.Logic
 		/// <exception cref="LogicException">
 		/// Thrown when the resolved <see cref="IUserContext"/> fails to specify an existing user.
 		/// </exception>
+		/// <remarks>
+		/// Each session depends on a Unity DI container defined in a configuration section.
+		/// This container must at least provide resolutions for the following:
+		/// <list>
+		/// <item><typeparamref name="D"/></item>
+		/// <item><see cref="IUserContext"/></item>
+		/// <item><see cref="IPermissionsSetupProvider"/></item>
+		/// </list>
+		/// </remarks>
 		public UserSession(string configurationSectionName)
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 
-			this.configurationSectionName = configurationSectionName;
-
-			var sessionEnvironment = sessionEnvironmentsCache.Get(configurationSectionName);
-
-			this.DIContainer = sessionEnvironment.DIContainer;
-			this.AccessResolver = sessionEnvironment.AccessResolver;
-
-			this.DomainContainer = this.DIContainer.Resolve<D>();
+			Initialize(configurationSectionName);
 
 			var userContext = this.DIContainer.Resolve<IUserContext>();
 
 			long? userID = userContext.UserID;
 
-			var userQuery = this.DomainContainer.Users
-				.Include(u => u.Roles)
-				.Include("Dispositions.Type");
+			IQueryable<U> userQuery = this.DomainContainer.Users;
 
 			if (userID.HasValue)
 			{
@@ -320,23 +328,23 @@ namespace Grammophone.Domos.Logic
 		/// <exception cref="LogicException">
 		/// Thrown when the <paramref name="userPickPredicate"/> fails to specify an existing user.
 		/// </exception>
+		/// <remarks>
+		/// Each session depends on a Unity DI container defined in a configuration section.
+		/// This container must at least provide resolutions for the following:
+		/// <list>
+		/// <item><typeparamref name="D"/></item>
+		/// <item><see cref="IUserContext"/></item>
+		/// <item><see cref="IPermissionsSetupProvider"/></item>
+		/// </list>
+		/// </remarks>
 		public UserSession(string configurationSectionName, Expression<Func<U, bool>> userPickPredicate)
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 			if (userPickPredicate == null) throw new ArgumentNullException(nameof(userPickPredicate));
 
-			this.configurationSectionName = configurationSectionName;
+			Initialize(configurationSectionName);
 
-			var sessionEnvironment = sessionEnvironmentsCache.Get(configurationSectionName);
-
-			this.DIContainer = sessionEnvironment.DIContainer;
-			this.AccessResolver = sessionEnvironment.AccessResolver;
-
-			this.DomainContainer = this.DIContainer.Resolve<D>();
-
-			var userQuery = this.DomainContainer.Users
-				.Include(u => u.Roles)
-				.Include("Dispositions.Type");
+			var userQuery = this.DomainContainer.Users.Where(userPickPredicate);
 
 			Login(userQuery);
 		}
@@ -348,14 +356,45 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The user owning the session or null of anonymous.
 		/// </summary>
-		public U CurrentUser
+		public U User
 		{
 			get
 			{
-				if (currentUser.IsAnonymous)
+				if (user.IsAnonymous)
 					return null;
 				else
-					return currentUser;
+					return user;
+			}
+		}
+
+		/// <summary>
+		/// If true, lazy loading is enabled. The default is true.
+		/// </summary>
+		public bool IsLazyLoadingEnabled
+		{
+			get
+			{
+				return this.DomainContainer.IsLazyLoadingEnabled;
+			}
+			set
+			{
+				this.DomainContainer.IsLazyLoadingEnabled = value;
+			}
+		}
+
+		/// <summary>
+		/// If set as true and all preconditions are met, the container
+		/// will provide proxy classes wherever applicable. Default is true.
+		/// </summary>
+		public bool IsProxyCreationEnabled
+		{
+			get
+			{
+				return this.DomainContainer.IsProxyCreationEnabled;
+			}
+			set
+			{
+				this.DomainContainer.IsProxyCreationEnabled = value;
 			}
 		}
 
@@ -393,6 +432,25 @@ namespace Grammophone.Domos.Logic
 
 		#endregion
 
+		#region Internal methods
+
+		/// <summary>
+		/// Elevate access to all entities for the duration of a <paramref name="transaction"/>.
+		/// </summary>
+		/// <param name="transaction">The transaction.</param>
+		internal void ElevateTransactionAccessRights(ITransaction transaction)
+		{
+			if (transaction == null) throw new ArgumentNullException("transaction");
+
+			transaction.Succeeding += RestoreAccessRights;
+			transaction.RollingBack += RestoreAccessRights;
+
+			ElevateAccessRights();
+		}
+
+		#endregion
+
+
 		#region Protected methods
 
 		/// <summary>
@@ -409,19 +467,39 @@ namespace Grammophone.Domos.Logic
 			return userQuery;
 		}
 
+		/// <summary>
+		/// Checks whether the current user has access to a manager.
+		/// </summary>
+		/// <param name="type">The type of the manager.</param>
+		protected bool CanAccessManager(Type type)
+		{
+			if (type == null) throw new ArgumentNullException("type");
+
+			string managerName = type.FullName;
+
+			return this.AccessResolver.CanUserAccessManager(user, managerName);
+		}
+
 		#endregion
 
 		#region Private methods
 
+		/// <summary>
+		/// Establish the current user and install
+		/// entity access control on ehalf of her.
+		/// </summary>
+		/// <param name="userQuery">A query defining the user.</param>
 		private void Login(IQueryable<U> userQuery)
 		{
 			if (userQuery == null) throw new ArgumentNullException(nameof(userQuery));
 
-			userQuery = IncludeWithUser(userQuery);
+			userQuery = IncludeWithUser(userQuery)
+				.Include(u => u.Roles)
+				.Include("Dispositions.Type");
 
-			currentUser = userQuery.FirstOrDefault();
+			user = userQuery.FirstOrDefault();
 
-			if (currentUser == null)
+			if (user == null)
 				throw new LogicException("The specified user doesn't exist in the database.");
 
 			InstallEntityAccessListener();
@@ -450,9 +528,42 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		private void InstallEntityAccessListener()
 		{
-			entityListener = new EntityListener(currentUser, this.AccessResolver);
+			entityListener = new EntityListener(user, this.AccessResolver);
 
 			this.DomainContainer.EntityListeners.Add(entityListener);
+		}
+
+		/// <summary>
+		/// Set up <see cref="DIContainer"/>, <see cref="DomainContainer"/>
+		/// and <see cref="AccessResolver"/> based on the configuration.
+		/// </summary>
+		/// <param name="configurationSectionName">The name of a Unity configuration section.</param>
+		private void Initialize(string configurationSectionName)
+		{
+			this.configurationSectionName = configurationSectionName;
+
+			var sessionEnvironment = sessionEnvironmentsCache.Get(configurationSectionName);
+
+			this.DIContainer = sessionEnvironment.DIContainer;
+			this.AccessResolver = sessionEnvironment.AccessResolver;
+
+			this.DomainContainer = this.DIContainer.Resolve<D>();
+		}
+
+		/// <summary>
+		/// Elevates access to all entities for the rest of the session.
+		/// </summary>
+		private void ElevateAccessRights()
+		{
+			entityListener.SupressAccessCheck = true;
+		}
+
+		/// <summary>
+		/// Restores any previous access rights elevation.
+		/// </summary>
+		private void RestoreAccessRights()
+		{
+			entityListener.SupressAccessCheck = false;
 		}
 
 		#endregion
