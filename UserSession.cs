@@ -440,7 +440,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="transaction">The transaction.</param>
 		internal void ElevateTransactionAccessRights(ITransaction transaction)
 		{
-			if (transaction == null) throw new ArgumentNullException("transaction");
+			if (transaction == null) throw new ArgumentNullException(nameof(transaction));
 
 			transaction.Succeeding += RestoreAccessRights;
 			transaction.RollingBack += RestoreAccessRights;
@@ -471,9 +471,15 @@ namespace Grammophone.Domos.Logic
 		/// Checks whether the current user has access to a manager.
 		/// </summary>
 		/// <param name="type">The type of the manager.</param>
+		/// <remarks>
+		/// If the type of the manager is generic, it uses the full
+		/// name of its generic type definition.
+		/// </remarks>
 		protected bool CanAccessManager(Type type)
 		{
-			if (type == null) throw new ArgumentNullException("type");
+			if (type == null) throw new ArgumentNullException(nameof(type));
+
+			if (type.IsConstructedGenericType) type = type.GetGenericTypeDefinition();
 
 			string managerName = type.FullName;
 
