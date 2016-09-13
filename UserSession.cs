@@ -167,11 +167,11 @@ namespace Grammophone.Domos.Logic
 
 			/// <summary>
 			/// Format an access denial message using the <paramref name="action"/> parameter,
-			/// log and throw a <see cref="DomainAccessDeniedException"/>.
+			/// log and throw a <see cref="AccessDeniedDomainException"/>.
 			/// </summary>
 			/// <param name="entity">The entity to which the access is denied.</param>
 			/// <param name="action">The verb form of the action being denied, like "read", "create" etc.</param>
-			/// <exception cref="DomainAccessDeniedException">Thrown always.</exception>
+			/// <exception cref="AccessDeniedDomainException">Thrown always.</exception>
 			private void LogActionAndThrowAccessDenied(object entity, string action)
 			{
 				var entityWithID = entity as IEntityWithID<object>;
@@ -193,14 +193,14 @@ namespace Grammophone.Domos.Logic
 			}
 
 			/// <summary>
-			/// Log the denial of access and throw a <see cref="DomainAccessDeniedException"/>.
+			/// Log the denial of access and throw a <see cref="AccessDeniedDomainException"/>.
 			/// </summary>
 			/// <param name="entity">The entity to which the access is denied.</param>
 			/// <param name="message">The message to log and throw.</param>
-			/// <exception cref="DomainAccessDeniedException">Thrown always.</exception>
+			/// <exception cref="AccessDeniedDomainException">Thrown always.</exception>
 			private void LogAndThrowAccessDenied(object entity, string message)
 			{
-				throw new DomainAccessDeniedException(message, entity);
+				throw new AccessDeniedDomainException(message, entity);
 			}
 
 			#endregion
@@ -449,7 +449,6 @@ namespace Grammophone.Domos.Logic
 		}
 
 		#endregion
-
 
 		#region Protected methods
 
