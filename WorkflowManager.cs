@@ -16,12 +16,12 @@ namespace Grammophone.Domos.Logic
 	/// <typeparam name="U">The type of the user, derived from <see cref="User"/>.</typeparam>
 	/// <typeparam name="ST">The type of the state transition, derived fom <see cref="StateTransition{U}"/>.</typeparam>
 	/// <typeparam name="D">The type of domain container, derived from <see cref="IWorkflowUsersDomainContainer{U, ST}"/>.</typeparam>
-	/// <typeparam name="S">The type of session, derived from <see cref="UserSession{U, D}"/>.</typeparam>
+	/// <typeparam name="S">The type of session, derived from <see cref="Session{U, D}"/>.</typeparam>
 	public abstract class WorkflowManager<U, ST, D, S> : Manager<U, D, S>
 		where U : User
 		where ST : StateTransition<U>
 		where D : IWorkflowUsersDomainContainer<U, ST>
-		where S : UserSession<U, D>
+		where S : Session<U, D>
 	{
 		#region Construction
 

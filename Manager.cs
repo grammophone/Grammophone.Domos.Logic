@@ -13,15 +13,15 @@ namespace Grammophone.Domos.Logic
 {
 	/// <summary>
 	/// Base class for all managers handed 
-	/// by <see cref="UserSession{U, D}"/> descendants.
+	/// by <see cref="Session{U, D}"/> descendants.
 	/// </summary>
 	/// <typeparam name="U">The type of the user in the domain container, derived from <see cref="User"/>.</typeparam>
 	/// <typeparam name="D">The type of the domain container, derived from <see cref="IUsersDomainContainer{U}"/>.</typeparam>
-	/// <typeparam name="S">The type of the session, derived from <see cref="UserSession{U, D}"/>.</typeparam>
+	/// <typeparam name="S">The type of the session, derived from <see cref="Session{U, D}"/>.</typeparam>
 	public abstract class Manager<U, D, S>
 		where U : User
 		where D : IUsersDomainContainer<U>
-		where S : UserSession<U, D>
+		where S : Session<U, D>
 	{
 		#region Construction
 

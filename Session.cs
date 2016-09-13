@@ -35,7 +35,7 @@ namespace Grammophone.Domos.Logic
 	/// <item><see cref="IPermissionsSetupProvider"/></item>
 	/// </list>
 	/// </remarks>
-	public class UserSession<U, D> : IDisposable
+	public class Session<U, D> : IDisposable
 		where U : User
 		where D : IUsersDomainContainer<U>
 	{
@@ -269,7 +269,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Static initialization.
 		/// </summary>
-		static UserSession()
+		static Session()
 		{
 			sessionEnvironmentsCache = new MRUCache<string, SessionEnvironment>(
 				configurationSectionName => new SessionEnvironment(configurationSectionName), 
@@ -295,7 +295,7 @@ namespace Grammophone.Domos.Logic
 		/// <item><see cref="IPermissionsSetupProvider"/></item>
 		/// </list>
 		/// </remarks>
-		public UserSession(string configurationSectionName)
+		public Session(string configurationSectionName)
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 
@@ -337,7 +337,7 @@ namespace Grammophone.Domos.Logic
 		/// <item><see cref="IPermissionsSetupProvider"/></item>
 		/// </list>
 		/// </remarks>
-		public UserSession(string configurationSectionName, Expression<Func<U, bool>> userPickPredicate)
+		public Session(string configurationSectionName, Expression<Func<U, bool>> userPickPredicate)
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 			if (userPickPredicate == null) throw new ArgumentNullException(nameof(userPickPredicate));
