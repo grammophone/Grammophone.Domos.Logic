@@ -19,6 +19,11 @@ namespace Grammophone.Domos.Logic
 	/// <typeparam name="ST">The type of the state transition, derived fom <see cref="StateTransition{U}"/>.</typeparam>
 	/// <typeparam name="D">The type of domain container, derived from <see cref="IWorkflowUsersDomainContainer{U, ST}"/>.</typeparam>
 	/// <typeparam name="S">The type of session, derived from <see cref="Session{U, D}"/>.</typeparam>
+	/// <remarks>
+	/// This manager expects a dedicated Unity DI container for workflow, where at least there 
+	/// are <see cref="StatePathConfiguration{U, ST, D, S}"/> instances named 
+	/// after <see cref="StatePath.Code"/> for every <see cref="StatePath"/> in the system.
+	/// </remarks>
 	public abstract class WorkflowManager<U, ST, D, S> : Manager<U, D, S>
 		where U : User
 		where ST : StateTransition<U>
