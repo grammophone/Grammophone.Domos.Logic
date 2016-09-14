@@ -448,6 +448,24 @@ namespace Grammophone.Domos.Logic
 			ElevateAccessRights();
 		}
 
+		/// <summary>
+		/// Create a Unity DI container from a configuration section.
+		/// </summary>
+		/// <param name="configurationSectionName">The element name of the configuratio section.</param>
+		/// <returns>Returns the container.</returns>
+		internal static IUnityContainer CreateDIContainer(string configurationSectionName)
+		{
+			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
+
+			var configurationSection = ConfigurationManager.GetSection(configurationSectionName)
+				as UnityConfigurationSection;
+
+			if (configurationSection == null)
+				throw new LogicException($"The '{configurationSectionName}' configuration section is not defined.");
+
+			return new UnityContainer().LoadConfiguration(configurationSection);
+		}
+
 		#endregion
 
 		#region Protected methods
@@ -530,24 +548,6 @@ namespace Grammophone.Domos.Logic
 				throw new LogicException("The specified user doesn't exist in the database.");
 
 			InstallEntityAccessListener();
-		}
-
-		/// <summary>
-		/// Create a Unity DI container from a configuration section.
-		/// </summary>
-		/// <param name="configurationSectionName">The element name of the configuratio section.</param>
-		/// <returns>Returns the container.</returns>
-		private static IUnityContainer CreateDIContainer(string configurationSectionName)
-		{
-			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
-
-			var configurationSection = ConfigurationManager.GetSection(configurationSectionName)
-				as UnityConfigurationSection;
-
-			if (configurationSection == null)
-				throw new LogicException($"The '{configurationSectionName}' configuration section is not defined.");
-
-			return new UnityContainer().LoadConfiguration(configurationSection);
 		}
 
 		/// <summary>
