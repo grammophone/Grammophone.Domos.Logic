@@ -18,7 +18,7 @@ namespace Grammophone.Domos.Logic
 	/// <typeparam name="U">The type of the user in the domain container, derived from <see cref="User"/>.</typeparam>
 	/// <typeparam name="D">The type of the domain container, derived from <see cref="IUsersDomainContainer{U}"/>.</typeparam>
 	/// <typeparam name="S">The type of the session, derived from <see cref="Session{U, D}"/>.</typeparam>
-	public abstract class Manager<U, D, S>
+	public abstract class Manager<U, D, S> : Loggable
 		where U : User
 		where D : IUsersDomainContainer<U>
 		where S : Session<U, D>

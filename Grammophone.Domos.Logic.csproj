@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IWorkflowAction.cs" />
+    <Compile Include="Loggable.cs" />
     <Compile Include="LogicException.cs" />
     <Compile Include="Manager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

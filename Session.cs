@@ -31,11 +31,14 @@ namespace Grammophone.Domos.Logic
 	/// This container must at least provide resolutions for the following:
 	/// <list>
 	/// <item><typeparamref name="D"/></item>
-	/// <item><see cref="IUserContext"/></item>
+	/// <item>
+	/// <see cref="IUserContext"/> (required only when using the constructor which
+	/// implies the current user)
+	/// </item>
 	/// <item><see cref="IPermissionsSetupProvider"/></item>
 	/// </list>
 	/// </remarks>
-	public class Session<U, D> : IDisposable
+	public class Session<U, D> : Loggable, IDisposable
 		where U : User
 		where D : IUsersDomainContainer<U>
 	{
@@ -53,7 +56,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Enforces security while accessing entities.
 		/// </summary>
-		private class EntityListener : IEntityListener
+		private class EntityListener : Loggable, IEntityListener
 		{
 			#region Private fields
 
@@ -200,6 +203,8 @@ namespace Grammophone.Domos.Logic
 			/// <exception cref="AccessDeniedDomainException">Thrown always.</exception>
 			private void LogAndThrowAccessDenied(object entity, string message)
 			{
+				this.Logger.Error(message);
+
 				throw new AccessDeniedDomainException(message, entity);
 			}
 
