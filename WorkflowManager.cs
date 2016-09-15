@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Grammophone.Caching;
+using Grammophone.Domos.AccessChecking;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Workflow;
@@ -22,7 +23,7 @@ namespace Grammophone.Domos.Logic
 	/// <remarks>
 	/// This manager expects a dedicated Unity DI container for workflow, where at least there 
 	/// are <see cref="StatePathConfiguration{U, ST, D, S}"/> instances named 
-	/// after <see cref="StatePath.Code"/> for every <see cref="StatePath"/> in the system.
+	/// after <see cref="StatePath.CodeName"/> for every <see cref="StatePath"/> in the system.
 	/// </remarks>
 	public abstract class WorkflowManager<U, ST, D, S> : Manager<U, D, S>
 		where U : User
@@ -91,7 +92,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <typeparam name="T">The type of state transition, derived from <typeparamref name="ST"/>.</typeparam>
 		/// <param name="stateful">The stateful instance to execute the transition upon.</param>
-		/// <param name="pathCodeName">The <see cref="StatePath.Code"/> of the state path.</param>
+		/// <param name="pathCodeName">The <see cref="StatePath.CodeName"/> of the state path.</param>
 		/// <param name="actionArguments">A dictinary of arguments to be passed to the path actions.</param>
 		/// <returns>Returns the state transition created.</returns>
 		public async Task<T> ExecuteStatePathAsync<T>(
@@ -106,7 +107,7 @@ namespace Grammophone.Domos.Logic
 
 			var path = await this.DomainContainer.StatePaths
 				.Include(sp => sp.ToState)
-				.FirstOrDefaultAsync(sp => sp.Code == pathCodeName);
+				.FirstOrDefaultAsync(sp => sp.CodeName == pathCodeName);
 
 			if (path == null)
 				throw new LogicException($"The state path with code '{pathCodeName}' does not exist.");
@@ -114,6 +115,12 @@ namespace Grammophone.Domos.Logic
 			if (stateful.State != path.FromState)
 				throw new LogicException(
 					$"The specified path '{pathCodeName}' is not available for the current state of the stateful object.");
+
+			if (!this.AccessResolver.CanExecuteStatePath(this.Session.User, stateful, path))
+				throw new AccessDeniedDomainException(
+					$"The user with ID {this.Session.User.ID} has no rights " +
+					$"to execute path '{pathCodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.", 
+					stateful);
 
 			T stateTransition = this.DomainContainer.Create<T>();
 
@@ -174,7 +181,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Get the pre and post actions for a state paths.
 		/// </summary>
-		/// <param name="pathCodeName">The <see cref="StatePath.Code"/> of the path.</param>
+		/// <param name="pathCodeName">The <see cref="StatePath.CodeName"/> of the path.</param>
 		/// <returns>Returns the actions specifications.</returns>
 		private StatePathConfiguration<U, ST, D, S> GetStatePathConfiguration(string pathCodeName)
 		{

@@ -184,12 +184,12 @@ namespace Grammophone.Domos.Logic
 				if (entityWithID != null)
 				{
 					message =
-						$"The user {user.Email} cannot {action} an entity of type {AccessRight.GetEntityTypeName(entity)} with ID {entityWithID.ID}.";
+						$"The user with ID {user.ID} cannot {action} an entity of type {AccessRight.GetEntityTypeName(entity)} with ID {entityWithID.ID}.";
 				}
 				else
 				{
 					message =
-						$"The user {user.Email} cannot {action} an entity of type {AccessRight.GetEntityTypeName(entity)}.";
+						$"The user with ID {user.ID} cannot {action} an entity of type {AccessRight.GetEntityTypeName(entity)}.";
 				}
 
 				LogAndThrowAccessDenied(entity, message);
