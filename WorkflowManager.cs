@@ -76,6 +76,35 @@ namespace Grammophone.Domos.Logic
 
 		#endregion
 
+		#region Public properties
+
+		/// <summary>
+		/// The states in the system.
+		/// </summary>
+		public IQueryable<State> States => this.DomainContainer.States;
+
+		/// <summary>
+		/// The state groups in the system.
+		/// </summary>
+		public IQueryable<StateGroup> StateGroups => this.DomainContainer.StateGroups;
+
+		/// <summary>
+		/// The workflow graphs in the system.
+		/// </summary>
+		public IQueryable<WorkflowGraph> WorkflowGraphs => this.DomainContainer.WorkflowGraphs;
+
+		/// <summary>
+		/// The state paths in the system.
+		/// </summary>
+		public IQueryable<StatePath> StatePaths => this.DomainContainer.StatePaths;
+
+		/// <summary>
+		/// The state transitions in the system.
+		/// </summary>
+		public IQueryable<ST> StateTransitions => this.DomainContainer.StateTransitions;
+
+		#endregion
+
 		#region Protected properties
 
 		/// <summary>
