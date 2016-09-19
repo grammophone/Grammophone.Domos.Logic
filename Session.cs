@@ -253,11 +253,6 @@ namespace Grammophone.Domos.Logic
 		private static MRUCache<string, SessionEnvironment> sessionEnvironmentsCache;
 
 		/// <summary>
-		/// The name of the Unity configuration section for this session.
-		/// </summary>
-		private string configurationSectionName;
-
-		/// <summary>
 		/// The user owning the session.
 		/// </summary>
 		private U user;
@@ -402,6 +397,11 @@ namespace Grammophone.Domos.Logic
 				this.DomainContainer.IsProxyCreationEnabled = value;
 			}
 		}
+
+		/// <summary>
+		/// The name of the configuration section for this session.
+		/// </summary>
+		public string ConfigurationSectionName { get; private set; }
 
 		#endregion
 
@@ -572,7 +572,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="configurationSectionName">The name of a Unity configuration section.</param>
 		private void Initialize(string configurationSectionName)
 		{
-			this.configurationSectionName = configurationSectionName;
+			this.ConfigurationSectionName = configurationSectionName;
 
 			var sessionEnvironment = sessionEnvironmentsCache.Get(configurationSectionName);
 
