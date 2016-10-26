@@ -33,7 +33,7 @@ namespace Grammophone.Domos.Logic
 		/// <returns>Returns a task completing the operation.</returns>
 		Task ExecuteAsync(
 			S session, 
-			IStateful<U> stateful, 
+			IStateful<U, ST> stateful, 
 			ST stateTransition, 
 			IDictionary<string, object> actionArguments);
 	}

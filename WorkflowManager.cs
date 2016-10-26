@@ -125,7 +125,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="actionArguments">A dictinary of arguments to be passed to the path actions.</param>
 		/// <returns>Returns the state transition created.</returns>
 		public async Task<T> ExecuteStatePathAsync<T>(
-			IStateful<U> stateful, 
+			IStateful<U, ST> stateful, 
 			string pathCodeName, 
 			IDictionary<string, object> actionArguments)
 			where T : ST, new()
@@ -195,7 +195,7 @@ namespace Grammophone.Domos.Logic
 		/// <returns></returns>
 		private async Task ExecuteActions(
 			IEnumerable<IWorkflowAction<U, ST, D, S>> actions, 
-			IStateful<U> stateful,
+			IStateful<U, ST> stateful,
 			ST stateTransition, 
 			IDictionary<string, object> actionArguments)
 		{
