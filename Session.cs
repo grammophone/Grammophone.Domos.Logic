@@ -428,6 +428,31 @@ namespace Grammophone.Domos.Logic
 		#region Public methods
 
 		/// <summary>
+		/// Begins a local transaction on the unerlying store.
+		/// Use this method to enroll manager actions under a single transaction.
+		/// The caller is responsible
+		/// for disposing the object. Use <see cref="ITransaction.Commit"/>
+		/// before disposing for accepting the transaction, else rollback will take place.
+		/// </summary>
+		public ITransaction BeginTransaction()
+		{
+			return this.DomainContainer.BeginTransaction();
+		}
+
+		/// <summary>
+		/// Begins a local transaction on the unerlying store.
+		/// Use this method to enroll manager actions under a single transaction.
+		/// The caller is responsible
+		/// for disposing the object. Use <see cref="ITransaction.Commit"/>
+		/// before disposing for accepting the transaction, else rollback will take place.
+		/// </summary>
+		/// <param name="isolationLevel">The transaction isolation level.</param>
+		public ITransaction BeginTransaction(System.Data.IsolationLevel isolationLevel)
+		{
+			return this.DomainContainer.BeginTransaction(isolationLevel);
+		}
+
+		/// <summary>
 		/// Disposes the underlying resources of the <see cref="DomainContainer"/>.
 		/// </summary>
 		public void Dispose()
