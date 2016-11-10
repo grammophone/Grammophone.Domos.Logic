@@ -7,7 +7,7 @@ using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Workflow;
 
-namespace Grammophone.Domos.Logic
+namespace Grammophone.Domos.Logic.Configuration
 {
 	/// <summary>
 	/// Specifies the pre-actions and the post-actions of a <see cref="StatePath"/>.

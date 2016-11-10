@@ -73,9 +73,9 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// A Unity IoC container set up for the <see cref="Session"/>.
+		/// The Unity IoC container set up for the <see cref="Session"/>.
 		/// </summary>
-		protected IUnityContainer DIContainer
+		protected IUnityContainer SessionDIContainer
 		{
 			get
 			{

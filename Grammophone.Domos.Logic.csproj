@@ -68,12 +68,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\ContentTypeAssociation.cs" />
+    <Compile Include="Configuration\ContentTypeAssociations.cs" />
+    <Compile Include="Configuration\FilesConfiguration.cs" />
+    <Compile Include="ConfiguredManager.cs" />
+    <Compile Include="FileException.cs" />
+    <Compile Include="FilesManager.cs" />
+    <Compile Include="FilesManagerMessages.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FilesManagerMessages.resx</DependentUpon>
+    </Compile>
     <Compile Include="IWorkflowAction.cs" />
     <Compile Include="Loggable.cs" />
     <Compile Include="LogicException.cs" />
     <Compile Include="Manager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StatePathConfiguration.cs" />
+    <Compile Include="Configuration\StatePathConfiguration.cs" />
     <Compile Include="UserException.cs" />
     <Compile Include="Session.cs" />
     <Compile Include="WorkflowManager.cs" />
@@ -103,11 +114,23 @@
       <Project>{2c981885-79db-49ee-bc62-429a6164807d}</Project>
       <Name>Grammophone.Domos.Environment</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Grammophone.Storage\Grammophone.Storage.csproj">
+      <Project>{5ecd757e-e8e8-4cd2-9e01-f0fb946980da}</Project>
+      <Name>Grammophone.Storage</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="FilesManagerMessages.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>FilesManagerMessages.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FilesManagerResources-fr.resx" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

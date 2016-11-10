@@ -9,6 +9,7 @@ using Grammophone.Domos.AccessChecking;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Workflow;
+using Grammophone.Domos.Logic.Configuration;
 using Microsoft.Practices.Unity;
 
 namespace Grammophone.Domos.Logic
@@ -25,53 +26,22 @@ namespace Grammophone.Domos.Logic
 	/// are <see cref="StatePathConfiguration{U, ST, D, S}"/> instances named 
 	/// after <see cref="StatePath.CodeName"/> for every <see cref="StatePath"/> in the system.
 	/// </remarks>
-	public abstract class WorkflowManager<U, ST, D, S> : Manager<U, D, S>
+	public abstract class WorkflowManager<U, ST, D, S> : ConfiguredManager<U, D, S>
 		where U : User
 		where ST : StateTransition<U>
 		where D : IWorkflowUsersDomainContainer<U, ST>
 		where S : Session<U, D>
 	{
-		#region Constants
-
-		/// <summary>
-		/// The size of <see cref="workflowDIContainersCache"/>.
-		/// </summary>
-		private const int WorkflowDIContainersCacheSize = 128;
-
-		#endregion
-
-		#region Private fields
-
-		/// <summary>
-		/// Cache of DI conainers by configuration section names.
-		/// </summary>
-		private static MRUCache<string, IUnityContainer> workflowDIContainersCache;
-
-		#endregion
-
 		#region Construction
-
-		/// <summary>
-		/// Static initialization.
-		/// </summary>
-		static WorkflowManager()
-		{
-			workflowDIContainersCache = new MRUCache<string, IUnityContainer>(
-				configurationSectionName => Session<U, D>.CreateDIContainer(configurationSectionName), 
-				WorkflowDIContainersCacheSize);
-		}
 
 		/// <summary>
 		/// Create.
 		/// </summary>
-		/// <param name="configurationSectionName">The name of the Unity configuration section dedicated for workflow.</param>
 		/// <param name="session">The owning session.</param>
-		protected WorkflowManager(string configurationSectionName, S session)
-			: base(session)
+		/// <param name="configurationSectionName">The name of the Unity configuration section dedicated for workflow.</param>
+		protected WorkflowManager(S session, string configurationSectionName)
+			: base(session, configurationSectionName)
 		{
-			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
-
-			this.WorkflowDIContainer = workflowDIContainersCache.Get(configurationSectionName);
 		}
 
 		#endregion
@@ -102,15 +72,6 @@ namespace Grammophone.Domos.Logic
 		/// The state transitions in the system.
 		/// </summary>
 		public IQueryable<ST> StateTransitions => this.DomainContainer.StateTransitions;
-
-		#endregion
-
-		#region Protected properties
-
-		/// <summary>
-		/// The Unity configuration section dedicated for workflow.
-		/// </summary>
-		protected IUnityContainer WorkflowDIContainer { get; private set; }
 
 		#endregion
 
@@ -164,7 +125,7 @@ namespace Grammophone.Domos.Logic
 				stateTransition.Path = path;
 				stateTransition.ChangeStampBefore = stateful.ChangeStamp;
 
-				await ExecuteActions(statePathConfiguration.PreActions, stateful, stateTransition, actionArguments);
+				await ExecuteActionsAsync(statePathConfiguration.PreActions, stateful, stateTransition, actionArguments);
 
 				stateful.State = path.ToState;
 
@@ -173,7 +134,7 @@ namespace Grammophone.Domos.Logic
 
 				stateTransition.ChangeStampAfter = stateful.ChangeStamp;
 
-				await ExecuteActions(statePathConfiguration.PostActions, stateful, stateTransition, actionArguments);
+				await ExecuteActionsAsync(statePathConfiguration.PostActions, stateful, stateTransition, actionArguments);
 
 				await transaction.CommitAsync();
 			}
@@ -192,8 +153,8 @@ namespace Grammophone.Domos.Logic
 		/// <param name="stateful">The stateful instance against which the actions are executed.</param>
 		/// <param name="stateTransition">The state transition.</param>
 		/// <param name="actionArguments">The arguments to the actions.</param>
-		/// <returns></returns>
-		private async Task ExecuteActions(
+		/// <returns>Returns a task completing the actions.</returns>
+		private async Task ExecuteActionsAsync(
 			IEnumerable<IWorkflowAction<U, ST, D, S>> actions, 
 			IStateful<U, ST> stateful,
 			ST stateTransition, 
@@ -216,7 +177,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (pathCodeName == null) throw new ArgumentNullException(nameof(pathCodeName));
 
-			return this.WorkflowDIContainer.Resolve<StatePathConfiguration<U, ST, D, S>>(pathCodeName);
+			return this.ManagerDIContainer.Resolve<StatePathConfiguration<U, ST, D, S>>(pathCodeName);
 		}
 
 		#endregion
