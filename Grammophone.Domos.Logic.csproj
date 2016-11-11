@@ -94,6 +94,10 @@
       <Project>{2c834c5b-aa21-43fa-826e-398ab4de25ac}</Project>
       <Name>Grammophone.Caching</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Grammophone.Configuration\Grammophone.Configuration.csproj">
+      <Project>{0f7811fd-6162-4813-9c55-6c43e67308b0}</Project>
+      <Name>Grammophone.Configuration</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Grammophone.DataAccess\Grammophone.DataAccess.csproj">
       <Project>{c9030969-1247-4ee9-bf68-782c1d676c8f}</Project>
       <Name>Grammophone.DataAccess</Name>
