@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Grammophone.Caching;
+using Grammophone.Configuration;
 using Grammophone.DataAccess;
 using Grammophone.Domos.AccessChecking;
 using Grammophone.Domos.DataAccess;
@@ -211,11 +212,40 @@ namespace Grammophone.Domos.Logic
 			#endregion
 		}
 
+		#endregion
+
+		#region Internal classes
+
 		/// <summary>
 		/// Binds a session to its configuration environment.
 		/// </summary>
-		private class SessionEnvironment
+		internal class SessionEnvironment
 		{
+			#region Constants
+
+			/// <summary>
+			/// Size for <see cref="storageProvidersCache"/>.
+			/// </summary>
+			private const int StorageProvidersCacheSize = 16;
+
+			#endregion
+
+			#region Private fields
+
+			private Lazy<Configuration.FilesConfiguration> lazyFilesConfiguration;
+
+			private Lazy<IReadOnlyDictionary<string, int>> lazyContentTypeIDsByMIME;
+
+			private Lazy<IReadOnlyDictionary<string, string>> lazyContentTypesByExtension;
+
+			private Lazy<byte[]> lazyFilesEncryptionKey;
+
+			private MRUCache<string, Storage.IStorageProvider> storageProvidersCache;
+
+			#endregion
+
+			#region Cosntruction
+
 			/// <summary>
 			/// Create.
 			/// </summary>
@@ -229,18 +259,133 @@ namespace Grammophone.Domos.Logic
 				var permissionsSetupProvider = this.DIContainer.Resolve<IPermissionsSetupProvider>();
 
 				this.AccessResolver = new AccessResolver(permissionsSetupProvider);
+
+				this.lazyFilesConfiguration = new Lazy<Configuration.FilesConfiguration>(
+					() => this.DIContainer.Resolve<Configuration.FilesConfiguration>(), 
+					true);
+
+				this.lazyContentTypeIDsByMIME = new Lazy<IReadOnlyDictionary<string, int>>(
+					this.LoadContentTypeIDsByMIME,
+					true);
+
+				this.lazyContentTypesByExtension = new Lazy<IReadOnlyDictionary<string, string>>(
+					this.LoadContentTypesByExtension,
+					true);
+
+				this.lazyFilesEncryptionKey = new Lazy<byte[]>(
+					this.LoadFilesEncryptionKey,
+					true);
+
+				this.storageProvidersCache = new MRUCache<string, Storage.IStorageProvider>(
+					name => this.DIContainer.Resolve<Storage.IStorageProvider>(name),
+					StorageProvidersCacheSize);
 			}
+
+			#endregion
+
+			#region Public properties
 
 			/// <summary>
 			/// The Unity DI container.
 			/// </summary>
-			public IUnityContainer DIContainer;
+			public IUnityContainer DIContainer { get; private set; }
 
 			/// <summary>
 			/// The access resolver using the <see cref="IPermissionsSetupProvider"/>
 			/// specified in <see cref="DIContainer"/>.
 			/// </summary>
-			public AccessResolver AccessResolver;
+			public AccessResolver AccessResolver { get; private set; }
+
+			/// <summary>
+			/// The configuration of files.
+			/// </summary>
+			public Configuration.FilesConfiguration FilesConfiguration => lazyFilesConfiguration.Value;
+
+			/// <summary>
+			/// Dictionary of content type IDs by MIME.
+			/// </summary>
+			public IReadOnlyDictionary<string, int> ContentTypeIDsByMIME => lazyContentTypeIDsByMIME.Value;
+
+			/// <summary>
+			/// Map of MIME content types by file extensions.
+			/// The file extensions include the leading dot and are specified in lower case.
+			/// </summary>
+			public IReadOnlyDictionary<string, string> ContentTypesByExtension => lazyContentTypesByExtension.Value;
+
+			/// <summary>
+			/// The encruption key specified in <see cref="Configuration.FilesConfiguration.EncryptionKey"/>,
+			/// decoded from base64.
+			/// </summary>
+			public byte[] FilesEncryptionKey => lazyFilesEncryptionKey.Value;
+
+			#endregion
+
+			#region Public methods
+
+			/// <summary>
+			/// Get a registered storage provider.
+			/// </summary>
+			/// <param name="providerName">The name under which the provider is registered or null for the default.</param>
+			/// <returns>Returns the requested storage provider.</returns>
+			public Storage.IStorageProvider GetStorageProvider(string providerName = null)
+			{
+				if (providerName == null) providerName = String.Empty;
+
+				return storageProvidersCache.Get(providerName);
+			}
+
+			#endregion
+
+			#region Private methods
+
+			private IReadOnlyDictionary<string, int> LoadContentTypeIDsByMIME()
+			{
+				using (var domainContainer = this.DIContainer.Resolve<D>())
+				{
+					var query = from ct in domainContainer.ContentTypes
+											select new { ct.ID, ct.MIME };
+
+					return query.ToDictionary(r => r.MIME, r => r.ID);
+				}
+			}
+
+			private IReadOnlyDictionary<string, string> LoadContentTypesByExtension()
+			{
+				var filesConfiguration = this.FilesConfiguration;
+
+				if (String.IsNullOrWhiteSpace(filesConfiguration.ContentTypeAssociationsXamlPath))
+					throw new LogicException("The ContentTypeAssociationsXamlPath property of FilesConfiguration is not specified.");
+
+				var contentTypeAssociations =
+					XamlConfiguration<Configuration.ContentTypeAssociations>.LoadSettings(
+						filesConfiguration.ContentTypeAssociationsXamlPath);
+
+				return contentTypeAssociations.ToDictionary(
+					a => a.FileExtension.Trim().ToLower(), 
+					a => a.MIMEType.Trim());
+			}
+
+			private byte[] LoadFilesEncryptionKey()
+			{
+				try
+				{
+					string base64Key = this.FilesConfiguration.EncryptionKey;
+
+					if (String.IsNullOrWhiteSpace(base64Key))
+						throw new LogicException(
+							"The FilesConfiguration.EncryptionKey property has not beed defined.");
+
+					return Convert.FromBase64String(base64Key);
+				}
+				catch (FormatException ex)
+				{
+					throw new LogicException(
+						"The FilesConfiguration.EncryptionKey property does not hold a valid base64 string.",
+						ex);
+				}
+			}
+
+			#endregion
 		}
 
 		#endregion
@@ -416,12 +561,21 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The Unity dependency injection container for this session.
 		/// </summary>
-		protected internal IUnityContainer DIContainer { get; private set; }
+		protected internal IUnityContainer DIContainer => this.Environment.DIContainer;
 
 		/// <summary>
 		/// Provides low and high-level access checking for entities and managers.
 		/// </summary>
-		protected internal AccessResolver AccessResolver { get; private set; }
+		protected internal AccessResolver AccessResolver => this.Environment.AccessResolver;
+
+		#endregion
+
+		#region Internal properties
+
+		/// <summary>
+		/// The environment of the session.
+		/// </summary>
+		internal SessionEnvironment Environment { get; private set; }
 
 		#endregion
 
@@ -450,6 +604,22 @@ namespace Grammophone.Domos.Logic
 		public ITransaction BeginTransaction(System.Data.IsolationLevel isolationLevel)
 		{
 			return this.DomainContainer.BeginTransaction(isolationLevel);
+		}
+
+		/// <summary>
+		/// Get the URL of a <see cref="Domain.Files.File"/>.
+		/// </summary>
+		/// <remarks>
+		/// The URL might not allow public access. 
+		/// The access behavior is typically controlled by the file's storage container.
+		/// </remarks>
+		public string GetFileURL(Domain.Files.File file)
+		{
+			if (file == null) throw new ArgumentNullException(nameof(file));
+
+			var storageProvider = this.Environment.GetStorageProvider(file.ProviderName);
+
+			return $"{storageProvider.URLBase}/{Uri.EscapeDataString(file.ContainerName)}/{Uri.EscapeDataString(file.FullName)}";
 		}
 
 		/// <summary>
@@ -599,12 +769,9 @@ namespace Grammophone.Domos.Logic
 		{
 			this.ConfigurationSectionName = configurationSectionName;
 
-			var sessionEnvironment = sessionEnvironmentsCache.Get(configurationSectionName);
+			this.Environment = sessionEnvironmentsCache.Get(configurationSectionName);
 
-			this.DIContainer = sessionEnvironment.DIContainer;
-			this.AccessResolver = sessionEnvironment.AccessResolver;
-
-			this.DomainContainer = this.DIContainer.Resolve<D>();
+			this.DomainContainer = this.Environment.DIContainer.Resolve<D>();
 		}
 
 		/// <summary>
