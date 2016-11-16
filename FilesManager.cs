@@ -4,13 +4,10 @@ using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Practices.Unity;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Files;
 using Grammophone.Storage;
-using Grammophone.Configuration;
-using Grammophone.Caching;
 
 namespace Grammophone.Domos.Logic
 {
@@ -42,34 +39,34 @@ namespace Grammophone.Domos.Logic
 		#region Protected methods
 
 		/// <summary>
-		/// Upload the contents of a file to the storage and update
-		/// the <see cref="File"/> descendants 
+		/// Upload the contents of a <see cref="File"/> to the storage and update
+		/// its properties.
 		/// </summary>
+		/// <param name="contentType">The content type (MIME) of the file.</param>
 		/// <param name="file">The file entity to be updated.</param>
 		/// <param name="containerName">The name of the storage container.</param>
 		/// <param name="name">The friendly name of the file.</param>
 		/// <param name="fullName">The full name of the file relative to its container.</param>
 		/// <param name="stream">The source of the file's contents.</param>
 		/// <param name="encrypt">If true, the file contents are encrypted.</param>
-		/// <param name="contentType">The content type (MIME) of the file.</param>
 		/// <param name="providerName">The name of a storage provider or null for the default provider.</param>
 		/// <returns>Returns a task completing the action.</returns>
 		protected async Task UploadFileAsync(
-			File file, 
-			string containerName,
-			string name, 
-			string fullName, 
-			System.IO.Stream stream, 
-			bool encrypt,
 			string contentType,
+			File file,
+			string containerName,
+			string name,
+			string fullName,
+			System.IO.Stream stream,
+			bool encrypt,
 			string providerName = null)
 		{
+			if (contentType == null) throw new ArgumentNullException(nameof(contentType));
 			if (file == null) throw new ArgumentNullException(nameof(file));
 			if (containerName == null) throw new ArgumentNullException(nameof(containerName));
 			if (name == null) throw new ArgumentNullException(nameof(name));
 			if (fullName == null) throw new ArgumentNullException(nameof(fullName));
 			if (stream == null) throw new ArgumentNullException(nameof(stream));
-			if (contentType == null) throw new ArgumentNullException(nameof(contentType));
 
 			int contentTypeID;
 
@@ -87,6 +84,7 @@ namespace Grammophone.Domos.Logic
 				file.ProviderName = providerName;
 				file.Name = name;
 				file.FullName = fullName;
+				file.IsEncrypted = encrypt;
 
 				var storageProvider = environment.GetStorageProvider(providerName);
 
@@ -99,10 +97,178 @@ namespace Grammophone.Domos.Logic
 					container.DeleteFileAsync(fullName).Wait();
 				};
 
-				await container.CreateFileAsync(fullName, contentType, stream);
+				var storageFile = await container.CreateFileAsync(fullName, contentType);
+
+				await storageFile.UploadFromStreamAsync(stream, encrypt);
 
 				await transaction.CommitAsync();
 			}
+		}
+
+		/// <summary>
+		/// Upload the contents of a <see cref="File"/> of a user to the storage and update
+		/// its properties.
+		/// </summary>
+		/// <param name="user">The owner of the file.</param>
+		/// <param name="file">The file entity to be updated.</param>
+		/// <param name="containerName">The name of the storage container.</param>
+		/// <param name="filename">The name of the file.</param>
+		/// <param name="stream">The source of the file's contents.</param>
+		/// <param name="encrypt">If true, the file contents are encrypted.</param>
+		/// <param name="providerName">The name of a storage provider or null for the default provider.</param>
+		/// <returns>Returns a task completing the action.</returns>
+		protected async Task UploadUserFileAsync(
+			User user,
+			File file,
+			string containerName,
+			string filename,
+			System.IO.Stream stream,
+			bool encrypt,
+			string providerName = null)
+		{
+			if (user == null) throw new ArgumentNullException(nameof(user));
+			if (file == null) throw new ArgumentNullException(nameof(file));
+			if (containerName == null) throw new ArgumentNullException(nameof(containerName));
+			if (stream == null) throw new ArgumentNullException(nameof(stream));
+
+			string contentType = GetFilenameContentType(filename);
+
+			if (contentType == null)
+			{
+				throw new FileException(FilesManagerMessages.UNSUPPORTED_CONTENT_TYPE);
+			}
+
+			var fileGuid = new Guid();
+
+			string fullName = $"{user.Guid}/{fileGuid}_{filename}";
+
+			await UploadFileAsync(
+				contentType,
+				file,
+				containerName,
+				filename,
+				fullName,
+				stream,
+				encrypt,
+				providerName);
+		}
+
+		/// <summary>
+		/// Upload the contents of a <see cref="File"/> of the current user to the storage and update
+		/// its properties.
+		/// </summary>
+		/// <param name="file">The file entity to be updated.</param>
+		/// <param name="containerName">The name of the storage container.</param>
+		/// <param name="filename">The name of the file.</param>
+		/// <param name="stream">The source of the file's contents.</param>
+		/// <param name="encrypt">If true, the file contents are encrypted.</param>
+		/// <param name="providerName">The name of a storage provider or null for the default provider.</param>
+		/// <returns>Returns a task completing the action.</returns>
+		protected async Task UploadUserFileAsync(
+			File file,
+			string containerName,
+			string filename,
+			System.IO.Stream stream,
+			bool encrypt,
+			string providerName = null)
+		{
+			await UploadUserFileAsync(this.Session.User, file, containerName, filename, stream, encrypt, providerName);
+		}
+
+		/// <summary>
+		/// Download the contents of a <see cref="File"/> to a stream.
+		/// </summary>
+		/// <param name="file">The file to download.</param>
+		/// <param name="stream">The stream to write the contents to.</param>
+		/// <returns>Returns a task completing the action.</returns>
+		protected async Task DownloadFileAsync(
+			File file,
+			System.IO.Stream stream)
+		{
+			if (file == null) throw new ArgumentNullException(nameof(file));
+			if (stream == null) throw new ArgumentNullException(nameof(stream));
+
+			var storageFile = await OpenStorageFileAsync(file);
+
+			await storageFile.DownloadToStreamAsync(stream);
+		}
+
+		/// <summary>
+		/// Open a stream for reading the contants of a <see cref="File"/>.
+		/// </summary>
+		/// <param name="file">The file to open.</param>
+		/// <returns>Returns a task whose result contains the input stream.</returns>
+		protected async Task<System.IO.Stream> ReadFileAsync(File file)
+		{
+			if (file == null) throw new ArgumentNullException(nameof(file));
+
+			var storageFile = await OpenStorageFileAsync(file);
+
+			return await storageFile.OpenReadAsync();
+		}
+
+		/// <summary>
+		/// Get the content type matching the extension of
+		/// a <paramref name="filename"/>.
+		/// </summary>
+		/// <param name="filename">The file name.</param>
+		/// <returns>
+		/// Returns the corresponding extension according to the 
+		/// configured <see cref="Configuration.ContentTypeAssociations"/> or null if no match.
+		/// </returns>
+		protected string GetFilenameContentType(string filename)
+		{
+			if (filename == null) throw new ArgumentNullException(nameof(filename));
+
+			filename = filename.Trim();
+
+			int dotIndex = filename.LastIndexOf('.');
+
+			if (dotIndex == -1) return null;
+
+			string extension = filename.Substring(dotIndex).ToLower();
+
+			string contentType;
+
+			if (this.Session.Environment.ContentTypesByExtension.TryGetValue(extension, out contentType))
+			{
+				return contentType;
+			}
+			else
+			{
+				return null;
+			}
+		}
+
+		#endregion
+
+		#region Private methods
+
+		private async Task<IStorageFile> OpenStorageFileAsync(File file)
+		{
+			var environment = this.Session.Environment;
+
+			var storageProvider = environment.GetStorageProvider(file.ProviderName);
+
+			var client = storageProvider.GetClient();
+
+			var container = await client.GetContainerAsync(file.ContainerName);
+
+			if (container == null)
+			{
+				throw new LogicException(
+					$"The storage container '{file.ContainerName}' does not exist.");
+			}
+
+			var storageFile = await container.GetFileAsync(file.FullName);
+
+			if (storageFile == null)
+			{
+				throw new LogicException(
+					$"The file '{file.FullName}' does not exist in container '{file.ContainerName}'.");
+			}
+
+			return storageFile;
 		}
 
 		#endregion

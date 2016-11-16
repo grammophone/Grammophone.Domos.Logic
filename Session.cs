@@ -232,13 +232,9 @@ namespace Grammophone.Domos.Logic
 
 			#region Private fields
 
-			private Lazy<Configuration.FilesConfiguration> lazyFilesConfiguration;
-
 			private Lazy<IReadOnlyDictionary<string, int>> lazyContentTypeIDsByMIME;
 
 			private Lazy<IReadOnlyDictionary<string, string>> lazyContentTypesByExtension;
-
-			private Lazy<byte[]> lazyFilesEncryptionKey;
 
 			private MRUCache<string, Storage.IStorageProvider> storageProvidersCache;
 
@@ -260,20 +256,12 @@ namespace Grammophone.Domos.Logic
 
 				this.AccessResolver = new AccessResolver(permissionsSetupProvider);
 
-				this.lazyFilesConfiguration = new Lazy<Configuration.FilesConfiguration>(
-					() => this.DIContainer.Resolve<Configuration.FilesConfiguration>(), 
-					true);
-
 				this.lazyContentTypeIDsByMIME = new Lazy<IReadOnlyDictionary<string, int>>(
 					this.LoadContentTypeIDsByMIME,
 					true);
 
 				this.lazyContentTypesByExtension = new Lazy<IReadOnlyDictionary<string, string>>(
 					this.LoadContentTypesByExtension,
-					true);
-
-				this.lazyFilesEncryptionKey = new Lazy<byte[]>(
-					this.LoadFilesEncryptionKey,
 					true);
 
 				this.storageProvidersCache = new MRUCache<string, Storage.IStorageProvider>(
@@ -297,11 +285,6 @@ namespace Grammophone.Domos.Logic
 			public AccessResolver AccessResolver { get; private set; }
 
 			/// <summary>
-			/// The configuration of files.
-			/// </summary>
-			public Configuration.FilesConfiguration FilesConfiguration => lazyFilesConfiguration.Value;
-
-			/// <summary>
 			/// Dictionary of content type IDs by MIME.
 			/// </summary>
 			public IReadOnlyDictionary<string, int> ContentTypeIDsByMIME => lazyContentTypeIDsByMIME.Value;
@@ -311,12 +294,6 @@ namespace Grammophone.Domos.Logic
 			/// The file extensions include the leading dot and are specified in lower case.
 			/// </summary>
 			public IReadOnlyDictionary<string, string> ContentTypesByExtension => lazyContentTypesByExtension.Value;
-
-			/// <summary>
-			/// The encruption key specified in <see cref="Configuration.FilesConfiguration.EncryptionKey"/>,
-			/// decoded from base64.
-			/// </summary>
-			public byte[] FilesEncryptionKey => lazyFilesEncryptionKey.Value;
 
 			#endregion
 
@@ -351,7 +328,7 @@ namespace Grammophone.Domos.Logic
 
 			private IReadOnlyDictionary<string, string> LoadContentTypesByExtension()
 			{
-				var filesConfiguration = this.FilesConfiguration;
+				var filesConfiguration = this.DIContainer.Resolve<Configuration.FilesConfiguration>();
 
 				if (String.IsNullOrWhiteSpace(filesConfiguration.ContentTypeAssociationsXamlPath))
 					throw new LogicException("The ContentTypeAssociationsXamlPath property of FilesConfiguration is not specified.");
@@ -363,26 +340,6 @@ namespace Grammophone.Domos.Logic
 				return contentTypeAssociations.ToDictionary(
 					a => a.FileExtension.Trim().ToLower(), 
 					a => a.MIMEType.Trim());
-			}
-
-			private byte[] LoadFilesEncryptionKey()
-			{
-				try
-				{
-					string base64Key = this.FilesConfiguration.EncryptionKey;
-
-					if (String.IsNullOrWhiteSpace(base64Key))
-						throw new LogicException(
-							"The FilesConfiguration.EncryptionKey property has not beed defined.");
-
-					return Convert.FromBase64String(base64Key);
-				}
-				catch (FormatException ex)
-				{
-					throw new LogicException(
-						"The FilesConfiguration.EncryptionKey property does not hold a valid base64 string.",
-						ex);
-				}
 			}
 
 			#endregion

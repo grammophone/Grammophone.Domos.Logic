@@ -39,7 +39,7 @@ namespace Grammophone.Domos.Logic.Configuration
 			if (encryptionKey == null) throw new ArgumentNullException(nameof(encryptionKey));
 
 			this.ContentTypeAssociationsXamlPath = contentTypeAssociationsPath;
-			this.EncryptionAlgorithm = encryptionAlgorithm;
+			this.EncryptionAlgorithmName = encryptionAlgorithm;
 			this.EncryptionKey = encryptionKey;
 		}
 
@@ -56,7 +56,7 @@ namespace Grammophone.Domos.Logic.Configuration
 		/// Name of a symmetric encryption algorithm, 
 		/// suitable for <see cref="System.Security.Cryptography.SymmetricAlgorithm.Create(string)"/>.
 		/// </summary>
-		public string EncryptionAlgorithm { get; private set; }
+		public string EncryptionAlgorithmName { get; private set; }
 
 		/// <summary>
 		/// The encryption key to use when the files have <see cref="File.IsEncrypted"/> set,
