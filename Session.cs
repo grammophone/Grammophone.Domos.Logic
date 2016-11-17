@@ -28,6 +28,7 @@ namespace Grammophone.Domos.Logic
 	/// The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.
 	/// </typeparam>
 	/// <remarks>
+	/// <para>
 	/// Each session depends on a Unity DI container defined in a configuration section.
 	/// This container must at least provide resolutions for the following:
 	/// <list>
@@ -38,6 +39,18 @@ namespace Grammophone.Domos.Logic
 	/// </item>
 	/// <item><see cref="IPermissionsSetupProvider"/></item>
 	/// </list>
+	/// </para>
+	/// <para>
+	/// If the system is working with files, ie entities implementing <see cref="Domain.Files.IFile"/>,
+	/// the session's configuration section must provide resulutions for the following also:
+	/// <list>
+	/// <item><see cref="Configuration.FilesConfiguration"/>.</item>
+	/// <item>
+	/// Named and/or unnamed registrations of <see cref="Storage.IStorageProvider"/> implementations,
+	/// whose name (null or not) matches the <see cref="Domain.Files.IFile.ProviderName"/> property.
+	/// </item>
+	/// </list>
+	/// </para>
 	/// </remarks>
 	public class Session<U, D> : Loggable, IDisposable
 		where U : User
