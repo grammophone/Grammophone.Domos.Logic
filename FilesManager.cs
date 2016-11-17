@@ -12,9 +12,9 @@ using Grammophone.Storage;
 namespace Grammophone.Domos.Logic
 {
 	/// <summary>
-	/// Base manager for handling files. It expects a dedicated configuration section where
-	/// <see cref="Configuration.FilesConfiguration"/> is defined 
-	/// and the <see cref="IStorageClient"/> implementations are registered.
+	/// Base manager for handling files. It expects a <see cref="Configuration.FilesConfiguration"/>
+	/// and the <see cref="IStorageProvider"/> implementations
+	/// defined in the session's configuration section.
 	/// </summary>
 	/// <typeparam name="U">The type of the user in the domain container, derived from <see cref="User"/>.</typeparam>
 	/// <typeparam name="D">The type of the domain container, derived from <see cref="IUsersDomainContainer{U}"/>.</typeparam>
