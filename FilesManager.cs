@@ -39,7 +39,7 @@ namespace Grammophone.Domos.Logic
 		#region Protected methods
 
 		/// <summary>
-		/// Upload the contents of a <see cref="File"/> to the storage and update
+		/// Upload the contents of a <see cref="IFile"/> to the storage and update
 		/// its properties.
 		/// </summary>
 		/// <param name="contentType">The content type (MIME) of the file.</param>
@@ -53,7 +53,7 @@ namespace Grammophone.Domos.Logic
 		/// <returns>Returns a task completing the action.</returns>
 		protected async Task UploadFileAsync(
 			string contentType,
-			File file,
+			IFile file,
 			string containerName,
 			string name,
 			string fullName,
@@ -106,7 +106,7 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Upload the contents of a <see cref="File"/> of a user to the storage and update
+		/// Upload the contents of a <see cref="IFile"/> of a user to the storage and update
 		/// its properties.
 		/// </summary>
 		/// <param name="user">The owner of the file.</param>
@@ -119,7 +119,7 @@ namespace Grammophone.Domos.Logic
 		/// <returns>Returns a task completing the action.</returns>
 		protected async Task UploadUserFileAsync(
 			User user,
-			File file,
+			IFile file,
 			string containerName,
 			string filename,
 			System.IO.Stream stream,
@@ -154,7 +154,7 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Upload the contents of a <see cref="File"/> of the current user to the storage and update
+		/// Upload the contents of a <see cref="IFile"/> of the current user to the storage and update
 		/// its properties.
 		/// </summary>
 		/// <param name="file">The file entity to be updated.</param>
@@ -165,7 +165,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="providerName">The name of a storage provider or null for the default provider.</param>
 		/// <returns>Returns a task completing the action.</returns>
 		protected async Task UploadUserFileAsync(
-			File file,
+			IFile file,
 			string containerName,
 			string filename,
 			System.IO.Stream stream,
@@ -176,13 +176,13 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Download the contents of a <see cref="File"/> to a stream.
+		/// Download the contents of a <see cref="IFile"/> to a stream.
 		/// </summary>
 		/// <param name="file">The file to download.</param>
 		/// <param name="stream">The stream to write the contents to.</param>
 		/// <returns>Returns a task completing the action.</returns>
 		protected async Task DownloadFileAsync(
-			File file,
+			IFile file,
 			System.IO.Stream stream)
 		{
 			if (file == null) throw new ArgumentNullException(nameof(file));
@@ -194,11 +194,11 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Open a stream for reading the contants of a <see cref="File"/>.
+		/// Open a stream for reading the contants of a <see cref="IFile"/>.
 		/// </summary>
 		/// <param name="file">The file to open.</param>
 		/// <returns>Returns a task whose result contains the input stream.</returns>
-		protected async Task<System.IO.Stream> ReadFileAsync(File file)
+		protected async Task<System.IO.Stream> ReadFileAsync(IFile file)
 		{
 			if (file == null) throw new ArgumentNullException(nameof(file));
 
@@ -244,8 +244,10 @@ namespace Grammophone.Domos.Logic
 
 		#region Private methods
 
-		private async Task<IStorageFile> OpenStorageFileAsync(File file)
+		private async Task<IStorageFile> OpenStorageFileAsync(IFile file)
 		{
+			if (file == null) throw new ArgumentNullException(nameof(file));
+
 			var environment = this.Session.Environment;
 
 			var storageProvider = environment.GetStorageProvider(file.ProviderName);
