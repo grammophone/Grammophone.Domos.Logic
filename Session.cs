@@ -448,7 +448,6 @@ namespace Grammophone.Domos.Logic
 		/// This container must at least provide resolutions for the following:
 		/// <list>
 		/// <item><typeparamref name="D"/></item>
-		/// <item><see cref="IUserContext"/></item>
 		/// <item><see cref="IPermissionsSetupProvider"/></item>
 		/// </list>
 		/// </remarks>
