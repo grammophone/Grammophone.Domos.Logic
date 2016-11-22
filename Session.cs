@@ -694,6 +694,19 @@ namespace Grammophone.Domos.Logic
 			return this.AccessResolver.CanUserAccessManager(user, dispositionID, managerName);
 		}
 
+		/// <summary>
+		/// Create a new domain container which has entity access security enabled.
+		/// It is the caller's responsibility to dispose the container.
+		/// </summary>
+		protected D CreateSecuredDomainContainer()
+		{
+			D domainContainer = this.CreateDomainContainer();
+
+			InstallEntityAccessListener(domainContainer);
+
+			return domainContainer;
+		}
+
 		#endregion
 
 		#region Private methods
@@ -716,17 +729,28 @@ namespace Grammophone.Domos.Logic
 			if (user == null)
 				throw new LogicException("The specified user doesn't exist in the database.");
 
-			InstallEntityAccessListener();
+			InstallEntityAccessListener(this.DomainContainer);
 		}
 
 		/// <summary>
-		/// Installs entity access check control.
+		/// Installs entity access check control to a domain container.
 		/// </summary>
-		private void InstallEntityAccessListener()
+		private void InstallEntityAccessListener(D domainContainer)
 		{
+			if (domainContainer == null) throw new ArgumentNullException(nameof(domainContainer));
+
 			entityListener = new EntityListener(user, this.AccessResolver);
 
-			this.DomainContainer.EntityListeners.Add(entityListener);
+			domainContainer.EntityListeners.Add(entityListener);
+		}
+
+		/// <summary>
+		/// Creates a domain container ready for use.
+		/// It is the caller's responsibility to dispose the object.
+		/// </summary>
+		private D CreateDomainContainer()
+		{
+			return this.Environment.DIContainer.Resolve<D>();
 		}
 
 		/// <summary>
@@ -740,7 +764,7 @@ namespace Grammophone.Domos.Logic
 
 			this.Environment = sessionEnvironmentsCache.Get(configurationSectionName);
 
-			this.DomainContainer = this.Environment.DIContainer.Resolve<D>();
+			this.DomainContainer = this.CreateDomainContainer();
 		}
 
 		/// <summary>
