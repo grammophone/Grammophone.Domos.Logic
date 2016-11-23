@@ -19,7 +19,7 @@ using Microsoft.Practices.Unity.Configuration;
 namespace Grammophone.Domos.Logic
 {
 	/// <summary>
-	/// Abstract base for business logic sessions.
+	/// Abstract base for business logic session.
 	/// </summary>
 	/// <typeparam name="U">
 	/// The type of the user, derived from <see cref="Domain.User"/>.
@@ -52,7 +52,7 @@ namespace Grammophone.Domos.Logic
 	/// </list>
 	/// </para>
 	/// </remarks>
-	public class Session<U, D> : Loggable, IDisposable
+	public abstract class Session<U, D> : Loggable, IDisposable
 		where U : User
 		where D : IUsersDomainContainer<U>
 	{
@@ -782,6 +782,156 @@ namespace Grammophone.Domos.Logic
 		{
 			entityListener.SupressAccessCheck = false;
 		}
+
+		#endregion
+	}
+
+	/// <summary>
+	/// Abstract base for business logic session, which also hands out a <see cref="PublicDomain"/>.
+	/// </summary>
+	/// <typeparam name="U">
+	/// The type of the user, derived from <see cref="Domain.User"/>.
+	/// </typeparam>
+	/// <typeparam name="D">
+	/// The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.
+	/// </typeparam>
+	/// <typeparam name="PD">
+	/// The type of public domain, derived from <see cref="PublicDomain{D}"/>.
+	/// </typeparam>
+	/// <remarks>
+	/// <para>
+	/// Each session depends on a Unity DI container defined in a configuration section.
+	/// This container must at least provide resolutions for the following:
+	/// <list>
+	/// <item><typeparamref name="D"/></item>
+	/// <item>
+	/// <see cref="IUserContext"/> (required only when using the constructor which
+	/// implies the current user)
+	/// </item>
+	/// <item><see cref="IPermissionsSetupProvider"/></item>
+	/// </list>
+	/// </para>
+	/// <para>
+	/// If the system is working with files, ie entities implementing <see cref="Domain.Files.IFile"/>,
+	/// the session's configuration section must provide resulutions for the following also:
+	/// <list>
+	/// <item><see cref="Configuration.FilesConfiguration"/>.</item>
+	/// <item>
+	/// Named and/or unnamed registrations of <see cref="Storage.IStorageProvider"/> implementations,
+	/// whose name (null or not) matches the <see cref="Domain.Files.IFile.ProviderName"/> property.
+	/// </item>
+	/// </list>
+	/// </para>
+	/// </remarks>
+	public abstract class Session<U, D, PD> : Session<U, D>
+		where U : User
+		where D : IUsersDomainContainer<U>
+		where PD : PublicDomain<D>
+	{
+		#region Private fields
+
+		/// <summary>
+		/// Backing field for <see cref="PublicDomain"/>.
+		/// </summary>
+		private PD publicDomain;
+
+		#endregion
+
+		#region Construction
+
+		/// <summary>
+		/// Create a session impersonating the user specified
+		/// in the registered <see cref="IUserContext"/>
+		/// inside the configuration
+		/// section specified by <paramref name="configurationSectionName"/>.
+		/// </summary>
+		/// <param name="configurationSectionName">The element name of a Unity configuration section.</param>
+		/// <exception cref="LogicException">
+		/// Thrown when the resolved <see cref="IUserContext"/> fails to specify an existing user.
+		/// </exception>
+		/// <remarks>
+		/// Each session depends on a Unity DI container defined in a configuration section.
+		/// This container must at least provide resolutions for the following:
+		/// <list>
+		/// <item><typeparamref name="D"/></item>
+		/// <item><see cref="IUserContext"/></item>
+		/// <item><see cref="IPermissionsSetupProvider"/></item>
+		/// </list>
+		/// </remarks>
+		public Session(string configurationSectionName) 
+			: base(configurationSectionName)
+		{
+		}
+
+		/// <summary>
+		/// Create a session impersonating the user specified
+		/// using a predicate.
+		/// </summary>
+		/// <param name="configurationSectionName">The element name of a Unity configuration section.</param>
+		/// <param name="userPickPredicate">A predicate to filter a single user.</param>
+		/// <exception cref="LogicException">
+		/// Thrown when the <paramref name="userPickPredicate"/> fails to specify an existing user.
+		/// </exception>
+		/// <remarks>
+		/// Each session depends on a Unity DI container defined in a configuration section.
+		/// This container must at least provide resolutions for the following:
+		/// <list>
+		/// <item><typeparamref name="D"/></item>
+		/// <item><see cref="IPermissionsSetupProvider"/></item>
+		/// </list>
+		/// </remarks>
+		public Session(string configurationSectionName, Expression<Func<U, bool>> userPickPredicate)
+			: base(configurationSectionName, userPickPredicate)
+		{
+		}
+
+		#endregion
+
+		#region Public properties
+
+		/// <summary>
+		/// Get the public domain associated with the session.
+		/// </summary>
+		public PD PublicDomain
+		{
+			get
+			{
+				if (publicDomain == null)
+				{
+					publicDomain = CreatePublicDomain(this.DomainContainer, false);
+				}
+
+				return publicDomain;
+			}
+		}
+
+		#endregion
+
+		#region Public methods
+
+		/// <summary>
+		/// Create a new public domain.
+		/// </summary>
+		public PD CreatePublicDomain()
+		{
+			return CreatePublicDomain(CreateSecuredDomainContainer(), true);
+		}
+
+		#endregion
+
+		#region Protected methods
+
+		/// <summary>
+		/// Create a new instance of a public domain. Specified by derivations.
+		/// </summary>
+		/// <param name="domainContainer">
+		/// The domain container to wrap.
+		/// </param>
+		/// <param name="ownsDomainContainer">
+		/// If true, the public domain owns the <paramref name="domainContainer"/>.
+		/// </param>
+		/// <returns>Returns the created public domain.</returns>
+		protected abstract PD CreatePublicDomain(D domainContainer, bool ownsDomainContainer);
 
 		#endregion
 	}
