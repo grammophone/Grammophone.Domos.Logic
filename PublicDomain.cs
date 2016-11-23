@@ -55,7 +55,7 @@ namespace Grammophone.Domos.Logic
 
 		// ..or maybe add filtering:
 
-		// IQueryable<MyEntity> MyEntities => from e in thid.DomainContainer.MyEntities
+		// IQueryable<MyEntity> MyEntities => from e in this.DomainContainer.MyEntities
 		//                                    where e.IsPublic
 		//                                    select e;
 
