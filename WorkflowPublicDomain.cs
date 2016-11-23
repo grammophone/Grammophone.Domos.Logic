@@ -52,22 +52,22 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Entity set of workflow graphs in the system.
 		/// </summary>
-		public IQueryable<WorkflowGraph> WorkflowGraphs => domainContainer.WorkflowGraphs;
+		public IQueryable<WorkflowGraph> WorkflowGraphs => this.DomainContainer.WorkflowGraphs;
 
 		/// <summary>
 		/// Entity set of workflow state groups in the system.
 		/// </summary>
-		public IQueryable<StateGroup> StateGroups => domainContainer.StateGroups;
+		public IQueryable<StateGroup> StateGroups => this.DomainContainer.StateGroups;
 
 		/// <summary>
 		/// Entity set of workflow states in the system.
 		/// </summary>
-		public IQueryable<State> States => domainContainer.States;
+		public IQueryable<State> States => this.DomainContainer.States;
 
 		/// <summary>
 		/// Entity set of workflow state paths in the system.
 		/// </summary>
-		public IQueryable<StatePath> StatePaths => domainContainer.StatePaths;
+		public IQueryable<StatePath> StatePaths => this.DomainContainer.StatePaths;
 
 		#endregion
 	}

@@ -54,7 +54,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The file content types supported by the system.
 		/// </summary>
-		public IQueryable<ContentType> ContentTypes => domainContainer.ContentTypes;
+		public IQueryable<ContentType> ContentTypes => this.DomainContainer.ContentTypes;
 
 		#endregion
 	}

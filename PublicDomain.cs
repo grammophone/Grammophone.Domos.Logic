@@ -23,21 +23,6 @@ namespace Grammophone.Domos.Logic
 	public abstract class PublicDomain<D> : IContextOwner, IDisposable
 		where D : IDomainContainer
 	{
-		#region Private fields
-
-		/// <summary>
-		/// The domain container to wrap, preferrably with enabled entity access security.
-		/// See	<see cref="Session{U, D}.CreateSecuredDomainContainer"/>.
-		/// </summary>
-		protected readonly D domainContainer;
-
-		/// If true, the public domain instance owns the <see cref="domainContainer"/>
-		/// and the <see cref="Dispose"/> method will dispose the 
-		/// underlying <see cref="domainContainer"/>.
-		protected readonly bool ownsDomainContainer;
-
-		#endregion
-
 		#region Construction
 
 		/// <summary>
@@ -56,8 +41,8 @@ namespace Grammophone.Domos.Logic
 		{
 			if (domainContainer == null) throw new ArgumentNullException(nameof(domainContainer));
 
-			this.domainContainer = domainContainer;
-			this.ownsDomainContainer = ownsDomainContainer;
+			this.DomainContainer = domainContainer;
+			this.OwnsDomainContainer = ownsDomainContainer;
 		}
 
 		#endregion
@@ -66,12 +51,33 @@ namespace Grammophone.Domos.Logic
 
 		// Queryables should be exposed as public properties. Proposed example:
 
-		// IQueryable<MyEntity> MyEntities => domainContainer.MyEntities;
+		// IQueryable<MyEntity> MyEntities => this.DomainContainer.MyEntities;
+
+		// ..or maybe add filtering:
+
+		// IQueryable<MyEntity> MyEntities => from e in thid.DomainContainer
+		//                                    where e.IsPublic
+		//                                    select e;
 
 		/// <summary>
 		/// The underlying context of the container.
 		/// </summary>
-		object IContextOwner.UnderlyingContext => domainContainer.UnderlyingContext;
+		object IContextOwner.UnderlyingContext => DomainContainer.UnderlyingContext;
+
+		#endregion
+
+		#region Protected properties
+
+		/// <summary>
+		/// The domain container to wrap, preferrably with enabled entity access security.
+		/// See	<see cref="Session{U, D}.CreateSecuredDomainContainer"/>.
+		/// </summary>
+		protected D DomainContainer { get; private set; }
+
+		/// If true, the public domain instance owns the <see cref="DomainContainer"/>
+		/// and the <see cref="Dispose"/> method will dispose the 
+		/// underlying <see cref="DomainContainer"/>.
+		protected bool OwnsDomainContainer { get; private set; }
 
 		#endregion
 
@@ -82,7 +88,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		public void Dispose()
 		{
-			if (ownsDomainContainer) domainContainer.Dispose();
+			if (this.OwnsDomainContainer) this.DomainContainer.Dispose();
 		}
 
 		#endregion
