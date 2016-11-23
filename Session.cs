@@ -892,6 +892,9 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Get the public domain associated with the session.
 		/// </summary>
+		/// <remarks>
+		/// The wrapped domain container has always entity access security enabled.
+		/// </remarks>
 		public PD PublicDomain
 		{
 			get
@@ -912,6 +915,9 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Create a new public domain.
 		/// </summary>
+		/// <remarks>
+		/// The wrapped domain container has always entity access security enabled.
+		/// </remarks>
 		public PD CreatePublicDomain()
 		{
 			return CreatePublicDomain(CreateSecuredDomainContainer(), true);
@@ -923,6 +929,8 @@ namespace Grammophone.Domos.Logic
 
 		/// <summary>
 		/// Create a new instance of a public domain. Specified by derivations.
+		/// The method supports the <see cref="PublicDomain"/> property and
+		/// the <see cref="CreatePublicDomain()"/> method.
 		/// </summary>
 		/// <param name="domainContainer">
 		/// The domain container to wrap.
