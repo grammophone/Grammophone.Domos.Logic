@@ -707,6 +707,48 @@ namespace Grammophone.Domos.Logic
 			return domainContainer;
 		}
 
+		/// <summary>
+		/// Flush the cached static resources of sessions created using a
+		/// specific configuration section name.
+		/// Forces new sessions of the given configuration section name to have
+		/// regenerated static resources.
+		/// </summary>
+		/// <param name="configurationSectionName">
+		/// The configuration section name upon which the sessions are set up.
+		/// </param>
+		/// <returns>
+		/// Returns true if the resources were existing and flushed.
+		/// Else, the resources were not found either because no session
+		/// has been created under the configuration section name since the
+		/// start of the application or the previous call of this method,
+		/// either the resources were dropped out of the cache as
+		/// least-recently-used items to make room for other resources.
+		/// </returns>
+		/// <remarks>
+		/// A session environment is created per <paramref name="configurationSectionName"/>
+		/// on an as-needed basis.
+		/// It contains the <see cref="DIContainer"/>, the <see cref="AccessResolver"/>
+		/// and mappings of MIME content types for the sessions created using
+		/// the given configuration section name.
+		/// </remarks>
+		protected static bool FlushSessionsEnvironment(string configurationSectionName)
+		{
+			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
+
+			SessionEnvironment sessionEnvironment;
+
+			if (sessionEnvironmentsCache.Remove(configurationSectionName, out sessionEnvironment))
+			{
+				sessionEnvironment.DIContainer.Dispose();
+
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
 		#endregion
 
 		#region Private methods
