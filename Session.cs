@@ -560,7 +560,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Send an e-mail.
 		/// </summary>
-		/// <param name="recepients">A semicolon separated list of recepients.</param>
+		/// <param name="recepients">A list of recepients separated by comma or semicolon.</param>
 		/// <param name="subject">The subject of the message.</param>
 		/// <param name="body">The body of the message.</param>
 		/// <param name="isBodyHTML">If true, the format of the body message is HTML.</param>
@@ -598,7 +598,7 @@ namespace Grammophone.Domos.Logic
 
 			foreach (string recepient in recepients.Split(';', ','))
 			{
-				mailMessage.To.Add(recepient);
+				mailMessage.To.Add(recepient.Trim());
 			}
 
 			await SendEmailAsync(mailMessage);
