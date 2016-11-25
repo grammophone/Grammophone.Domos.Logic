@@ -39,7 +39,7 @@ namespace Grammophone.Domos.Logic
 	/// implies the current user)
 	/// </item>
 	/// <item><see cref="IPermissionsSetupProvider"/> (required)</item>
-	/// <item><see cref="IRenderProvider"/> (required when RenderTempalte methods are used)</item>
+	/// <item><see cref="IRenderProvider"/> (required when RenderTemplate methods are used)</item>
 	/// </list>
 	/// </para>
 	/// <para>
@@ -888,7 +888,7 @@ namespace Grammophone.Domos.Logic
 	/// implies the current user)
 	/// </item>
 	/// <item><see cref="IPermissionsSetupProvider"/> (required)</item>
-	/// <item><see cref="IRenderProvider"/> (required when RenderTempalte methods are used)</item>
+	/// <item><see cref="IRenderProvider"/> (required when RenderTemplate methods are used)</item>
 	/// </list>
 	/// </para>
 	/// <para>
@@ -993,7 +993,7 @@ namespace Grammophone.Domos.Logic
 		#region Public methods
 
 		/// <summary>
-		/// Create a new public domain.
+		/// Create a new public domain. The caller is responsible for disposing it.
 		/// </summary>
 		/// <remarks>
 		/// The wrapped domain container has always entity access security enabled.
