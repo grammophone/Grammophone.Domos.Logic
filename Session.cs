@@ -39,7 +39,7 @@ namespace Grammophone.Domos.Logic
 	/// implies the current user)
 	/// </item>
 	/// <item><see cref="IPermissionsSetupProvider"/> (required)</item>
-	/// <item><see cref="IRenderProvider"/> ()</item>
+	/// <item><see cref="IRenderProvider"/> (required when RenderTempalte methods are used)</item>
 	/// </list>
 	/// </para>
 	/// <para>
@@ -880,14 +880,15 @@ namespace Grammophone.Domos.Logic
 	/// <remarks>
 	/// <para>
 	/// Each session depends on a Unity DI container defined in a configuration section.
-	/// This container must at least provide resolutions for the following:
+	/// This container must provide resolutions for the following:
 	/// <list>
-	/// <item><typeparamref name="D"/></item>
+	/// <item><typeparamref name="D"/> (required)</item>
 	/// <item>
 	/// <see cref="IUserContext"/> (required only when using the constructor which
 	/// implies the current user)
 	/// </item>
-	/// <item><see cref="IPermissionsSetupProvider"/></item>
+	/// <item><see cref="IPermissionsSetupProvider"/> (required)</item>
+	/// <item><see cref="IRenderProvider"/> (required when RenderTempalte methods are used)</item>
 	/// </list>
 	/// </para>
 	/// <para>
