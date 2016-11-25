@@ -13,6 +13,7 @@ using Grammophone.Domos.AccessChecking;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.Domos.Environment;
+using Grammophone.TemplateRendering;
 using Microsoft.Practices.Unity;
 using Microsoft.Practices.Unity.Configuration;
 
@@ -30,14 +31,15 @@ namespace Grammophone.Domos.Logic
 	/// <remarks>
 	/// <para>
 	/// Each session depends on a Unity DI container defined in a configuration section.
-	/// This container must at least provide resolutions for the following:
+	/// This container must provide resolutions for the following:
 	/// <list>
-	/// <item><typeparamref name="D"/></item>
+	/// <item><typeparamref name="D"/> (required)</item>
 	/// <item>
 	/// <see cref="IUserContext"/> (required only when using the constructor which
 	/// implies the current user)
 	/// </item>
-	/// <item><see cref="IPermissionsSetupProvider"/></item>
+	/// <item><see cref="IPermissionsSetupProvider"/> (required)</item>
+	/// <item><see cref="IRenderProvider"/> ()</item>
 	/// </list>
 	/// </para>
 	/// <para>
@@ -549,6 +551,41 @@ namespace Grammophone.Domos.Logic
 		#endregion
 
 		#region Public methods
+
+		/// <summary>
+		/// Render a template using a strong-type <paramref name="model"/>.
+		/// </summary>
+		/// <typeparam name="M">The type of the model.</typeparam>
+		/// <param name="templateKey">The key of the template.</param>
+		/// <param name="textWriter">The writer used for output.</param>
+		/// <param name="model">The model.</param>
+		/// <param name="dynamicProperties">Optional dynamic properties.</param>
+		void RenderTemplate<M>(
+			string templateKey,
+			System.IO.TextWriter textWriter,
+			M model,
+			IDictionary<string, object> dynamicProperties = null)
+		{
+			var renderProvider = this.DIContainer.Resolve<IRenderProvider>();
+
+			renderProvider.Render(templateKey, textWriter, model, dynamicProperties);
+		}
+
+		/// <summary>
+		/// Render a template.
+		/// </summary>
+		/// <param name="templateKey">The key of the template.</param>
+		/// <param name="textWriter">The writer used for output.</param>
+		/// <param name="dynamicProperties">The dynamic properties.</param>
+		void RenderTemplate(
+			string templateKey,
+			System.IO.TextWriter textWriter,
+			IDictionary<string, object> dynamicProperties)
+		{
+			var renderProvider = this.DIContainer.Resolve<IRenderProvider>();
+
+			renderProvider.Render(templateKey, textWriter, dynamicProperties);
+		}
 
 		/// <summary>
 		/// Begins a local transaction on the unerlying store.

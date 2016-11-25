@@ -126,6 +126,10 @@
       <Project>{5ecd757e-e8e8-4cd2-9e01-f0fb946980da}</Project>
       <Name>Grammophone.Storage</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Grammophone.TemplateRendering\Grammophone.TemplateRendering.csproj">
+      <Project>{dfa670c7-e136-4a48-b5ec-d7bd0adffb6f}</Project>
+      <Name>Grammophone.TemplateRendering</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
