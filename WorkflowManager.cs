@@ -95,12 +95,7 @@ namespace Grammophone.Domos.Logic
 			if (pathCodeName == null) throw new ArgumentNullException(nameof(pathCodeName));
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
 
-			var path = await this.DomainContainer.StatePaths
-				.Include(sp => sp.ToState)
-				.FirstOrDefaultAsync(sp => sp.CodeName == pathCodeName);
-
-			if (path == null)
-				throw new LogicException($"The state path with code '{pathCodeName}' does not exist.");
+			var path = await FindStatePathAsync(pathCodeName);
 
 			if (stateful.State != path.FromState)
 				throw new LogicException(
@@ -109,7 +104,7 @@ namespace Grammophone.Domos.Logic
 			if (!this.AccessResolver.CanExecuteStatePath(this.Session.User, stateful, path))
 				throw new AccessDeniedDomainException(
 					$"The user with ID {this.Session.User.ID} has no rights " +
-					$"to execute path '{pathCodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.", 
+					$"to execute path '{pathCodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.",
 					stateful);
 
 			T stateTransition = this.DomainContainer.Create<T>();
@@ -140,6 +135,40 @@ namespace Grammophone.Domos.Logic
 			}
 
 			return stateTransition;
+		}
+
+		/// <summary>
+		/// Get the specifications of parameters required by all pre-actions
+		/// and post-actions of a state path.
+		/// </summary>
+		/// <param name="pathCodeName">The code name of the state path.</param>
+		/// <returns>
+		/// Returns a dictionary of the parameter specifications having as key 
+		/// the <see cref="ParameterSpecification.Key"/> property.
+		/// If actions specify parametrs with overlapping keys, the last one 
+		/// in the actions list overwrites the previous, first from pre-actions to
+		/// post-actions.
+		/// </returns>
+		public IReadOnlyDictionary<string, ParameterSpecification> GetPathParameterSpecifications(
+			string pathCodeName)
+		{
+			if (pathCodeName == null) throw new ArgumentNullException(nameof(pathCodeName));
+
+			var statePathConfiguration = GetStatePathConfiguration(pathCodeName);
+
+			var parameterSpecificationsByKey = new Dictionary<string, ParameterSpecification>();
+
+			foreach (var action in statePathConfiguration.PreActions)
+			{
+				var actionParameterSpecifications = action.GetParameterSpecifications();
+
+				foreach (var parameterSpecification in actionParameterSpecifications)
+				{
+					parameterSpecificationsByKey[parameterSpecification.Key] = parameterSpecification;
+				}
+			}
+
+			return parameterSpecificationsByKey;
 		}
 
 		#endregion
@@ -178,6 +207,25 @@ namespace Grammophone.Domos.Logic
 			if (pathCodeName == null) throw new ArgumentNullException(nameof(pathCodeName));
 
 			return this.ManagerDIContainer.Resolve<StatePathConfiguration<U, ST, D, S>>(pathCodeName);
+		}
+
+		/// <summary>
+		/// Find the <see cref="StatePath"/> having the given code name.
+		/// </summary>
+		/// <returns>Returns the path found.</returns>
+		/// <exception cref="LogicException">
+		/// Thrown when no <see cref="StatePath"/> exists having the given code name.
+		/// </exception>
+		private async Task<StatePath> FindStatePathAsync(string pathCodeName)
+		{
+			var path = await this.DomainContainer.StatePaths
+				.Include(sp => sp.ToState)
+				.FirstOrDefaultAsync(sp => sp.CodeName == pathCodeName);
+
+			if (path == null)
+				throw new LogicException($"The state path with code '{pathCodeName}' does not exist.");
+
+			return path;
 		}
 
 		#endregion
