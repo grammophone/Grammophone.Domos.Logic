@@ -39,16 +39,21 @@ namespace Grammophone.Domos.Logic
 	/// implies the current user)
 	/// </item>
 	/// <item><see cref="IPermissionsSetupProvider"/> (required)</item>
-	/// <item><see cref="IRenderProvider"/> (required when RenderTemplate methods are used)</item>
+	/// <item>
+	/// <see cref="IRenderProvider"/>
+	/// (required when RenderTemplate methods are used, singleton lifetime is strongly recommended)
+	/// </item>
 	/// </list>
 	/// </para>
 	/// <para>
-	/// If the system is working with files, ie entities implementing <see cref="Domain.Files.IFile"/>,
-	/// the session's configuration section must provide resulutions for the following also:
+	/// If the system is working with <see cref="Domain.Files.IFile"/> entities,
+	/// the session's configuration section must provide resulutions for the following as well:
 	/// <list>
-	/// <item><see cref="Configuration.FilesConfiguration"/>.</item>
 	/// <item>
-	/// Named and/or unnamed registrations of <see cref="Storage.IStorageProvider"/> implementations,
+	/// <see cref="Configuration.FilesConfiguration"/> (singleton lifetime is strongly recommended)</item>
+	/// <item>
+	/// Named and/or unnamed registrations of <see cref="Storage.IStorageProvider"/> implementations
+	/// (singleton lifetime is strongly recommended),
 	/// whose name (null or not) matches the <see cref="Domain.Files.IFile.ProviderName"/> property.
 	/// </item>
 	/// </list>
@@ -553,6 +558,80 @@ namespace Grammophone.Domos.Logic
 		#region Public methods
 
 		/// <summary>
+		/// Send an e-mail.
+		/// </summary>
+		/// <param name="recepients">A semicolon separated list of recepients.</param>
+		/// <param name="subject">The subject of the message.</param>
+		/// <param name="body">The body of the message.</param>
+		/// <param name="isBodyHTML">If true, the format of the body message is HTML.</param>
+		/// <param name="sender">
+		/// The sender of the message, is specified, else 
+		/// the configured <see cref="EmailSettings.DefaultSenderAddress"/> is used.
+		/// </param>
+		/// <returns>Returns a task completing the action.</returns>
+		/// <remarks>
+		/// The message's subject, headers and body encoding is set to UTF8.
+		/// </remarks>
+		public async Task SendEmailAsync(
+			string recepients,
+			string subject,
+			string body,
+			bool isBodyHTML,
+			string sender = null)
+		{
+			if (recepients == null) throw new ArgumentNullException(nameof(recepients));
+			if (subject == null) throw new ArgumentNullException(nameof(subject));
+			if (body == null) throw new ArgumentNullException(nameof(body));
+
+			var emailSettings = this.DIContainer.Resolve<EmailSettings>();
+
+			var mailMessage = new System.Net.Mail.MailMessage
+			{
+				Sender = new System.Net.Mail.MailAddress(sender ?? emailSettings.DefaultSenderAddress),
+				Subject = subject,
+				Body = body,
+				IsBodyHtml = isBodyHTML,
+				BodyEncoding = Encoding.UTF8,
+				SubjectEncoding = Encoding.UTF8,
+				HeadersEncoding = Encoding.UTF8,
+			};
+
+			foreach (string recepient in recepients.Split(';', ','))
+			{
+				mailMessage.To.Add(recepient);
+			}
+
+			await SendEmailAsync(mailMessage);
+		}
+
+		/// <summary>
+		/// Send an e-mail.
+		/// </summary>
+		/// <param name="mailMessage">
+		/// The message to send. If its Sender property is not set, 
+		/// the configured <see cref="EmailSettings.DefaultSenderAddress"/> is used.
+		/// </param>
+		/// <returns>Returns a task completing the action.</returns>
+		public async Task SendEmailAsync(System.Net.Mail.MailMessage mailMessage)
+		{
+			if (mailMessage == null) throw new ArgumentNullException(nameof(mailMessage));
+
+			var emailSettings = this.DIContainer.Resolve<EmailSettings>();
+
+			if (mailMessage.Sender == null)
+			{
+				mailMessage.Sender = new System.Net.Mail.MailAddress(emailSettings.DefaultSenderAddress);
+			}
+
+			using (var emailClient = new System.Net.Mail.SmtpClient(emailSettings.SmtpServerName, emailSettings.SmtpServerPort))
+			{
+				emailClient.EnableSsl = emailSettings.UseSSL;
+
+				await emailClient.SendMailAsync(mailMessage);
+			}
+		}
+
+		/// <summary>
 		/// Render a template using a strong-type <paramref name="model"/>.
 		/// </summary>
 		/// <typeparam name="M">The type of the model.</typeparam>
@@ -865,18 +944,6 @@ namespace Grammophone.Domos.Logic
 		#endregion
 	}
 
-	/// <summary>
-	/// Abstract base for business logic session, which also hands out a <see cref="PublicDomain"/>.
-	/// </summary>
-	/// <typeparam name="U">
-	/// The type of the user, derived from <see cref="Domain.User"/>.
-	/// </typeparam>
-	/// <typeparam name="D">
-	/// The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.
-	/// </typeparam>
-	/// <typeparam name="PD">
-	/// The type of public domain, derived from <see cref="PublicDomain{D}"/>.
-	/// </typeparam>
 	/// <remarks>
 	/// <para>
 	/// Each session depends on a Unity DI container defined in a configuration section.
@@ -888,16 +955,21 @@ namespace Grammophone.Domos.Logic
 	/// implies the current user)
 	/// </item>
 	/// <item><see cref="IPermissionsSetupProvider"/> (required)</item>
-	/// <item><see cref="IRenderProvider"/> (required when RenderTemplate methods are used)</item>
+	/// <item>
+	/// <see cref="IRenderProvider"/>
+	/// (required when RenderTemplate methods are used, singleton lifetime is strongly recommended)
+	/// </item>
 	/// </list>
 	/// </para>
 	/// <para>
-	/// If the system is working with files, ie entities implementing <see cref="Domain.Files.IFile"/>,
-	/// the session's configuration section must provide resulutions for the following also:
+	/// If the system is working with <see cref="Domain.Files.IFile"/> entities,
+	/// the session's configuration section must provide resulutions for the following as well:
 	/// <list>
-	/// <item><see cref="Configuration.FilesConfiguration"/>.</item>
 	/// <item>
-	/// Named and/or unnamed registrations of <see cref="Storage.IStorageProvider"/> implementations,
+	/// <see cref="Configuration.FilesConfiguration"/> (singleton lifetime is strongly recommended)</item>
+	/// <item>
+	/// Named and/or unnamed registrations of <see cref="Storage.IStorageProvider"/> implementations
+	/// (singleton lifetime is strongly recommended),
 	/// whose name (null or not) matches the <see cref="Domain.Files.IFile.ProviderName"/> property.
 	/// </item>
 	/// </list>
