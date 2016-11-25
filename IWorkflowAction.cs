@@ -36,5 +36,14 @@ namespace Grammophone.Domos.Logic
 			IStateful<U, ST> stateful, 
 			ST stateTransition, 
 			IDictionary<string, object> actionArguments);
+
+		/// <summary>
+		/// Get the specifications of parameters expected in the
+		/// parameters dictionary used 
+		/// by <see cref="ExecuteAsync(S, IStateful{U, ST}, ST, IDictionary{string, object})"/>
+		/// method.
+		/// </summary>
+		/// <returns>Returns a collection of parameter specifications.</returns>
+		IEnumerable<ParameterSpecification> GetParameterSpecifications();
 	}
 }
