@@ -8,9 +8,9 @@ namespace Grammophone.Domos.Logic
 {
 	/// <summary>
 	/// Specification of a parameter in the parameters dictionary used 
-	/// in <see cref="IWorkflowAction{U, ST, D, S}.ExecuteAsync(S, Domain.Workflow.IStateful{U, ST}, ST, IDictionary{string, object})"/>
+	/// in <see cref="IWorkflowAction{U, D, S, ST}.ExecuteAsync(S, Domain.Workflow.IStateful{U, ST}, ST, IDictionary{string, object})"/>
 	/// method. The collection of the parameter specifications for the dictionary is provided 
-	/// by <see cref="IWorkflowAction{U, ST, D, S}.GetParameterSpecifications"/> method.
+	/// by <see cref="IWorkflowAction{U, D, S, ST}.GetParameterSpecifications"/> method.
 	/// </summary>
 	[Serializable]
 	public class ParameterSpecification

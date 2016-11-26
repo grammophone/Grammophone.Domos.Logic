@@ -18,19 +18,25 @@ namespace Grammophone.Domos.Logic
 	/// Base manager for querying and executing workflow actions.
 	/// </summary>
 	/// <typeparam name="U">The type of the user, derived from <see cref="User"/>.</typeparam>
-	/// <typeparam name="ST">The type of the state transition, derived fom <see cref="StateTransition{U}"/>.</typeparam>
-	/// <typeparam name="D">The type of domain container, derived from <see cref="IWorkflowUsersDomainContainer{U, ST}"/>.</typeparam>
+	/// <typeparam name="BST">
+	/// The base type of the system's state transitions, derived fom <see cref="StateTransition{U}"/>.
+	/// </typeparam>
+	/// <typeparam name="D">
+	/// The type of domain container, derived from <see cref="IWorkflowUsersDomainContainer{U, ST}"/>.
+	/// </typeparam>
 	/// <typeparam name="S">The type of session, derived from <see cref="Session{U, D}"/>.</typeparam>
+	/// <typeparam name="ST">The type of state transition, derived from <typeparamref name="BST"/>.</typeparam>
 	/// <remarks>
 	/// This manager expects a dedicated Unity DI container for workflow, where at least there 
-	/// are <see cref="StatePathConfiguration{U, ST, D, S}"/> instances named 
+	/// are <see cref="StatePathConfiguration{U, D, S, ST}"/> instances named 
 	/// after <see cref="StatePath.CodeName"/> for every <see cref="StatePath"/> in the system.
 	/// </remarks>
-	public abstract class WorkflowManager<U, ST, D, S> : ConfiguredManager<U, D, S>
+	public abstract class WorkflowManager<U, BST, D, S, ST> : ConfiguredManager<U, D, S>
 		where U : User
-		where ST : StateTransition<U>
-		where D : IWorkflowUsersDomainContainer<U, ST>
+		where BST : StateTransition<U>
+		where D : IWorkflowUsersDomainContainer<U, BST>
 		where S : Session<U, D>
+		where ST : BST, new()
 	{
 		#region Construction
 
@@ -71,7 +77,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The state transitions in the system.
 		/// </summary>
-		public IQueryable<ST> StateTransitions => this.DomainContainer.StateTransitions;
+		public IQueryable<BST> StateTransitions => this.DomainContainer.StateTransitions;
 
 		#endregion
 
@@ -80,16 +86,14 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Execute a state path against a stateful instance.
 		/// </summary>
-		/// <typeparam name="T">The type of state transition, derived from <typeparamref name="ST"/>.</typeparam>
 		/// <param name="stateful">The stateful instance to execute the transition upon.</param>
 		/// <param name="pathCodeName">The <see cref="StatePath.CodeName"/> of the state path.</param>
 		/// <param name="actionArguments">A dictinary of arguments to be passed to the path actions.</param>
 		/// <returns>Returns the state transition created.</returns>
-		public async Task<T> ExecuteStatePathAsync<T>(
+		public async Task<ST> ExecuteStatePathAsync(
 			IStateful<U, ST> stateful, 
 			string pathCodeName, 
 			IDictionary<string, object> actionArguments)
-			where T : ST, new()
 		{
 			if (stateful == null) throw new ArgumentNullException(nameof(stateful));
 			if (pathCodeName == null) throw new ArgumentNullException(nameof(pathCodeName));
@@ -107,7 +111,7 @@ namespace Grammophone.Domos.Logic
 					$"to execute path '{pathCodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.",
 					stateful);
 
-			T stateTransition = this.DomainContainer.Create<T>();
+			ST stateTransition = this.DomainContainer.StateTransitions.Create<ST>();
 
 			var statePathConfiguration = GetStatePathConfiguration(pathCodeName);
 
@@ -184,7 +188,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="actionArguments">The arguments to the actions.</param>
 		/// <returns>Returns a task completing the actions.</returns>
 		private async Task ExecuteActionsAsync(
-			IEnumerable<IWorkflowAction<U, ST, D, S>> actions, 
+			IEnumerable<IWorkflowAction<U, D, S, ST>> actions, 
 			IStateful<U, ST> stateful,
 			ST stateTransition, 
 			IDictionary<string, object> actionArguments)
@@ -202,11 +206,11 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="pathCodeName">The <see cref="StatePath.CodeName"/> of the path.</param>
 		/// <returns>Returns the actions specifications.</returns>
-		private StatePathConfiguration<U, ST, D, S> GetStatePathConfiguration(string pathCodeName)
+		private StatePathConfiguration<U, D, S, ST> GetStatePathConfiguration(string pathCodeName)
 		{
 			if (pathCodeName == null) throw new ArgumentNullException(nameof(pathCodeName));
 
-			return this.ManagerDIContainer.Resolve<StatePathConfiguration<U, ST, D, S>>(pathCodeName);
+			return this.ManagerDIContainer.Resolve<StatePathConfiguration<U, D, S, ST>>(pathCodeName);
 		}
 
 		/// <summary>
@@ -214,16 +218,25 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <returns>Returns the path found.</returns>
 		/// <exception cref="LogicException">
-		/// Thrown when no <see cref="StatePath"/> exists having the given code name.
+		/// Thrown when no <see cref="StatePath"/> exists having the given code name
+		/// or when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
 		/// </exception>
 		private async Task<StatePath> FindStatePathAsync(string pathCodeName)
 		{
 			var path = await this.DomainContainer.StatePaths
 				.Include(sp => sp.ToState)
+				.Include(sp => sp.WorkflowGraph)
 				.FirstOrDefaultAsync(sp => sp.CodeName == pathCodeName);
 
 			if (path == null)
-				throw new LogicException($"The state path with code '{pathCodeName}' does not exist.");
+				throw new LogicException(
+					$"The state path with code '{pathCodeName}' does not exist.");
+
+			if (path.WorkflowGraph.StateTransitionTypeName != typeof(ST).FullName)
+				throw new LogicException(
+					$"The state path must work with transitions of type {path.WorkflowGraph.StateTransitionTypeName}.");
 
 			return path;
 		}

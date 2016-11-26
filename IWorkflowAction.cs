@@ -14,14 +14,14 @@ namespace Grammophone.Domos.Logic
 	/// state transitions.
 	/// </summary>
 	/// <typeparam name="U">The type of the user, derived from <see cref="User"/>.</typeparam>
-	/// <typeparam name="ST">The type of the state transition, derived fom <see cref="StateTransition{U}"/>.</typeparam>
 	/// <typeparam name="D">The type of domain container, derived from <see cref="IWorkflowUsersDomainContainer{U, ST}"/>.</typeparam>
 	/// <typeparam name="S">The type of session, derived from <see cref="Session{U, D}"/>.</typeparam>
-	public interface IWorkflowAction<U, ST, D, S>
+	/// <typeparam name="ST">The type of state transition, derived from <see cref="StateTransition{U}"/>.</typeparam>
+	public interface IWorkflowAction<U, D, S, ST>
 		where U : User
-		where ST : StateTransition<U>
-		where D : IWorkflowUsersDomainContainer<U, ST>
+		where D : IUsersDomainContainer<U>
 		where S : Session<U, D>
+		where ST : StateTransition<U>
 	{
 		/// <summary>
 		/// Execute the action.

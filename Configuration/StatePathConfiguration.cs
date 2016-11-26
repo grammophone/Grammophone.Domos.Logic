@@ -13,25 +13,25 @@ namespace Grammophone.Domos.Logic.Configuration
 	/// Specifies the pre-actions and the post-actions of a <see cref="StatePath"/>.
 	/// </summary>
 	/// <typeparam name="U">The type of the user, derived from <see cref="User"/>.</typeparam>
-	/// <typeparam name="ST">The type of the state transition, derived fom <see cref="StateTransition{U}"/>.</typeparam>
-	/// <typeparam name="D">The type of domain container, derived from <see cref="IWorkflowUsersDomainContainer{U, ST}"/>.</typeparam>
+	/// <typeparam name="D">The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.</typeparam>
 	/// <typeparam name="S">The type of session, derived from <see cref="Session{U, D}"/>.</typeparam>
+	/// <typeparam name="ST">The type of state transition, derived from <see cref="StateTransition{U}"/>.</typeparam>
 	/// <remarks>
 	/// Can be subclassed just to specify the type arguments, in order to make
 	/// the configuration in Unity simpler.
 	/// </remarks>
 	[Serializable]
-	public class StatePathConfiguration<U, ST, D, S>
+	public class StatePathConfiguration<U, D, S, ST>
 		where U : User
-		where ST : StateTransition<U>
-		where D : IWorkflowUsersDomainContainer<U, ST>
+		where D : IUsersDomainContainer<U>
 		where S : Session<U, D>
+		where ST : StateTransition<U>
 	{
 		#region Private fields
 
-		private ICollection<IWorkflowAction<U, ST, D, S>> preActions;
+		private ICollection<IWorkflowAction<U, D, S, ST>> preActions;
 
-		private ICollection<IWorkflowAction<U, ST, D, S>> postActions;
+		private ICollection<IWorkflowAction<U, D, S, ST>> postActions;
 
 		#endregion
 
@@ -40,11 +40,11 @@ namespace Grammophone.Domos.Logic.Configuration
 		/// <summary>
 		/// The actions to execute before state transition.
 		/// </summary>
-		public ICollection<IWorkflowAction<U, ST, D, S>> PreActions
+		public ICollection<IWorkflowAction<U, D, S, ST>> PreActions
 		{
 			get
 			{
-				return preActions ?? (preActions = new HashSet<IWorkflowAction<U, ST, D, S>>());
+				return preActions ?? (preActions = new HashSet<IWorkflowAction<U, D, S, ST>>());
 			}
 			set
 			{
@@ -57,11 +57,11 @@ namespace Grammophone.Domos.Logic.Configuration
 		/// <summary>
 		/// The actions to execute after state transition.
 		/// </summary>
-		public ICollection<IWorkflowAction<U, ST, D, S>> PostActions
+		public ICollection<IWorkflowAction<U, D, S, ST>> PostActions
 		{
 			get
 			{
-				return postActions ?? (postActions = new HashSet<IWorkflowAction<U, ST, D, S>>());
+				return postActions ?? (postActions = new HashSet<IWorkflowAction<U, D, S, ST>>());
 			}
 			set
 			{
