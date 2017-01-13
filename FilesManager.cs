@@ -39,6 +39,48 @@ namespace Grammophone.Domos.Logic
 		#region Protected methods
 
 		/// <summary>
+		/// Delete a file from the database and its contents from its storage.
+		/// </summary>
+		/// <typeparam name="F">The type of the file.</typeparam>
+		/// <param name="file">The file to delete.</param>
+		/// <param name="filesSet">The entity set from which to remove the file.</param>
+		protected async Task DeleteFileAsync<F>(F file, IDbSet<F> filesSet)
+			where F : class, IFile
+		{
+			if (file == null) throw new ArgumentNullException(nameof(file));
+			if (filesSet == null) throw new ArgumentNullException(nameof(filesSet));
+
+			using (var transaction = this.DomainContainer.BeginTransaction())
+			{
+				await DeleteFileContentsAsync(file);
+
+				filesSet.Remove(file);
+
+				await transaction.CommitAsync();
+			}
+		}
+
+		/// <summary>
+		/// Delete the contents of a file from its storage.
+		/// </summary>
+		/// <param name="file">The file whose contents to delete.</param>
+		/// <returns>Returns true if the file contents were found and deleted.</returns>
+		protected async Task<bool> DeleteFileContentsAsync(IFile file)
+		{
+			if (file == null) throw new ArgumentNullException(nameof(file));
+
+			var environment = this.Session.Environment;
+
+			var storageProvider = environment.GetStorageProvider(file.ProviderName);
+
+			var storageClient = storageProvider.GetClient();
+
+			var container = await storageClient.GetContainerAsync(file.ContainerName);
+
+			return await container.DeleteFileAsync(file.FullName);
+		}
+
+		/// <summary>
 		/// Upload the contents of a <see cref="IFile"/> to the storage and update
 		/// its properties.
 		/// </summary>
