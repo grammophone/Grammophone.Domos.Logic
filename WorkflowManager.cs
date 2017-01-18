@@ -247,6 +247,32 @@ namespace Grammophone.Domos.Logic
 				.Where(sp => this.AccessResolver.CanExecuteStatePath(this.Session.User, stateful, sp));
 		}
 
+		/// <summary>
+		/// Get the set of state transitions of a stateful object.
+		/// </summary>
+		/// <param name="statefulID">The ID of the stateful object.</param>
+		public IQueryable<ST> GetStateTransitions(long statefulID)
+		{
+			return from s in GetManagedStatefulObjects()
+						 where s.ID == statefulID
+						 from st in s.StateTransitions
+						 select st;
+		}
+
+		/// <summary>
+		/// Get the set of state transitions of a stateful object.
+		/// </summary>
+		/// <param name="stateful">The stateful object.</param>
+		public IQueryable<ST> GetStateTransitions(SO stateful)
+		{
+			if (stateful == null) throw new ArgumentNullException(nameof(stateful));
+
+			return from s in GetManagedStatefulObjects()
+						 where s.ID == stateful.ID
+						 from st in s.StateTransitions
+						 select st;
+		}
+
 		#endregion
 
 		#region Protected methods
