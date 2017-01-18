@@ -183,6 +183,24 @@ namespace Grammophone.Domos.Logic
 			return parameterSpecificationsByKey;
 		}
 
+		/// <summary>
+		/// Filter the state paths which can be executed on a
+		/// stateful object by the current session user.
+		/// </summary>
+		/// <param name="stateful">The claim to check execution upon.</param>
+		/// <param name="statePaths">The paths to filter.</param>
+		/// <returns>
+		/// Returns the filtered list containing only the paths which can be executed 
+		/// by the current session user.
+		/// </returns>
+		public IEnumerable<StatePath> FilterAllowedStatePaths(SO stateful, IEnumerable<StatePath> statePaths)
+		{
+			if (statePaths == null) throw new ArgumentNullException(nameof(statePaths));
+
+			return statePaths
+				.Where(sp => this.AccessResolver.CanExecuteStatePath(this.Session.User, stateful, sp));
+		}
+
 		#endregion
 
 		#region Private methods
