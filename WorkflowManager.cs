@@ -24,19 +24,27 @@ namespace Grammophone.Domos.Logic
 	/// <typeparam name="D">
 	/// The type of domain container, derived from <see cref="IWorkflowUsersDomainContainer{U, ST}"/>.
 	/// </typeparam>
-	/// <typeparam name="S">The type of session, derived from <see cref="Session{U, D}"/>.</typeparam>
-	/// <typeparam name="ST">The type of state transition, derived from <typeparamref name="BST"/>.</typeparam>
+	/// <typeparam name="S">
+	/// The type of session, derived from <see cref="Session{U, D}"/>.
+	/// </typeparam>
+	/// <typeparam name="ST">
+	/// The type of state transition, derived from <typeparamref name="BST"/>.
+	/// </typeparam>
+	/// <typeparam name="SO">
+	/// The type of stateful being managed, derived from <see cref="IStateful{U, ST}"/>.
+	/// </typeparam>
 	/// <remarks>
 	/// This manager expects a dedicated Unity DI container for workflow, where at least there 
 	/// are <see cref="StatePathConfiguration{U, D, S, ST}"/> instances named 
 	/// after <see cref="StatePath.CodeName"/> for every <see cref="StatePath"/> in the system.
 	/// </remarks>
-	public abstract class WorkflowManager<U, BST, D, S, ST> : ConfiguredManager<U, D, S>
+	public abstract class WorkflowManager<U, BST, D, S, ST, SO> : ConfiguredManager<U, D, S>
 		where U : User
 		where BST : StateTransition<U>
 		where D : IWorkflowUsersDomainContainer<U, BST>
 		where S : Session<U, D>
 		where ST : BST, new()
+		where SO : IStateful<U, ST>
 	{
 		#region Construction
 
@@ -101,7 +109,7 @@ namespace Grammophone.Domos.Logic
 
 			var path = await FindStatePathAsync(pathCodeName);
 
-			if (stateful.State != path.FromState)
+			if (stateful.State != path.PreviousState)
 				throw new LogicException(
 					$"The specified path '{pathCodeName}' is not available for the current state of the stateful object.");
 
@@ -126,7 +134,7 @@ namespace Grammophone.Domos.Logic
 
 				await ExecuteActionsAsync(statePathConfiguration.PreActions, stateful, stateTransition, actionArguments);
 
-				stateful.State = path.ToState;
+				stateful.State = path.NextState;
 
 				stateful.ChangeStamp &= path.ChangeStampANDMask;
 				stateful.ChangeStamp |= path.ChangeStampORMask;
@@ -226,7 +234,7 @@ namespace Grammophone.Domos.Logic
 		private async Task<StatePath> FindStatePathAsync(string pathCodeName)
 		{
 			var path = await this.DomainContainer.StatePaths
-				.Include(sp => sp.ToState)
+				.Include(sp => sp.NextState)
 				.Include(sp => sp.WorkflowGraph)
 				.FirstOrDefaultAsync(sp => sp.CodeName == pathCodeName);
 
