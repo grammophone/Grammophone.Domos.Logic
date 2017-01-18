@@ -68,10 +68,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommonMessages.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CommonMessages.resx</DependentUpon>
+    </Compile>
     <Compile Include="Configuration\ContentTypeAssociation.cs" />
     <Compile Include="Configuration\ContentTypeAssociations.cs" />
     <Compile Include="Configuration\FilesConfiguration.cs" />
     <Compile Include="ConfiguredManager.cs" />
+    <Compile Include="DomainIntegrityException.cs" />
     <Compile Include="EmailSettings.cs" />
     <Compile Include="FileException.cs" />
     <Compile Include="FilesManager.cs" />
@@ -137,6 +143,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="CommonMessages.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>CommonMessages.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommonMessages_fr.resx" />
     <EmbeddedResource Include="FilesManagerMessages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>FilesManagerMessages.Designer.cs</LastGenOutput>
