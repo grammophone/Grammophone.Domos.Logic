@@ -99,7 +99,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="actionArguments">A dictinary of arguments to be passed to the path actions.</param>
 		/// <returns>Returns the state transition created.</returns>
 		public async Task<ST> ExecuteStatePathAsync(
-			IStateful<U, ST> stateful, 
+			SO stateful, 
 			string pathCodeName, 
 			IDictionary<string, object> actionArguments)
 		{
@@ -184,6 +184,52 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Get the set of all the possible next state paths which can 
+		/// be executed on a stateful object.
+		/// Use <see cref="FilterAllowedStatePaths(SO, IEnumerable{StatePath})"/>
+		/// to narrow the result to the paths which can be executed by the 
+		/// current session user.
+		/// </summary>
+		/// <param name="statefulID">The ID of the stateful object.</param>
+		/// <returns>
+		/// Returns all the next paths available to the state of a claim,
+		/// irrespective of user rights.
+		/// Use <see cref="FilterAllowedStatePaths(SO, IEnumerable{StatePath})"/>
+		/// to only select the ones allowed by the current session user.
+		/// </returns>
+		public IQueryable<StatePath> GetNextPaths(long statefulID)
+		{
+			return from c in this.GetManagedStatefulObjects()
+						 where c.ID == statefulID
+						 from sp in this.StatePaths
+						 where c.State.ID == sp.PreviousStateID
+						 select sp;
+		}
+
+		/// <summary>
+		/// Get the set of all the possible next state paths which can 
+		/// be executed on a <paramref name="stateful"/> object.
+		/// Use <see cref="FilterAllowedStatePaths(SO, IEnumerable{StatePath})"/>
+		/// to narrow the result to the paths which can be executed by the 
+		/// current session user.
+		/// </summary>
+		/// <param name="stateful">The stateful object.</param>
+		/// <returns>
+		/// Returns all the next paths available to the state of a claim,
+		/// irrespective of user rights.
+		/// Use <see cref="FilterAllowedStatePaths(SO, IEnumerable{StatePath})"/>
+		/// to only select the ones allowed by the current session user.
+		/// </returns>
+		public IQueryable<StatePath> GetNextPaths(SO stateful)
+		{
+			if (stateful == null) throw new ArgumentNullException(nameof(stateful));
+
+			return from sp in this.StatePaths
+						 where stateful.State.ID == sp.PreviousStateID
+						 select sp;
+		}
+
+		/// <summary>
 		/// Filter the state paths which can be executed on a
 		/// stateful object by the current session user.
 		/// </summary>
@@ -200,6 +246,15 @@ namespace Grammophone.Domos.Logic
 			return statePaths
 				.Where(sp => this.AccessResolver.CanExecuteStatePath(this.Session.User, stateful, sp));
 		}
+
+		#endregion
+
+		#region Protected methods
+
+		/// <summary>
+		/// Gets the set of stateful objects which can be managed by this manager.
+		/// </summary>
+		protected abstract IQueryable<SO> GetManagedStatefulObjects();
 
 		#endregion
 
