@@ -109,19 +109,58 @@ namespace Grammophone.Domos.Logic
 
 			var path = await FindStatePathAsync(pathCodeName);
 
+			return await ExecuteStatePathAsync(stateful, path, actionArguments);
+		}
+
+		/// <summary>
+		/// Execute a state path against a stateful instance.
+		/// </summary>
+		/// <param name="stateful">The stateful instance to execute the transition upon.</param>
+		/// <param name="pathID">The ID of the state path.</param>
+		/// <param name="actionArguments">A dictinary of arguments to be passed to the path actions.</param>
+		/// <returns>Returns the state transition created.</returns>
+		public async Task<ST> ExecuteStatePathAsync(
+			SO stateful,
+			long pathID,
+			IDictionary<string, object> actionArguments)
+		{
+			if (stateful == null) throw new ArgumentNullException(nameof(stateful));
+			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
+
+			var path = await FindStatePathAsync(pathID);
+
+			return await ExecuteStatePathAsync(stateful, path, actionArguments);
+		}
+
+		/// <summary>
+		/// Execute a state path against a stateful instance.
+		/// </summary>
+		/// <param name="stateful">The stateful instance to execute the transition upon.</param>
+		/// <param name="path">The state path.</param>
+		/// <param name="actionArguments">A dictinary of arguments to be passed to the path actions.</param>
+		/// <returns>Returns the state transition created.</returns>
+		public async Task<ST> ExecuteStatePathAsync(
+			SO stateful,
+			StatePath path,
+			IDictionary<string, object> actionArguments)
+		{
+			if (stateful == null) throw new ArgumentNullException(nameof(stateful));
+			if (path == null) throw new ArgumentNullException(nameof(path));
+			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
+
 			if (stateful.State != path.PreviousState)
 				throw new LogicException(
-					$"The specified path '{pathCodeName}' is not available for the current state of the stateful object.");
+					$"The specified path '{path.CodeName}' is not available for the current state of the stateful object.");
 
 			if (!this.AccessResolver.CanExecuteStatePath(this.Session.User, stateful, path))
 				throw new AccessDeniedDomainException(
 					$"The user with ID {this.Session.User.ID} has no rights " +
-					$"to execute path '{pathCodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.",
+					$"to execute path '{path.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.",
 					stateful);
 
 			ST stateTransition = this.DomainContainer.StateTransitions.Create<ST>();
 
-			var statePathConfiguration = GetStatePathConfiguration(pathCodeName);
+			var statePathConfiguration = GetStatePathConfiguration(path.CodeName);
 
 			stateTransition.BindToStateful(stateful);
 
@@ -332,14 +371,54 @@ namespace Grammophone.Domos.Logic
 		/// </exception>
 		private async Task<StatePath> FindStatePathAsync(string pathCodeName)
 		{
-			var path = await this.DomainContainer.StatePaths
+			var pathQuery = this.DomainContainer.StatePaths
+				.Where(sp => sp.CodeName == pathCodeName);
+
+			return await FindStatePathAsync(pathQuery);
+		}
+
+		/// <summary>
+		/// Find the <see cref="StatePath"/> having the given ID.
+		/// </summary>
+		/// <returns>Returns the path found.</returns>
+		/// <exception cref="LogicException">
+		/// Thrown when no <see cref="StatePath"/> exists having the given ID
+		/// or when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		private async Task<StatePath> FindStatePathAsync(long pathID)
+		{
+			var pathQuery = this.DomainContainer.StatePaths
+				.Where(sp => sp.ID == pathID);
+
+			return await FindStatePathAsync(pathQuery);
+		}
+
+		/// <summary>
+		/// Find a <see cref="StatePath"/> via a query.
+		/// </summary>
+		/// <param name="pathQuery">The query to execite.</param>
+		/// <returns>Returns the path found.</returns>
+		/// <exception cref="LogicException">
+		/// Thrown when no <see cref="StatePath"/> exists in the query
+		/// or when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		private async Task<StatePath> FindStatePathAsync(IQueryable<StatePath> pathQuery)
+		{
+			if (pathQuery == null) throw new ArgumentNullException(nameof(pathQuery));
+
+			pathQuery = pathQuery
 				.Include(sp => sp.NextState)
-				.Include(sp => sp.WorkflowGraph)
-				.FirstOrDefaultAsync(sp => sp.CodeName == pathCodeName);
+				.Include(sp => sp.WorkflowGraph);
+
+			var path = await pathQuery.SingleOrDefaultAsync();
 
 			if (path == null)
 				throw new LogicException(
-					$"The state path with code '{pathCodeName}' does not exist.");
+					$"The state path does not exist.");
 
 			if (path.WorkflowGraph.StateTransitionTypeName != typeof(ST).FullName)
 				throw new LogicException(
