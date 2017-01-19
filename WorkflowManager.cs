@@ -83,9 +83,10 @@ namespace Grammophone.Domos.Logic
 		public IQueryable<StatePath> StatePaths => this.DomainContainer.StatePaths;
 
 		/// <summary>
-		/// The state transitions in the system.
+		/// The state transitions
+		/// of type <typeparamref name="ST"/> in the system.
 		/// </summary>
-		public IQueryable<BST> StateTransitions => this.DomainContainer.StateTransitions;
+		public IQueryable<ST> StateTransitions => this.DomainContainer.StateTransitions.OfType<ST>();
 
 		#endregion
 
