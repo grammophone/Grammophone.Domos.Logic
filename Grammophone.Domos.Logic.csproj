@@ -98,6 +98,11 @@
     <Compile Include="Session.cs" />
     <Compile Include="UsersPublicDomain.cs" />
     <Compile Include="WorkflowManager.cs" />
+    <Compile Include="WorkflowManagerMessages.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>WorkflowManagerMessages.resx</DependentUpon>
+    </Compile>
     <Compile Include="WorkflowPublicDomain.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -153,6 +158,11 @@
       <LastGenOutput>FilesManagerMessages.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="FilesManagerResources-fr.resx" />
+    <EmbeddedResource Include="WorkflowManagerMessages.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>WorkflowManagerMessages.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="WorkflowManagerResources_fr.resx" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

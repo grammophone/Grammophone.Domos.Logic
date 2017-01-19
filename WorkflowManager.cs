@@ -224,6 +224,99 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Get the specifications of parameters required by all pre-actions
+		/// and post-actions of a state path.
+		/// </summary>
+		/// <param name="statePathID">The ID of the state path.</param>
+		/// <returns>
+		/// Returns a dictionary of the parameter specifications having as key 
+		/// the <see cref="ParameterSpecification.Key"/> property.
+		/// If actions specify parametrs with overlapping keys, the last one 
+		/// in the actions list overwrites the previous, first from pre-actions to
+		/// post-actions.
+		/// </returns>
+		public async Task<IReadOnlyDictionary<string, ParameterSpecification>> GetPathParameterSpecificationsAsync(
+			long statePathID)
+		{
+			var statePath = await FindStatePathAsync(statePathID);
+
+			return GetPathParameterSpecifications(statePath.CodeName);
+		}
+
+		/// <summary>
+		/// Validate the arguments to be supplied to a state path execution.
+		/// </summary>
+		/// <param name="statePathCodeName">The <see cref="StatePath.CodeName"/>.</param>
+		/// <param name="actionArguments">The arguments to validate.</param>
+		/// <returns>
+		/// Returns a dictionary of validation error messages grouped by
+		/// parameter key.
+		/// </returns>
+		public IDictionary<string, ICollection<string>> ValidateStatePathArguments(
+			string statePathCodeName,
+			IDictionary<string, object> actionArguments)
+		{
+			if (statePathCodeName == null) throw new ArgumentNullException(nameof(statePathCodeName));
+			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
+
+			var parameterSpecifications = GetPathParameterSpecifications(statePathCodeName);
+
+			var validationDictionary = new Dictionary<string, ICollection<string>>();
+
+			foreach (var entry in parameterSpecifications)
+			{
+				string parameterKey = entry.Key;
+				var parameterSpecification = entry.Value;
+
+				object value;
+
+				if (!actionArguments.TryGetValue(parameterKey, out value) && parameterSpecification.IsRequired)
+				{
+					AddValidationEntry(validationDictionary, entry.Key, WorkflowManagerMessages.PARAMETER_IS_REQUIRED);
+				}
+				else
+				{
+					if (value != null)
+					{
+						if (parameterSpecification.IsRequired)
+						{
+							AddValidationEntry(validationDictionary, entry.Key, WorkflowManagerMessages.PARAMETER_IS_REQUIRED);
+						}
+						else
+						{
+							if (!parameterSpecification.Type.IsAssignableFrom(value.GetType()))
+							{
+								AddValidationEntry(validationDictionary, parameterKey, WorkflowManagerMessages.WRONG_PARAMETER_TYPE);
+							}
+						}
+					}
+				}
+			}
+
+			return validationDictionary;
+		}
+
+		/// <summary>
+		/// Validate the arguments to be supplied to a state path execution.
+		/// </summary>
+		/// <param name="statePathID">The ID of the state path.</param>
+		/// <param name="actionArguments">The arguments to validate.</param>
+		/// <returns>
+		/// Returns a dictionary of validation error messages grouped by
+		/// parameter key.
+		/// </returns>
+		public async Task<IDictionary<string, ICollection<string>>> ValidateStatePathArgumentsAsync(
+			long statePathID,
+			IDictionary<string, object> actionArguments)
+		{
+			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
+
+			var statePath = await FindStatePathAsync(statePathID);
+
+			return ValidateStatePathArguments(statePath.CodeName, actionArguments);
+		}
+
+		/// <summary>
 		/// Get the set of all the possible next state paths which can 
 		/// be executed on a stateful object.
 		/// Use <see cref="FilterAllowedStatePaths(SO, IEnumerable{StatePath})"/>
@@ -426,6 +519,28 @@ namespace Grammophone.Domos.Logic
 					$"The state path must work with transitions of type {path.WorkflowGraph.StateTransitionTypeName}.");
 
 			return path;
+		}
+
+		/// <summary>
+		/// Add an entry to a dictionary containing parameter validations.
+		/// </summary>
+		/// <param name="validationDictionary">The validation dictionary.</param>
+		/// <param name="parameterKey">The key of the parameter.</param>
+		/// <param name="message">The validation message.</param>
+		private void AddValidationEntry(
+			Dictionary<string, ICollection<string>> validationDictionary,
+			string parameterKey,
+			string message)
+		{
+			ICollection<string> parameterValidationMessages;
+
+			if (!validationDictionary.TryGetValue(parameterKey, out parameterValidationMessages))
+			{
+				parameterValidationMessages = new List<string>();
+				validationDictionary[parameterKey] = parameterValidationMessages;
+			}
+
+			parameterValidationMessages.Add(message);
 		}
 
 		#endregion
