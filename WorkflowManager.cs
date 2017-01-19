@@ -159,6 +159,11 @@ namespace Grammophone.Domos.Logic
 					$"to execute path '{path.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.",
 					stateful);
 
+			var validationErrors = ValidateStatePathArguments(path.CodeName, actionArguments);
+
+			if (validationErrors.Count > 0)
+				throw new WorkflowActionValidationException(validationErrors);
+
 			ST stateTransition = this.DomainContainer.StateTransitions.Create<ST>();
 
 			var statePathConfiguration = GetStatePathConfiguration(path.CodeName);

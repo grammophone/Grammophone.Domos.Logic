@@ -61,6 +61,15 @@ namespace Grammophone.Domos.Logic {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The parameters of the action are invalid..
+        /// </summary>
+        internal static string INVALID_ACTION_PARAMETERS {
+            get {
+                return ResourceManager.GetString("INVALID_ACTION_PARAMETERS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The parameter is required..
         /// </summary>
         internal static string PARAMETER_IS_REQUIRED {
