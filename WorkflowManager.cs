@@ -479,6 +479,38 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Get the first <see cref="StatePath"/> which leads to a given state.
+		/// </summary>
+		/// <param name="stateful">The stateful object.</param>
+		/// <param name="nextStateCodeName">The code name of the next state.</param>
+		/// <returns>Returns the first path or null if no such path exists.</returns>
+		public async Task<StatePath> GetPathToStateAsync(SO stateful, string nextStateCodeName)
+		{
+			return await
+				GetPathsToState(stateful, nextStateCodeName)
+				.Include(sp => sp.PreviousState)
+				.Include(sp => sp.NextState)
+				.Include(sp => sp.WorkflowGraph)
+				.FirstOrDefaultAsync();
+		}
+
+		/// <summary>
+		/// Get the first <see cref="StatePath"/> which leads to a given state.
+		/// </summary>
+		/// <param name="stateful">The stateful object.</param>
+		/// <param name="nextStateID">The ID of the next state.</param>
+		/// <returns>Returns the first path or null if no such path exists.</returns>
+		public async Task<StatePath> GetPathToStateAsync(SO stateful, long nextStateID)
+		{
+			return await
+				GetPathsToState(stateful, nextStateID)
+				.Include(sp => sp.PreviousState)
+				.Include(sp => sp.NextState)
+				.Include(sp => sp.WorkflowGraph)
+				.FirstOrDefaultAsync();
+		}
+
+		/// <summary>
 		/// Get the first <see cref="StatePath"/> which leads to a given state 
 		/// and can be executed on a given stateful object.
 		/// </summary>
@@ -494,8 +526,8 @@ namespace Grammophone.Domos.Logic
 				.Include(sp => sp.WorkflowGraph)
 				.ToArrayAsync();
 
-			return nextPaths.FirstOrDefault(
-				sp => this.AccessResolver.CanExecuteStatePath(this.Session.User, stateful, sp));
+			return FilterAllowedStatePaths(stateful, nextPaths)
+				.FirstOrDefault();
 		}
 
 		/// <summary>
