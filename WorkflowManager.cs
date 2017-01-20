@@ -99,6 +99,20 @@ namespace Grammophone.Domos.Logic
 		/// <param name="pathCodeName">The <see cref="StatePath.CodeName"/> of the state path.</param>
 		/// <param name="actionArguments">A dictinary of arguments to be passed to the path actions.</param>
 		/// <returns>Returns the state transition created.</returns>
+		/// <exception cref="AccessDeniedDomainException">
+		/// Thrown when the session user has no right to execute the state path.
+		/// </exception>
+		/// <exception cref="WorkflowActionValidationException">
+		/// Thrown when the <paramref name="actionArguments"/> are not valid
+		/// against the parameter specifications of the path actions.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// Thrown when the specified path 
+		/// is not available for the current state of the stateful object,
+		/// or when the path doesn't exist,
+		/// or when the path's workflow is not compatible with transitions 
+		/// of type <typeparamref name="ST"/>.
+		/// </exception>
 		public async Task<ST> ExecuteStatePathAsync(
 			SO stateful, 
 			string pathCodeName, 
@@ -120,6 +134,20 @@ namespace Grammophone.Domos.Logic
 		/// <param name="pathID">The ID of the state path.</param>
 		/// <param name="actionArguments">A dictinary of arguments to be passed to the path actions.</param>
 		/// <returns>Returns the state transition created.</returns>
+		/// <exception cref="AccessDeniedDomainException">
+		/// Thrown when the session user has no right to execute the state path.
+		/// </exception>
+		/// <exception cref="WorkflowActionValidationException">
+		/// Thrown when the <paramref name="actionArguments"/> are not valid
+		/// against the parameter specifications of the path actions.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// Thrown when the specified path 
+		/// is not available for the current state of the stateful object,
+		/// or when the path doesn't exist,
+		/// or when the path's workflow is not compatible with transitions 
+		/// of type <typeparamref name="ST"/>.
+		/// </exception>
 		public async Task<ST> ExecuteStatePathAsync(
 			SO stateful,
 			long pathID,
@@ -140,6 +168,17 @@ namespace Grammophone.Domos.Logic
 		/// <param name="path">The state path.</param>
 		/// <param name="actionArguments">A dictinary of arguments to be passed to the path actions.</param>
 		/// <returns>Returns the state transition created.</returns>
+		/// <exception cref="AccessDeniedDomainException">
+		/// Thrown when the session user has no right to execute the state path.
+		/// </exception>
+		/// <exception cref="WorkflowActionValidationException">
+		/// Thrown when the <paramref name="actionArguments"/> are not valid
+		/// against the parameter specifications of the path actions.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// Thrown when the specified path 
+		/// is not available for the current state of the stateful object.
+		/// </exception>
 		public async Task<ST> ExecuteStatePathAsync(
 			SO stateful,
 			StatePath path,
@@ -411,6 +450,74 @@ namespace Grammophone.Domos.Logic
 						 select st;
 		}
 
+		/// <summary>
+		/// Get the set of state paths leading to a given next state
+		/// from the current state of a stateful object.
+		/// </summary>
+		/// <param name="stateful">The stateful object.</param>
+		/// <param name="nextStateCodeName">The code name of the next state.</param>
+		public IQueryable<StatePath> GetPathsToState(SO stateful, string nextStateCodeName)
+		{
+			return from sp in this.StatePaths
+						 where sp.PreviousStateID == stateful.State.ID
+						 && sp.NextState.CodeName == nextStateCodeName
+						 select sp;
+		}
+
+		/// <summary>
+		/// Get the set of state paths leading to a given next state
+		/// from the current state of a stateful object.
+		/// </summary>
+		/// <param name="stateful">The stateful object.</param>
+		/// <param name="nextStateID">The ID of the next state.</param>
+		public IQueryable<StatePath> GetPathsToState(SO stateful, long nextStateID)
+		{
+			return from sp in this.StatePaths
+						 where sp.PreviousStateID == stateful.State.ID
+						 && sp.NextStateID == nextStateID
+						 select sp;
+		}
+
+		/// <summary>
+		/// Get the first <see cref="StatePath"/> which leads to a given state 
+		/// and can be executed on a given stateful object.
+		/// </summary>
+		/// <param name="stateful">The stateful object.</param>
+		/// <param name="nextStateCodeName">The code name of the next state.</param>
+		/// <returns>Returns the first allowed path or null if no such path exists.</returns>
+		public async Task<StatePath> GetAllowedPathToStateAsync(SO stateful, string nextStateCodeName)
+		{
+			var nextPaths = await
+				GetPathsToState(stateful, nextStateCodeName)
+				.Include(sp => sp.PreviousState)
+				.Include(sp => sp.NextState)
+				.Include(sp => sp.WorkflowGraph)
+				.ToArrayAsync();
+
+			return nextPaths.FirstOrDefault(
+				sp => this.AccessResolver.CanExecuteStatePath(this.Session.User, stateful, sp));
+		}
+
+		/// <summary>
+		/// Get the first <see cref="StatePath"/> which leads to a given state 
+		/// and can be executed on a given stateful object.
+		/// </summary>
+		/// <param name="stateful">The stateful object.</param>
+		/// <param name="nextStateID">The ID of the next state.</param>
+		/// <returns>Returns the first allowed path or null if no such path exists.</returns>
+		public async Task<StatePath> GetAllowedPathToStateAsync(SO stateful, long nextStateID)
+		{
+			var nextPaths = await
+				GetPathsToState(stateful, nextStateID)
+				.Include(sp => sp.PreviousState)
+				.Include(sp => sp.NextState)
+				.Include(sp => sp.WorkflowGraph)
+				.ToArrayAsync();
+
+			return nextPaths.FirstOrDefault(
+				sp => this.AccessResolver.CanExecuteStatePath(this.Session.User, stateful, sp));
+		}
+
 		#endregion
 
 		#region Protected methods
@@ -510,6 +617,7 @@ namespace Grammophone.Domos.Logic
 			if (pathQuery == null) throw new ArgumentNullException(nameof(pathQuery));
 
 			pathQuery = pathQuery
+				.Include(sp => sp.PreviousState)
 				.Include(sp => sp.NextState)
 				.Include(sp => sp.WorkflowGraph);
 
