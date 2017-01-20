@@ -546,8 +546,8 @@ namespace Grammophone.Domos.Logic
 				.Include(sp => sp.WorkflowGraph)
 				.ToArrayAsync();
 
-			return nextPaths.FirstOrDefault(
-				sp => this.AccessResolver.CanExecuteStatePath(this.Session.User, stateful, sp));
+			return FilterAllowedStatePaths(stateful, nextPaths)
+				.FirstOrDefault();
 		}
 
 		#endregion
