@@ -177,7 +177,10 @@ namespace Grammophone.Domos.Logic
 		/// </exception>
 		/// <exception cref="LogicException">
 		/// Thrown when the specified path 
-		/// is not available for the current state of the stateful object.
+		/// is not available for the current state of the stateful object
+		/// or when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
 		/// </exception>
 		public async Task<ST> ExecuteStatePathAsync(
 			SO stateful,
@@ -187,6 +190,8 @@ namespace Grammophone.Domos.Logic
 			if (stateful == null) throw new ArgumentNullException(nameof(stateful));
 			if (path == null) throw new ArgumentNullException(nameof(path));
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
+
+			ValidatePath(path);
 
 			if (stateful.State != path.PreviousState)
 				throw new LogicException(
@@ -484,14 +489,23 @@ namespace Grammophone.Domos.Logic
 		/// <param name="stateful">The stateful object.</param>
 		/// <param name="nextStateCodeName">The code name of the next state.</param>
 		/// <returns>Returns the first path or null if no such path exists.</returns>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
 		public async Task<StatePath> GetPathToStateAsync(SO stateful, string nextStateCodeName)
 		{
-			return await
+			var nextPath = await
 				GetPathsToState(stateful, nextStateCodeName)
 				.Include(sp => sp.PreviousState)
 				.Include(sp => sp.NextState)
 				.Include(sp => sp.WorkflowGraph)
 				.FirstOrDefaultAsync();
+
+			if (nextPath != null) ValidatePath(nextPath);
+
+			return nextPath;
 		}
 
 		/// <summary>
@@ -500,14 +514,23 @@ namespace Grammophone.Domos.Logic
 		/// <param name="stateful">The stateful object.</param>
 		/// <param name="nextStateID">The ID of the next state.</param>
 		/// <returns>Returns the first path or null if no such path exists.</returns>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
 		public async Task<StatePath> GetPathToStateAsync(SO stateful, long nextStateID)
 		{
-			return await
+			var nextPath = await
 				GetPathsToState(stateful, nextStateID)
 				.Include(sp => sp.PreviousState)
 				.Include(sp => sp.NextState)
 				.Include(sp => sp.WorkflowGraph)
 				.FirstOrDefaultAsync();
+
+			if (nextPath != null) ValidatePath(nextPath);
+
+			return nextPath;
 		}
 
 		/// <summary>
@@ -517,6 +540,11 @@ namespace Grammophone.Domos.Logic
 		/// <param name="stateful">The stateful object.</param>
 		/// <param name="nextStateCodeName">The code name of the next state.</param>
 		/// <returns>Returns the first allowed path or null if no such path exists.</returns>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
 		public async Task<StatePath> GetAllowedPathToStateAsync(SO stateful, string nextStateCodeName)
 		{
 			var nextPaths = await
@@ -526,8 +554,12 @@ namespace Grammophone.Domos.Logic
 				.Include(sp => sp.WorkflowGraph)
 				.ToArrayAsync();
 
-			return FilterAllowedStatePaths(stateful, nextPaths)
+			var allowedNextPath = FilterAllowedStatePaths(stateful, nextPaths)
 				.FirstOrDefault();
+
+			if (allowedNextPath != null) ValidatePath(allowedNextPath);
+
+			return allowedNextPath;
 		}
 
 		/// <summary>
@@ -537,6 +569,11 @@ namespace Grammophone.Domos.Logic
 		/// <param name="stateful">The stateful object.</param>
 		/// <param name="nextStateID">The ID of the next state.</param>
 		/// <returns>Returns the first allowed path or null if no such path exists.</returns>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
 		public async Task<StatePath> GetAllowedPathToStateAsync(SO stateful, long nextStateID)
 		{
 			var nextPaths = await
@@ -546,8 +583,12 @@ namespace Grammophone.Domos.Logic
 				.Include(sp => sp.WorkflowGraph)
 				.ToArrayAsync();
 
-			return FilterAllowedStatePaths(stateful, nextPaths)
+			var allowedNextPath = FilterAllowedStatePaths(stateful, nextPaths)
 				.FirstOrDefault();
+
+			if (allowedNextPath != null) ValidatePath(allowedNextPath);
+
+			return allowedNextPath;
 		}
 
 		#endregion
@@ -659,11 +700,28 @@ namespace Grammophone.Domos.Logic
 				throw new LogicException(
 					$"The state path does not exist.");
 
+			ValidatePath(path);
+
+			return path;
+		}
+
+		/// <summary>
+		/// Ensure that a given path belongs to a workflow
+		/// working with state transitions of type <typeparamref name="ST"/>.
+		/// </summary>
+		/// <param name="path">The path to validate.</param>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		private static void ValidatePath(StatePath path)
+		{
+			if (path == null) throw new ArgumentNullException(nameof(path));
+
 			if (path.WorkflowGraph.StateTransitionTypeName != typeof(ST).FullName)
 				throw new LogicException(
 					$"The state path must work with transitions of type {path.WorkflowGraph.StateTransitionTypeName}.");
-
-			return path;
 		}
 
 		/// <summary>
