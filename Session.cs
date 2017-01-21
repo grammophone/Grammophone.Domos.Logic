@@ -761,28 +761,6 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Elevate access rights, taking into account the nesting.
-		/// </summary>
-		internal void IncrementAccessElevationLevel()
-		{
-			if (accessElevationNestingLevel++ == 0)
-			{
-				ElevateAccessRights();
-			}
-		}
-
-		/// <summary>
-		/// Restore access rights, taking into account the nesting.
-		/// </summary>
-		internal void DecrementAccessElevationLevel()
-		{
-			if (--accessElevationNestingLevel == 0)
-			{
-				RestoreAccessRights();
-			}
-		}
-
-		/// <summary>
 		/// Create a Unity DI container from a configuration section.
 		/// </summary>
 		/// <param name="configurationSectionName">The element name of the configuratio section.</param>
@@ -988,6 +966,28 @@ namespace Grammophone.Domos.Logic
 		private void RestoreAccessRights()
 		{
 			entityListener.SupressAccessCheck = false;
+		}
+
+		/// <summary>
+		/// Elevate access rights, taking into account the nesting.
+		/// </summary>
+		private void IncrementAccessElevationLevel()
+		{
+			if (accessElevationNestingLevel++ == 0)
+			{
+				ElevateAccessRights();
+			}
+		}
+
+		/// <summary>
+		/// Restore access rights, taking into account the nesting.
+		/// </summary>
+		private void DecrementAccessElevationLevel()
+		{
+			if (--accessElevationNestingLevel == 0)
+			{
+				RestoreAccessRights();
+			}
 		}
 
 		#endregion
