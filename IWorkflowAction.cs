@@ -29,12 +29,14 @@ namespace Grammophone.Domos.Logic
 		/// Execute the action.
 		/// </summary>
 		/// <param name="session">The session.</param>
+		/// <param name="domainContainer">The domain container used by the session.</param>
 		/// <param name="stateful">The stateful instance to execute upon.</param>
 		/// <param name="stateTransition">The state transition being executed.</param>
 		/// <param name="actionArguments">The arguments to the action.</param>
 		/// <returns>Returns a task completing the operation.</returns>
 		Task ExecuteAsync(
 			S session, 
+			D domainContainer,
 			SO stateful, 
 			ST stateTransition, 
 			IDictionary<string, object> actionArguments);
@@ -42,7 +44,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Get the specifications of parameters expected in the
 		/// parameters dictionary used 
-		/// by <see cref="ExecuteAsync(S, SO, ST, IDictionary{string, object})"/>
+		/// by <see cref="ExecuteAsync(S, D, SO, ST, IDictionary{string, object})"/>
 		/// method.
 		/// </summary>
 		/// <returns>Returns a collection of parameter specifications.</returns>

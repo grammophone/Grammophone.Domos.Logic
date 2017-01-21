@@ -622,7 +622,12 @@ namespace Grammophone.Domos.Logic
 
 			foreach (var action in actions)
 			{
-				await action.ExecuteAsync(this.Session, stateful, stateTransition, actionArguments);
+				await action.ExecuteAsync(
+					this.Session, 
+					this.DomainContainer, 
+					stateful, 
+					stateTransition, 
+					actionArguments);
 			}
 		}
 
