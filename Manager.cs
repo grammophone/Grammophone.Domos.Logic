@@ -92,6 +92,7 @@ namespace Grammophone.Domos.Logic
 		/// Use with care.
 		/// </summary>
 		/// <param name="transaction">The transaction.</param>
+		[Obsolete("Use the session method instead.")]
 		protected void ElevateTransactionAccessRights(ITransaction transaction)
 		{
 			this.Session.ElevateTransactionAccessRights(transaction);

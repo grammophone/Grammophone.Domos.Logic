@@ -78,6 +78,7 @@
     <Compile Include="Configuration\FilesConfiguration.cs" />
     <Compile Include="ConfiguredManager.cs" />
     <Compile Include="DomainIntegrityException.cs" />
+    <Compile Include="ElevatedAccessScope.cs" />
     <Compile Include="EmailSettings.cs" />
     <Compile Include="FileException.cs" />
     <Compile Include="FilesManager.cs" />

@@ -384,6 +384,11 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		private EntityListener entityListener;
 
+		/// <summary>
+		/// The nesting level of access elevation.
+		/// </summary>
+		private int accessElevationNestingLevel;
+
 		#endregion
 
 		#region Construction
@@ -558,6 +563,42 @@ namespace Grammophone.Domos.Logic
 		#region Public methods
 
 		/// <summary>
+		/// Get a scope of elevated access, taking care of nesting.
+		/// Please ensure that <see cref="ElevatedAccessScope.Dispose"/> is called in all cases.
+		/// </summary>
+		/// <remarks>
+		/// Until all nested of elevated access scopes are <see cref="Dispose"/>d,
+		/// no security checks are performed by the session.
+		/// </remarks>
+		public ElevatedAccessScope GetElevatedAccessScope()
+		{
+			IncrementAccessElevationLevel();
+
+			return new ElevatedAccessScope(DecrementAccessElevationLevel);
+		}
+
+		/// <summary>
+		/// Elevate access to all entities for the duration of a <paramref name="transaction"/>,
+		/// taking care of any nesting.
+		/// </summary>
+		/// <param name="transaction">The transaction.</param>
+		/// <remarks>
+		/// This is suitable for domain containers having <see cref="TransactionMode.Deferred"/>,
+		/// where the saving takes place at the topmost transaction.
+		/// The <see cref="GetElevatedAccessScope"/> method for elevating access rights might 
+		/// restore them too soon.
+		/// </remarks>
+		public void ElevateTransactionAccessRights(ITransaction transaction)
+		{
+			if (transaction == null) throw new ArgumentNullException(nameof(transaction));
+
+			transaction.Succeeding += DecrementAccessElevationLevel;
+			transaction.RollingBack += DecrementAccessElevationLevel;
+
+			IncrementAccessElevationLevel();
+		}
+
+		/// <summary>
 		/// Send an e-mail.
 		/// </summary>
 		/// <param name="recepients">A list of recepients separated by comma or semicolon.</param>
@@ -720,17 +761,25 @@ namespace Grammophone.Domos.Logic
 		#region Internal methods
 
 		/// <summary>
-		/// Elevate access to all entities for the duration of a <paramref name="transaction"/>.
+		/// Elevate access rights, taking into account the nesting.
 		/// </summary>
-		/// <param name="transaction">The transaction.</param>
-		internal void ElevateTransactionAccessRights(ITransaction transaction)
+		internal void IncrementAccessElevationLevel()
 		{
-			if (transaction == null) throw new ArgumentNullException(nameof(transaction));
+			if (accessElevationNestingLevel++ == 0)
+			{
+				ElevateAccessRights();
+			}
+		}
 
-			transaction.Succeeding += RestoreAccessRights;
-			transaction.RollingBack += RestoreAccessRights;
-
-			ElevateAccessRights();
+		/// <summary>
+		/// Restore access rights, taking into account the nesting.
+		/// </summary>
+		internal void DecrementAccessElevationLevel()
+		{
+			if (--accessElevationNestingLevel == 0)
+			{
+				RestoreAccessRights();
+			}
 		}
 
 		/// <summary>
