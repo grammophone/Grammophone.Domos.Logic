@@ -563,42 +563,6 @@ namespace Grammophone.Domos.Logic
 		#region Public methods
 
 		/// <summary>
-		/// Get a scope of elevated access, taking care of nesting.
-		/// Please ensure that <see cref="ElevatedAccessScope.Dispose"/> is called in all cases.
-		/// </summary>
-		/// <remarks>
-		/// Until all nested of elevated access scopes are <see cref="Dispose"/>d,
-		/// no security checks are performed by the session.
-		/// </remarks>
-		public ElevatedAccessScope GetElevatedAccessScope()
-		{
-			IncrementAccessElevationLevel();
-
-			return new ElevatedAccessScope(DecrementAccessElevationLevel);
-		}
-
-		/// <summary>
-		/// Elevate access to all entities for the duration of a <paramref name="transaction"/>,
-		/// taking care of any nesting.
-		/// </summary>
-		/// <param name="transaction">The transaction.</param>
-		/// <remarks>
-		/// This is suitable for domain containers having <see cref="TransactionMode.Deferred"/>,
-		/// where the saving takes place at the topmost transaction.
-		/// The <see cref="GetElevatedAccessScope"/> method for elevating access rights might 
-		/// restore them too soon.
-		/// </remarks>
-		public void ElevateTransactionAccessRights(ITransaction transaction)
-		{
-			if (transaction == null) throw new ArgumentNullException(nameof(transaction));
-
-			transaction.Succeeding += DecrementAccessElevationLevel;
-			transaction.RollingBack += DecrementAccessElevationLevel;
-
-			IncrementAccessElevationLevel();
-		}
-
-		/// <summary>
 		/// Send an e-mail.
 		/// </summary>
 		/// <param name="recepients">A list of recepients separated by comma or semicolon.</param>
@@ -759,6 +723,42 @@ namespace Grammophone.Domos.Logic
 		#endregion
 
 		#region Internal methods
+
+		/// <summary>
+		/// Get a scope of elevated access, taking care of nesting.
+		/// Please ensure that <see cref="ElevatedAccessScope.Dispose"/> is called in all cases.
+		/// </summary>
+		/// <remarks>
+		/// Until all nested of elevated access scopes are disposed,
+		/// no security checks are performed by the session.
+		/// </remarks>
+		internal ElevatedAccessScope GetElevatedAccessScope()
+		{
+			IncrementAccessElevationLevel();
+
+			return new ElevatedAccessScope(DecrementAccessElevationLevel);
+		}
+
+		/// <summary>
+		/// Elevate access to all entities for the duration of a <paramref name="transaction"/>,
+		/// taking care of any nesting.
+		/// </summary>
+		/// <param name="transaction">The transaction.</param>
+		/// <remarks>
+		/// This is suitable for domain containers having <see cref="TransactionMode.Deferred"/>,
+		/// where the saving takes place at the topmost transaction.
+		/// The <see cref="GetElevatedAccessScope"/> method for elevating access rights might 
+		/// restore them too soon.
+		/// </remarks>
+		internal void ElevateTransactionAccessRights(ITransaction transaction)
+		{
+			if (transaction == null) throw new ArgumentNullException(nameof(transaction));
+
+			transaction.Succeeding += DecrementAccessElevationLevel;
+			transaction.RollingBack += DecrementAccessElevationLevel;
+
+			IncrementAccessElevationLevel();
+		}
 
 		/// <summary>
 		/// Elevate access rights, taking into account the nesting.

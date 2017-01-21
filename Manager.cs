@@ -88,15 +88,31 @@ namespace Grammophone.Domos.Logic
 		#region Protected methods
 
 		/// <summary>
-		/// Elevate access to all entities for the duration of a <paramref name="transaction"/>.
-		/// Use with care.
+		/// Elevate access to all entities for the duration of a <paramref name="transaction"/>,
+		/// taking care of any nesting. Use with care.
 		/// </summary>
 		/// <param name="transaction">The transaction.</param>
-		[Obsolete("Use the session method instead.")]
+		/// <remarks>
+		/// This is suitable for domain containers having <see cref="TransactionMode.Deferred"/>,
+		/// where the saving takes place at the topmost transaction.
+		/// The <see cref="GetElevatedAccessScope"/> method for elevating access rights might 
+		/// restore them too soon.
+		/// </remarks>
 		protected void ElevateTransactionAccessRights(ITransaction transaction)
 		{
 			this.Session.ElevateTransactionAccessRights(transaction);
 		}
+
+		/// <summary>
+		/// Get a scope of elevated access, taking care of nesting.
+		/// Please ensure that <see cref="ElevatedAccessScope.Dispose"/> is called in all cases.
+		/// </summary>
+		/// <remarks>
+		/// Until all nested of elevated access scopes 
+		/// are disposed,
+		/// no security checks are performed by the session.
+		/// </remarks>
+		protected ElevatedAccessScope GetElevatedAccessScope() => this.Session.GetElevatedAccessScope();
 
 		#endregion
 	}
