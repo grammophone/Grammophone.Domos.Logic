@@ -35,7 +35,7 @@ namespace Grammophone.Domos.Logic
 	/// </typeparam>
 	/// <remarks>
 	/// This manager expects a dedicated Unity DI container for workflow, where at least there 
-	/// are <see cref="StatePathConfiguration{U, D, S, ST}"/> instances named 
+	/// are <see cref="StatePathConfiguration{U, D, S, ST, SO}"/> instances named 
 	/// after <see cref="StatePath.CodeName"/> for every <see cref="StatePath"/> in the system.
 	/// </remarks>
 	public abstract class WorkflowManager<U, BST, D, S, ST, SO> : ConfiguredManager<U, D, S>
@@ -613,8 +613,8 @@ namespace Grammophone.Domos.Logic
 		/// <param name="actionArguments">The arguments to the actions.</param>
 		/// <returns>Returns a task completing the actions.</returns>
 		private async Task ExecuteActionsAsync(
-			IEnumerable<IWorkflowAction<U, D, S, ST>> actions, 
-			IStateful<U, ST> stateful,
+			IEnumerable<IWorkflowAction<U, D, S, ST, SO>> actions, 
+			SO stateful,
 			ST stateTransition, 
 			IDictionary<string, object> actionArguments)
 		{
@@ -631,11 +631,11 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="pathCodeName">The <see cref="StatePath.CodeName"/> of the path.</param>
 		/// <returns>Returns the actions specifications.</returns>
-		private StatePathConfiguration<U, D, S, ST> GetStatePathConfiguration(string pathCodeName)
+		private StatePathConfiguration<U, D, S, ST, SO> GetStatePathConfiguration(string pathCodeName)
 		{
 			if (pathCodeName == null) throw new ArgumentNullException(nameof(pathCodeName));
 
-			return this.ManagerDIContainer.Resolve<StatePathConfiguration<U, D, S, ST>>(pathCodeName);
+			return this.ManagerDIContainer.Resolve<StatePathConfiguration<U, D, S, ST, SO>>(pathCodeName);
 		}
 
 		/// <summary>

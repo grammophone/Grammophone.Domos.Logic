@@ -16,22 +16,24 @@ namespace Grammophone.Domos.Logic.Configuration
 	/// <typeparam name="D">The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.</typeparam>
 	/// <typeparam name="S">The type of session, derived from <see cref="Session{U, D}"/>.</typeparam>
 	/// <typeparam name="ST">The type of state transition, derived from <see cref="StateTransition{U}"/>.</typeparam>
+	/// <typeparam name="SO">The type of stateful object, derived from <see cref="IStateful{U, ST}"/>.</typeparam>
 	/// <remarks>
 	/// Can be subclassed just to specify the type arguments, in order to make
 	/// the configuration in Unity simpler.
 	/// </remarks>
 	[Serializable]
-	public class StatePathConfiguration<U, D, S, ST>
+	public class StatePathConfiguration<U, D, S, ST, SO>
 		where U : User
 		where D : IUsersDomainContainer<U>
 		where S : Session<U, D>
 		where ST : StateTransition<U>
+		where SO : IStateful<U, ST>
 	{
 		#region Private fields
 
-		private ICollection<IWorkflowAction<U, D, S, ST>> preActions;
+		private ICollection<IWorkflowAction<U, D, S, ST, SO>> preActions;
 
-		private ICollection<IWorkflowAction<U, D, S, ST>> postActions;
+		private ICollection<IWorkflowAction<U, D, S, ST, SO>> postActions;
 
 		#endregion
 
@@ -40,11 +42,11 @@ namespace Grammophone.Domos.Logic.Configuration
 		/// <summary>
 		/// The actions to execute before state transition.
 		/// </summary>
-		public ICollection<IWorkflowAction<U, D, S, ST>> PreActions
+		public ICollection<IWorkflowAction<U, D, S, ST, SO>> PreActions
 		{
 			get
 			{
-				return preActions ?? (preActions = new HashSet<IWorkflowAction<U, D, S, ST>>());
+				return preActions ?? (preActions = new HashSet<IWorkflowAction<U, D, S, ST, SO>>());
 			}
 			set
 			{
@@ -57,11 +59,11 @@ namespace Grammophone.Domos.Logic.Configuration
 		/// <summary>
 		/// The actions to execute after state transition.
 		/// </summary>
-		public ICollection<IWorkflowAction<U, D, S, ST>> PostActions
+		public ICollection<IWorkflowAction<U, D, S, ST, SO>> PostActions
 		{
 			get
 			{
-				return postActions ?? (postActions = new HashSet<IWorkflowAction<U, D, S, ST>>());
+				return postActions ?? (postActions = new HashSet<IWorkflowAction<U, D, S, ST, SO>>());
 			}
 			set
 			{
