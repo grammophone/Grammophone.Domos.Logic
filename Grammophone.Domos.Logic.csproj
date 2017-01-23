@@ -98,6 +98,7 @@
     <Compile Include="UserException.cs" />
     <Compile Include="Session.cs" />
     <Compile Include="UsersPublicDomain.cs" />
+    <Compile Include="WorkflowAction.cs" />
     <Compile Include="WorkflowActionValidationException.cs" />
     <Compile Include="WorkflowManager.cs" />
     <Compile Include="WorkflowManagerMessages.Designer.cs">
