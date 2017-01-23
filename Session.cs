@@ -77,7 +77,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Enforces security while accessing entities.
 		/// </summary>
-		private class EntityListener : Loggable, IEntityListener
+		private class EntityListener : Loggable, IUserTrackingEntityListener
 		{
 			#region Private fields
 
