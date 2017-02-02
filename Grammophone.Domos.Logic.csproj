@@ -155,17 +155,17 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CommonMessages.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="CommonMessages_fr.resx" />
+    <EmbeddedResource Include="CommonMessages.fr.resx" />
     <EmbeddedResource Include="FilesManagerMessages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>FilesManagerMessages.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="FilesManagerResources-fr.resx" />
+    <EmbeddedResource Include="FilesManagerMessages.fr.resx" />
     <EmbeddedResource Include="WorkflowManagerMessages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>WorkflowManagerMessages.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="WorkflowManagerResources_fr.resx" />
+    <EmbeddedResource Include="WorkflowManagerMessages.fr.resx" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
