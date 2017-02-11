@@ -10,6 +10,7 @@ using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Workflow;
 using Grammophone.Domos.Logic.Configuration;
+using Grammophone.Domos.Logic.Models.Workflow;
 using Microsoft.Practices.Unity;
 
 namespace Grammophone.Domos.Logic
@@ -165,7 +166,7 @@ namespace Grammophone.Domos.Logic
 		/// Execute a state path against a stateful instance.
 		/// </summary>
 		/// <param name="stateful">The stateful instance to execute the transition upon.</param>
-		/// <param name="path">The state path.</param>
+		/// <param name="statePath">The state path.</param>
 		/// <param name="actionArguments">A dictinary of arguments to be passed to the path actions.</param>
 		/// <returns>Returns the state transition created.</returns>
 		/// <exception cref="AccessDeniedDomainException">
@@ -182,35 +183,40 @@ namespace Grammophone.Domos.Logic
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
+		/// <remarks>
+		/// For best performance, the <see cref="StatePath.PreviousState"/>,
+		/// <see cref="StatePath.NextState"/> and <see cref="StatePath.WorkflowGraph"/>
+		/// properties of the <paramref name="statePath"/> must be eagerly loaded.
+		/// </remarks>
 		public async Task<ST> ExecuteStatePathAsync(
 			SO stateful,
-			StatePath path,
+			StatePath statePath,
 			IDictionary<string, object> actionArguments)
 		{
 			if (stateful == null) throw new ArgumentNullException(nameof(stateful));
-			if (path == null) throw new ArgumentNullException(nameof(path));
+			if (statePath == null) throw new ArgumentNullException(nameof(statePath));
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
 
-			ValidatePath(path);
+			ValidatePath(statePath);
 
-			if (stateful.State != path.PreviousState)
+			if (stateful.State != statePath.PreviousState)
 				throw new LogicException(
-					$"The specified path '{path.CodeName}' is not available for the current state of the stateful object.");
+					$"The specified path '{statePath.CodeName}' is not available for the current state of the stateful object.");
 
-			if (!this.AccessResolver.CanExecuteStatePath(this.Session.User, stateful, path))
+			if (!this.AccessResolver.CanExecuteStatePath(this.Session.User, stateful, statePath))
 				throw new AccessDeniedDomainException(
 					$"The user with ID {this.Session.User.ID} has no rights " +
-					$"to execute path '{path.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.",
+					$"to execute path '{statePath.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.",
 					stateful);
 
-			var validationErrors = ValidateStatePathArguments(path.CodeName, actionArguments);
+			var validationErrors = ValidateStatePathArguments(statePath.CodeName, actionArguments);
 
 			if (validationErrors.Count > 0)
 				throw new WorkflowActionValidationException(validationErrors);
 
 			ST stateTransition = this.DomainContainer.StateTransitions.Create<ST>();
 
-			var statePathConfiguration = GetStatePathConfiguration(path.CodeName);
+			var statePathConfiguration = GetStatePathConfiguration(statePath.CodeName);
 
 			stateTransition.BindToStateful(stateful);
 
@@ -218,15 +224,15 @@ namespace Grammophone.Domos.Logic
 			{
 				stateTransition.OwningUsers.Add(this.Session.User);
 
-				stateTransition.Path = path;
+				stateTransition.Path = statePath;
 				stateTransition.ChangeStampBefore = stateful.ChangeStamp;
 
 				await ExecuteActionsAsync(statePathConfiguration.PreActions, stateful, stateTransition, actionArguments);
 
-				stateful.State = path.NextState;
+				stateful.State = statePath.NextState;
 
-				stateful.ChangeStamp &= path.ChangeStampANDMask;
-				stateful.ChangeStamp |= path.ChangeStampORMask;
+				stateful.ChangeStamp &= statePath.ChangeStampANDMask;
+				stateful.ChangeStamp |= statePath.ChangeStampORMask;
 
 				stateTransition.ChangeStampAfter = stateful.ChangeStamp;
 
@@ -591,6 +597,132 @@ namespace Grammophone.Domos.Logic
 			return allowedNextPath;
 		}
 
+		/// <summary>
+		/// Execute a path on a batch of stateful objects.
+		/// </summary>
+		/// <param name="statefulObjectsQuery">The query defining the stateful objects.</param>
+		/// <param name="statePath">The state path to be executed.</param>
+		/// <param name="actionArguments">
+		/// The common arguments to be passed to all path actions. If "batchID" key is missing
+		/// from the arguments, it will be added with a new GUID.
+		/// </param>
+		/// <returns>
+		/// Returns a collection of <see cref="ExecutionResult{SO, ST}"/> items
+		/// for each stateful object.
+		/// </returns>
+		/// <remarks>
+		/// For best performance, the <see cref="StatePath.PreviousState"/>,
+		/// <see cref="StatePath.NextState"/> and <see cref="StatePath.WorkflowGraph"/>
+		/// properties of the <paramref name="statePath"/> must be eagerly loaded.
+		/// </remarks>
+		public async Task<IReadOnlyCollection<ExecutionResult<SO, ST>>> ExecuteStatePathBatchAsync(
+			IQueryable<SO> statefulObjectsQuery,
+			StatePath statePath,
+			IDictionary<string, object> actionArguments)
+		{
+			if (statefulObjectsQuery == null) throw new ArgumentNullException(nameof(statefulObjectsQuery));
+			if (statePath == null) throw new ArgumentNullException(nameof(statePath));
+			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
+
+			if (!actionArguments.ContainsKey("batchID"))
+			{
+				actionArguments["batchID"] = Guid.NewGuid().ToString("N");
+			}
+
+			statefulObjectsQuery = statefulObjectsQuery.Include(so => so.State);
+
+			var statefulObjects = await statefulObjectsQuery.ToListAsync();
+
+			var executionResults = new List<ExecutionResult<SO, ST>>(statefulObjects.Count);
+
+			foreach (var statefulObject in statefulObjects)
+			{
+				var result = new ExecutionResult<SO, ST>
+				{
+					StatefulObject = statefulObject
+				};
+
+				try
+				{
+					var transition = await this.ExecuteStatePathAsync(
+						statefulObject,
+						statePath,
+						actionArguments);
+
+					result.StateTransition = transition;
+				}
+				catch (Exception ex)
+				{
+					result.Exception = ex;
+				}
+
+				executionResults.Add(result);
+			}
+
+			return executionResults;
+		}
+
+		/// <summary>
+		/// Execute a path on a batch of stateful objects.
+		/// </summary>
+		/// <param name="statefulObjectsQuery">The query defining the stateful objects.</param>
+		/// <param name="pathCodeName">The <see cref="StatePath.CodeName"/> of the path.</param>
+		/// <param name="actionArguments">
+		/// The common arguments to be passed to all path actions. If "batchID" key is missing
+		/// from the arguments, it will be added with a new GUID.
+		/// </param>
+		/// <returns>
+		/// Returns a collection of <see cref="ExecutionResult{SO, ST}"/> items
+		/// for each stateful object.
+		/// </returns>
+		/// <exception cref="LogicException">
+		/// Thrown when no state path exists having
+		/// the given <paramref name="pathCodeName"/>.
+		/// </exception>
+		public async Task<IReadOnlyCollection<ExecutionResult<SO, ST>>> ExecuteStatePathBatchAsync(
+			IQueryable<SO> statefulObjectsQuery,
+			string pathCodeName,
+			IDictionary<string, object> actionArguments)
+		{
+			if (statefulObjectsQuery == null) throw new ArgumentNullException(nameof(statefulObjectsQuery));
+			if (pathCodeName == null) throw new ArgumentNullException(nameof(pathCodeName));
+			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
+
+			var statePath = await FindStatePathAsync(pathCodeName);
+
+			return await ExecuteStatePathBatchAsync(statefulObjectsQuery, statePath, actionArguments);
+		}
+
+		/// <summary>
+		/// Execute a path on a batch of stateful objects.
+		/// </summary>
+		/// <param name="statefulObjectsQuery">The query defining the stateful objects.</param>
+		/// <param name="statePathID">The ID of the state path.</param>
+		/// <param name="actionArguments">
+		/// The common arguments to be passed to all path actions. If "batchID" key is missing
+		/// from the arguments, it will be added with a new GUID.
+		/// </param>
+		/// <returns>
+		/// Returns a collection of <see cref="ExecutionResult{SO, ST}"/> items
+		/// for each stateful object.
+		/// </returns>
+		/// <exception cref="LogicException">
+		/// Thrown when no state path exists having
+		/// the given <paramref name="statePathID"/>.
+		/// </exception>
+		public async Task<IReadOnlyCollection<ExecutionResult<SO, ST>>> ExecuteStatePathBatchAsync(
+			IQueryable<SO> statefulObjectsQuery,
+			long statePathID,
+			IDictionary<string, object> actionArguments)
+		{
+			if (statefulObjectsQuery == null) throw new ArgumentNullException(nameof(statefulObjectsQuery));
+			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
+
+			var statePath = await FindStatePathAsync(statePathID);
+
+			return await ExecuteStatePathBatchAsync(statefulObjectsQuery, statePath, actionArguments);
+		}
+
 		#endregion
 
 		#region Protected methods
@@ -598,7 +730,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Gets the set of stateful objects which can be managed by this manager.
 		/// </summary>
-		protected abstract IQueryable<SO> GetManagedStatefulObjects();
+		protected internal abstract IQueryable<SO> GetManagedStatefulObjects();
 
 		#endregion
 
