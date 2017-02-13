@@ -9,16 +9,16 @@ using System.Xml.Serialization;
 namespace Grammophone.Domos.Logic.Models.FundsTransfer
 {
 	/// <summary>
-	/// A batch of fund requests.
+	/// A batch of responses for funds requests.
 	/// </summary>
 	[Serializable]
-	public class FundsRequestBatch
+	public class FundsResponseBatch
 	{
 		#region Private fields
 
-		private FundsRequestBatchItems items;
-
 		private DateTime date;
+
+		private FundsResponseBatchItems items;
 
 		private string creditSystemCodeName;
 
@@ -29,9 +29,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <summary>
 		/// Create.
 		/// </summary>
-		public FundsRequestBatch()
+		public FundsResponseBatch()
 		{
-			this.Items = new FundsRequestBatchItems();
 		}
 
 		/// <summary>
@@ -41,7 +40,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <param name="date">The date of the batch in UTC.</param>
 		/// <param name="capacity">The initial capacity of items to reserve.</param>
 		/// <param name="batchID">Optional ID of the batch.</param>
-		public FundsRequestBatch(
+		public FundsResponseBatch(
 			string creditSystemCodeName,
 			DateTime date,
 			int capacity,
@@ -50,10 +49,10 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			if (creditSystemCodeName == null) throw new ArgumentNullException(nameof(creditSystemCodeName));
 			if (date.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(date));
 
-			this.items = new FundsRequestBatchItems(capacity);
+			this.items = new FundsResponseBatchItems(capacity);
 
 			this.creditSystemCodeName = creditSystemCodeName;
-			this.Date = date;
+			this.date = date;
 			this.BatchID = batchID;
 		}
 
@@ -62,11 +61,23 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		#region Public properties
 
 		/// <summary>
-		/// The optional ID of the batch.
+		/// The code name of the credit system.
 		/// </summary>
-		[MaxLength(225)]
 		[XmlAttribute]
-		public string BatchID { get; set; }
+		[Required]
+		public string CreditSystemCodeName
+		{
+			get
+			{
+				return creditSystemCodeName;
+			}
+			set
+			{
+				if (value == null) throw new ArgumentNullException(nameof(value));
+
+				creditSystemCodeName = value;
+			}
+		}
 
 		/// <summary>
 		/// The date and time, in UTC.
@@ -88,29 +99,16 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		}
 
 		/// <summary>
-		/// The code name of the credit system where this
-		/// batch request is executed.
+		/// The optional ID of the batch.
 		/// </summary>
-		[Required]
+		[MaxLength(225)]
 		[XmlAttribute]
-		public string CreditSystemCodeName
-		{
-			get
-			{
-				return creditSystemCodeName;
-			}
-			set
-			{
-				if (value == null) throw new ArgumentNullException(nameof(value));
-
-				creditSystemCodeName = value;
-			}
-		}
+		public string BatchID { get; set; }
 
 		/// <summary>
-		/// The request items in the batch.
+		/// The response items in the batch.
 		/// </summary>
-		public FundsRequestBatchItems Items
+		public FundsResponseBatchItems Items
 		{
 			get
 			{

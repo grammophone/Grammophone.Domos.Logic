@@ -95,6 +95,9 @@
     <Compile Include="Models\FundsTransfer\FundsRequestBatch.cs" />
     <Compile Include="Models\FundsTransfer\FundsRequestBatchItem.cs" />
     <Compile Include="Models\FundsTransfer\FundsRequestBatchItems.cs" />
+    <Compile Include="Models\FundsTransfer\FundsResponseBatch.cs" />
+    <Compile Include="Models\FundsTransfer\FundsResponseBatchItem.cs" />
+    <Compile Include="Models\FundsTransfer\FundsResponseBatchItems.cs" />
     <Compile Include="Models\Workflow\ExecutionResult.cs" />
     <Compile Include="ParameterSpecification.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

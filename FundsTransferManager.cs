@@ -206,11 +206,11 @@ namespace Grammophone.Domos.Logic
 			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
 			if (fundsTransferRequests == null) throw new ArgumentNullException(nameof(fundsTransferRequests));
 
-			var batch = new FundsRequestBatch(fundsTransferRequests.Count);
-
-			batch.CreditSystemCodeName = creditSystem.CodeName;
-			batch.BatchID = batchID;
-			batch.Date = DateTime.UtcNow;
+			var batch = new FundsRequestBatch(
+				creditSystem.CodeName,
+				DateTime.UtcNow,
+				fundsTransferRequests.Count,
+				batchID);
 
 			using (var transaction = this.DomainContainer.BeginTransaction())
 			{
