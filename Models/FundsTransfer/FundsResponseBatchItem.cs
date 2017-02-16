@@ -37,9 +37,9 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		public virtual string TraceCode { get; set; }
 
 		/// <summary>
-		/// The type of this transfer event.
+		/// The type of this item.
 		/// </summary>
-		public virtual FundsTransferEventType Type { get; set; }
+		public virtual FundsResponseBatchItemType Type { get; set; }
 
 		/// <summary>
 		/// Optional comments.
