@@ -60,7 +60,7 @@ namespace Grammophone.Domos.Logic
 
 		private WorkflowManager<U, BST, D, S, ST, SO> workflowManager;
 
-		private SequentialMRUCache<string, Task<StatePath>> statePathsByCodeNameCache;
+		private AsyncSequentialMRUCache<string, StatePath> statePathsByCodeNameCache;
 
 		#endregion
 
@@ -85,7 +85,7 @@ namespace Grammophone.Domos.Logic
 			this.workflowManager = workflowManager;
 
 			this.statePathsByCodeNameCache = 
-				new SequentialMRUCache<string, Task<StatePath>>(LoadStatePathAsync);
+				new AsyncSequentialMRUCache<string, StatePath>(LoadStatePathAsync);
 		}
 
 		#endregion
@@ -208,6 +208,11 @@ namespace Grammophone.Domos.Logic
 		/// Returns a collection of results describing the execution outcome of the
 		/// contents of the <paramref name="batch"/>.
 		/// </returns>
+		/// <remarks>
+		/// Each action in paths being executed will receive an arguments dictionary
+		/// containing at least a key 'batchItem' with value
+		/// of type <see cref="FundsResponseBatchItem"/>.
+		/// </remarks>
 		public async Task<IReadOnlyCollection<FundsResponseResult<SO, ST>>> AcceptFundsTransferResponseBatchAsync(
 			FundsResponseBatch batch)
 		{
