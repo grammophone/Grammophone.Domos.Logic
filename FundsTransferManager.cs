@@ -5,12 +5,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using Grammophone.Caching;
 using Grammophone.Domos.Accounting;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Accounting;
 using Grammophone.Domos.Domain.Workflow;
 using Grammophone.Domos.Logic.Models.FundsTransfer;
+using Grammophone.Domos.Logic.Models.Workflow;
 
 namespace Grammophone.Domos.Logic
 {
@@ -58,6 +60,8 @@ namespace Grammophone.Domos.Logic
 
 		private WorkflowManager<U, BST, D, S, ST, SO> workflowManager;
 
+		private SequentialMRUCache<string, Task<StatePath>> statePathsByCodeNameCache;
+
 		#endregion
 
 		#region Construction
@@ -79,6 +83,9 @@ namespace Grammophone.Domos.Logic
 
 			this.accountingSession = accountingSession;
 			this.workflowManager = workflowManager;
+
+			this.statePathsByCodeNameCache = 
+				new SequentialMRUCache<string, Task<StatePath>>(LoadStatePathAsync);
 		}
 
 		#endregion
@@ -190,9 +197,76 @@ namespace Grammophone.Domos.Logic
 			return accountingSession.FilterPendingFundsTransferRequests(creditSystemID, query, includeSubmitted);
 		}
 
+		/// <summary>
+		/// Accepts a funds transfer response batch from a credit system
+		/// and execute the appropriate state paths 
+		/// asp specified by the <see cref="GetNextStatePathCodeName(string, FundsResponseBatchItem)"/> method
+		/// on the corresponding stateful objects.
+		/// </summary>
+		/// <param name="batch">The response batch to accept.</param>
+		/// <returns>
+		/// Returns a collection of results describing the execution outcome of the
+		/// contents of the <paramref name="batch"/>.
+		/// </returns>
+		public async Task<IReadOnlyCollection<FundsResponseResult<SO, ST>>> AcceptFundsTransferResponseBatchAsync(
+			FundsResponseBatch batch)
+		{
+			if (batch == null) throw new ArgumentNullException(nameof(batch));
+
+			if (String.IsNullOrWhiteSpace(batch.CreditSystemCodeName))
+				throw new ArgumentException(
+					$"The {nameof(batch.CreditSystemCodeName)} property of the batch is not set.",
+					nameof(batch));
+
+			var creditSystem = 
+				await this.DomainContainer.CreditSystems.SingleAsync(cs => cs.CodeName == batch.CreditSystemCodeName);
+
+			var date = batch.Date;
+
+			string[] transactionIDs = batch.Items.Select(i => i.TransactionID).ToArray();
+
+			var statefulObjectsQuery = from so in this.workflowManager.GetManagedStatefulObjects()
+																 from st in so.StateTransitions
+																 where st.FundsTransferEvent != null
+																 let ftr = st.FundsTransferEvent.Request
+																 where transactionIDs.Contains(ftr.TransactionID)
+																 select new
+																 {
+																	 StatefulObject = so,
+																	 State = so.State, // Force including the State property.
+																	 TransactionID = ftr.TransactionID
+																 };
+
+			var statefulObjectsByTransactionID = await statefulObjectsQuery
+				.ToDictionaryAsync(r => r.TransactionID, r => r.StatefulObject);
+
+			var responseResults = new List<FundsResponseResult<SO, ST>>(batch.Items.Count);
+
+			foreach (var item in batch.Items)
+			{
+				var fundsResponseResult = 
+					await AcceptFundsTransferResponseItemAsync(statefulObjectsByTransactionID, item);
+
+				responseResults.Add(fundsResponseResult);
+			}
+
+			return responseResults;
+		}
+
 		#endregion
 
 		#region Protected methods
+
+		/// <summary>
+		/// Decide the state path to execute on a stateful object
+		/// when a <see cref="FundsResponseBatchItem"/> arrives for it.
+		/// </summary>
+		/// <param name="stateCodeName">The code name of the current state.</param>
+		/// <param name="fundsResponseBatchItem">The batch line arriving for the stateful object.</param>
+		/// <returns>Returns the code name of the path to execute or null to execute none.</returns>
+		protected abstract string GetNextStatePathCodeName(
+			string stateCodeName,
+			FundsResponseBatchItem fundsResponseBatchItem);
 
 		#endregion
 
@@ -236,6 +310,78 @@ namespace Grammophone.Domos.Logic
 			}
 
 			return batch;
+		}
+
+		/// <summary>
+		/// Supports the cache miss of <see cref="statePathsByCodeNameCache"/>.
+		/// </summary>
+		private async Task<StatePath> LoadStatePathAsync(string statePathCodeName)
+			=> await this.DomainContainer.StatePaths
+			.Include(sp => sp.NextState)
+			.Include(sp => sp.PreviousState)
+			.Include(sp => sp.WorkflowGraph)
+			.SingleAsync(sp => sp.CodeName == statePathCodeName);
+
+		private async Task<FundsResponseResult<SO, ST>> AcceptFundsTransferResponseItemAsync(
+			Dictionary<string, SO> statefulObjectsByTransactionID,
+			FundsResponseBatchItem item)
+		{
+			if (statefulObjectsByTransactionID == null) throw new ArgumentNullException(nameof(statefulObjectsByTransactionID));
+			if (item == null) throw new ArgumentNullException(nameof(item));
+
+			var actionArguments = new Dictionary<string, object>
+			{
+				["batchItem"] = item
+			};
+
+			var fundsResponseResult = new FundsResponseResult<SO, ST>
+			{
+				BatchItem = item,
+				ExecutionResult = new ExecutionResult<SO, ST>()
+			};
+
+			try
+			{
+				SO statefulObject;
+
+				if (statefulObjectsByTransactionID.TryGetValue(item.TransactionID, out statefulObject))
+				{
+					fundsResponseResult.ExecutionResult.StatefulObject = statefulObject;
+
+					string currentStateCodeName = statefulObject.State.CodeName;
+
+					string nextStatePathCodeName = GetNextStatePathCodeName(currentStateCodeName, item);
+
+					if (nextStatePathCodeName == null)
+					{
+						fundsResponseResult.ExecutionResult.Exception =
+							new LogicException(
+								$"No next path is defined from state '{currentStateCodeName}' when batch item response type is '{item.Type}'.");
+					}
+					else
+					{
+						var statePath = await statePathsByCodeNameCache.Get(nextStatePathCodeName);
+
+						var transition = await workflowManager.ExecuteStatePathAsync(
+							statefulObject,
+							statePath,
+							actionArguments);
+
+						fundsResponseResult.ExecutionResult.StateTransition = transition;
+					}
+				}
+				else
+				{
+					fundsResponseResult.ExecutionResult.Exception =
+						new LogicException($"No stateful object is associated with transaction ID '{item.TransactionID}'");
+				}
+			}
+			catch (Exception ex)
+			{
+				fundsResponseResult.ExecutionResult.Exception = ex;
+			}
+
+			return fundsResponseResult;
 		}
 
 		#endregion

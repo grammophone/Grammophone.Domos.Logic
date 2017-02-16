@@ -92,6 +92,7 @@
     <Compile Include="Loggable.cs" />
     <Compile Include="LogicException.cs" />
     <Compile Include="Manager.cs" />
+    <Compile Include="Models\FundsTransfer\FundsResponseResult.cs" />
     <Compile Include="Models\FundsTransfer\FundsRequestBatch.cs" />
     <Compile Include="Models\FundsTransfer\FundsRequestBatchItem.cs" />
     <Compile Include="Models\FundsTransfer\FundsRequestBatchItems.cs" />
@@ -160,6 +161,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Models\FundsTransfer\FundsRequestBatch.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Models\FundsTransfer\FundsResponseBatch.xsd">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

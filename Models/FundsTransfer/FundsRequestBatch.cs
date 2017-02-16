@@ -12,6 +12,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 	/// A batch of fund requests.
 	/// </summary>
 	[Serializable]
+	[XmlRoot(Namespace = "urn:grammophone-domos/fundstransfer/requestbatch")]
 	public class FundsRequestBatch
 	{
 		#region Private fields
@@ -65,7 +66,6 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// The optional ID of the batch.
 		/// </summary>
 		[MaxLength(225)]
-		[XmlAttribute]
 		public string BatchID { get; set; }
 
 		/// <summary>

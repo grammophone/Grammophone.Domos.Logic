@@ -624,14 +624,46 @@ namespace Grammophone.Domos.Logic
 			if (statePath == null) throw new ArgumentNullException(nameof(statePath));
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
 
+			statefulObjectsQuery = statefulObjectsQuery.Include(so => so.State);
+
+			var statefulObjects = await statefulObjectsQuery.ToListAsync();
+
+			return await ExecuteStatePathBatchAsync(statefulObjects, statePath, actionArguments);
+		}
+
+		/// <summary>
+		/// Execute a path on a batch of stateful objects.
+		/// </summary>
+		/// <param name="statefulObjects">The stateful objects.</param>
+		/// <param name="statePath">The state path to be executed.</param>
+		/// <param name="actionArguments">
+		/// The common arguments to be passed to all path actions. If "batchID" key is missing
+		/// from the arguments, it will be added with a new GUID.
+		/// </param>
+		/// <returns>
+		/// Returns a collection of <see cref="ExecutionResult{SO, ST}"/> items
+		/// for each stateful object.
+		/// </returns>
+		/// <remarks>
+		/// For best performance, the <see cref="StatePath.PreviousState"/>,
+		/// <see cref="StatePath.NextState"/> and <see cref="StatePath.WorkflowGraph"/>
+		/// properties of the <paramref name="statePath"/> must be eagerly loaded
+		/// as well as the <see cref="IStateful{U, ST}.State"/> 
+		/// of the <paramref name="statefulObjects"/>.
+		/// </remarks>
+		public async Task<IReadOnlyCollection<ExecutionResult<SO, ST>>> ExecuteStatePathBatchAsync(
+			IReadOnlyList<SO> statefulObjects,
+			StatePath statePath,
+			IDictionary<string, object> actionArguments)
+		{
+			if (statefulObjects == null) throw new ArgumentNullException(nameof(statefulObjects));
+			if (statePath == null) throw new ArgumentNullException(nameof(statePath));
+			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
+
 			if (!actionArguments.ContainsKey("batchID"))
 			{
 				actionArguments["batchID"] = Guid.NewGuid().ToString("N");
 			}
-
-			statefulObjectsQuery = statefulObjectsQuery.Include(so => so.State);
-
-			var statefulObjects = await statefulObjectsQuery.ToListAsync();
 
 			var executionResults = new List<ExecutionResult<SO, ST>>(statefulObjects.Count);
 

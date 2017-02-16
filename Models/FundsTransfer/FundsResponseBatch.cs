@@ -12,6 +12,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 	/// A batch of responses for funds requests.
 	/// </summary>
 	[Serializable]
+	[XmlRoot(Namespace = "urn:grammophone-domos/fundstransfer/responsebatch")]
 	public class FundsResponseBatch
 	{
 		#region Private fields
