@@ -644,7 +644,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="textWriter">The writer used for output.</param>
 		/// <param name="model">The model.</param>
 		/// <param name="dynamicProperties">Optional dynamic properties.</param>
-		void RenderTemplate<M>(
+		public void RenderTemplate<M>(
 			string templateKey,
 			System.IO.TextWriter textWriter,
 			M model,
@@ -661,7 +661,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="templateKey">The key of the template.</param>
 		/// <param name="textWriter">The writer used for output.</param>
 		/// <param name="dynamicProperties">The dynamic properties.</param>
-		void RenderTemplate(
+		public void RenderTemplate(
 			string templateKey,
 			System.IO.TextWriter textWriter,
 			IDictionary<string, object> dynamicProperties)
@@ -669,6 +669,43 @@ namespace Grammophone.Domos.Logic
 			var renderProvider = this.DIContainer.Resolve<IRenderProvider>();
 
 			renderProvider.Render(templateKey, textWriter, dynamicProperties);
+		}
+
+		/// <summary>
+		/// Render a template to string using a strong-type <paramref name="model"/>.
+		/// </summary>
+		/// <typeparam name="M">The type of the model.</typeparam>
+		/// <param name="templateKey">The key of the template.</param>
+		/// <param name="model">The model.</param>
+		/// <param name="dynamicProperties">Optional dynamic properties.</param>
+		public string RenderTemplateToString<M>(
+			string templateKey,
+			M model,
+			IDictionary<string, object> dynamicProperties = null)
+		{
+			using (var writer = new System.IO.StringWriter())
+			{
+				RenderTemplate(templateKey, writer, model, dynamicProperties);
+
+				return writer.ToString();
+			}
+		}
+
+		/// <summary>
+		/// Render a template to string.
+		/// </summary>
+		/// <param name="templateKey">The key of the template.</param>
+		/// <param name="dynamicProperties">The dynamic properties.</param>
+		public string RenderTemplateToString(
+			string templateKey,
+			IDictionary<string, object> dynamicProperties)
+		{
+			using (var writer = new System.IO.StringWriter())
+			{
+				RenderTemplate(templateKey, writer, dynamicProperties);
+
+				return writer.ToString();
+			}
 		}
 
 		/// <summary>

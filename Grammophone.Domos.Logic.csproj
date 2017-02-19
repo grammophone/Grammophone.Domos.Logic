@@ -106,7 +106,6 @@
     <Compile Include="Configuration\StatePathConfiguration.cs" />
     <Compile Include="PublicDomain.cs" />
     <Compile Include="StandardArgumentKeys.cs" />
-    <Compile Include="StandardClaimArgumentKeys.cs" />
     <Compile Include="UserException.cs" />
     <Compile Include="Session.cs" />
     <Compile Include="UsersPublicDomain.cs" />
