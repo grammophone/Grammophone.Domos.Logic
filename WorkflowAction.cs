@@ -84,6 +84,43 @@ namespace Grammophone.Domos.Logic
 		protected static void ElevateTransactionAccessRights(S session, ITransaction transaction)
 			=> session.ElevateTransactionAccessRights(transaction);
 
+		/// <summary>
+		/// Get the value of a parameter inside the action arguments.
+		/// </summary>
+		/// <typeparam name="T">The type of the value.</typeparam>
+		/// <param name="actionArguments">The action arguments.</param>
+		/// <param name="parameterKey">The key of the parameter.</param>
+		/// <param name="isRequired">If true, treat the parameter as a required one.</param>
+		/// <returns>
+		/// Returns the value found in <paramref name="actionArguments"/> or
+		/// the default value of <typeparamref name="T"/> if <paramref name="isRequired"/> is false.
+		/// </returns>
+		/// <exception cref="ArgumentException">
+		/// Thrown when the parameter is not found in <paramref name="actionArguments"/>
+		/// and the <paramref name="isRequired"/> is true.
+		/// </exception>
+		protected T GetParameterValue<T>(IDictionary<string, object> actionArguments, string parameterKey, bool isRequired)
+		{
+			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
+			if (parameterKey == null) throw new ArgumentNullException(nameof(parameterKey));
+
+			object valueObject;
+
+			if (actionArguments.TryGetValue(parameterKey, out valueObject))
+			{
+				return (T)valueObject;
+			}
+			else
+			{
+				if (isRequired)
+					throw new ArgumentException(
+						$"The required parameter '{parameterKey}' does not exist in the action arguments.",
+						nameof(actionArguments));
+
+				return default(T);
+			}
+		}
+
 		#endregion
 	}
 }
