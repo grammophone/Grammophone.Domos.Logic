@@ -121,7 +121,9 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 		/// <summary>
 		/// Consume the billing item, and if it is a successful one,
-		/// turn it into a persisted accounting journal.
+		/// turn it into a persisted accounting journal. This method receives
+		/// a <paramref name="domainContainer"/> with elevated access rights,
+		/// suitable for accounting actions which typically touch private data.
 		/// </summary>
 		/// <param name="domainContainer">The domain container.</param>
 		/// <param name="user">The acting user.</param>
