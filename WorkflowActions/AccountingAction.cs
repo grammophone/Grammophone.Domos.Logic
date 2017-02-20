@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Grammophone.Domos.Accounting;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Accounting;
@@ -73,18 +74,23 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 			using (var transaction = domainContainer.BeginTransaction())
 			{
-				ElevateTransactionAccessRights(session, transaction);
+				ElevateTransactionAccessRights(session, transaction); // Needed because accounting touches private data.
 
-				J journal = await ExecuteAccountingAsync(
+				var result = await ExecuteAccountingAsync(
 					domainContainer,
 					session.User,
 					stateful,
 					date,
 					billingItem);
 
-				if (journal != null)
+				if (result.Journal != null)
 				{
-					journal.StateTransition = stateTransition;
+					result.Journal.StateTransition = stateTransition;
+				}
+
+				if (result.FundsTransferEvent != null)
+				{
+					stateTransition.FundsTransferEvent = result.FundsTransferEvent;
 				}
 
 				await transaction.CommitAsync();
@@ -120,8 +126,8 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		#region Protected methods
 
 		/// <summary>
-		/// Consume the billing item, and if it is a successful one,
-		/// turn it into a persisted accounting journal. This method receives
+		/// Override to consume the billing item and return an accounting result. 
+		/// This method receives
 		/// a <paramref name="domainContainer"/> with elevated access rights,
 		/// suitable for accounting actions which typically touch private data.
 		/// </summary>
@@ -131,9 +137,9 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// <param name="utcDate">The date, in UTC.</param>
 		/// <param name="billingItem">The billing item.</param>
 		/// <returns>
-		/// If the billing item is successful, returns the persisted accounting journal, else null.
+		/// Returns the result of the accounting action.
 		/// </returns>
-		protected abstract Task<J> ExecuteAccountingAsync(
+		protected abstract Task<AccountingSession<U, BST, A, P, R, J, D>.ActionResult> ExecuteAccountingAsync(
 			D domainContainer,
 			U user,
 			SO stateful,
