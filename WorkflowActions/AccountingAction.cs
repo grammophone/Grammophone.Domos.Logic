@@ -69,7 +69,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 			DateTime date = GetDate(actionArguments);
 
-			var billingItem = GetFundsTransferResponseBatchItem(actionArguments);
+			var billingItem = GetBillingItem(actionArguments);
 
 			using (var transaction = domainContainer.BeginTransaction())
 			{
@@ -147,7 +147,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// Thrown when there is no entry for the billing item
 		/// in the <paramref name="actionArguments"/>.
 		/// </exception>
-		protected B GetFundsTransferResponseBatchItem(IDictionary<string, object> actionArguments)
+		protected B GetBillingItem(IDictionary<string, object> actionArguments)
 			=> GetParameterValue<B>(actionArguments, StandardArgumentKeys.BillingItem, true);
 
 		/// <summary>
