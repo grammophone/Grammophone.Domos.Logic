@@ -79,7 +79,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Date and time of Response (UTC).
+        ///   Looks up a localized string similar to Date and time of billing (UTC).
         /// </summary>
         internal static string DATE_CAPTION {
             get {
@@ -88,7 +88,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The date and time (UTC) where the batch response was issued..
+        ///   Looks up a localized string similar to The date and time (UTC) where the billing was issued..
         /// </summary>
         internal static string DATE_DESCRIPTION {
             get {

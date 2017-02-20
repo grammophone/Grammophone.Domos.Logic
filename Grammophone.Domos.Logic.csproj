@@ -192,6 +192,7 @@
       <LastGenOutput>FilesManagerMessages.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="FilesManagerMessages.fr.resx" />
+    <EmbeddedResource Include="WorkflowActions\AccountingActionResources.fr.resx" />
     <EmbeddedResource Include="WorkflowActions\AccountingActionResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>AccountingActionResources.Designer.cs</LastGenOutput>

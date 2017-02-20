@@ -118,15 +118,15 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="BILLING_ITEM_CAPTION" xml:space="preserve">
-    <value>Billing Item</value>
+    <value>Article de Facturation</value>
   </data>
   <data name="BILLING_ITEM_DESCRIPTION" xml:space="preserve">
-    <value>An object representing a billing transaction.</value>
+    <value>Objet qui représente une transaction de facturation.</value>
   </data>
   <data name="DATE_CAPTION" xml:space="preserve">
-    <value>Date and time of billing (UTC)</value>
+    <value>Date et heure de facturation (UTC)</value>
   </data>
   <data name="DATE_DESCRIPTION" xml:space="preserve">
-    <value>The date and time (UTC) where the billing was issued.</value>
+    <value>La date et l’heure (UTC), où la facturation a été émise.</value>
   </data>
 </root>
