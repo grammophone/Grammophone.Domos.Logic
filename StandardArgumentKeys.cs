@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Grammophone.Domos.Domain.Accounting;
-using Grammophone.Domos.Logic.Models.FundsTransfer;
 
 namespace Grammophone.Domos.Logic
 {
@@ -27,8 +26,19 @@ namespace Grammophone.Domos.Logic
 		public const string TransactionID = nameof(TransactionID);
 
 		/// <summary>
-		/// Specifies a <see cref="FundsResponseBatchItem"/>.
+		/// Specifies a <see cref="BillingItem"/>.
 		/// </summary>
 		public const string BatchItem = nameof(BatchItem);
+
+		/// <summary>
+		/// Specifies a <see cref="DateTime"/> of type <see cref="DateTimeKind.Utc"/>.
+		/// </summary>
+		public const string Date = nameof(Date);
+
+		/// <summary>
+		/// Parameter key for 
+		/// a <see cref="Models.FundsTransfer.FundsResponseBatchItem"/>.
+		/// </summary>
+		public const string BillingItem = nameof(BillingItem);
 	}
 }

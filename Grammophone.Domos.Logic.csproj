@@ -109,8 +109,14 @@
     <Compile Include="UserException.cs" />
     <Compile Include="Session.cs" />
     <Compile Include="UsersPublicDomain.cs" />
-    <Compile Include="WorkflowAction.cs" />
-    <Compile Include="WorkflowActionValidationException.cs" />
+    <Compile Include="WorkflowActions\WorkflowAction.cs" />
+    <Compile Include="WorkflowActions\AccountingAction.cs" />
+    <Compile Include="WorkflowActions\AccountingActionResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AccountingActionResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="StatePathArgumentsException.cs" />
     <Compile Include="WorkflowManager.cs" />
     <Compile Include="WorkflowManagerMessages.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -186,6 +192,10 @@
       <LastGenOutput>FilesManagerMessages.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="FilesManagerMessages.fr.resx" />
+    <EmbeddedResource Include="WorkflowActions\AccountingActionResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>AccountingActionResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="WorkflowManagerMessages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>WorkflowManagerMessages.Designer.cs</LastGenOutput>

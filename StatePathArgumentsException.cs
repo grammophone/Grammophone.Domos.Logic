@@ -12,7 +12,7 @@ namespace Grammophone.Domos.Logic
 	/// are not valid.
 	/// </summary>
 	[Serializable]
-	public class WorkflowActionValidationException : UserException
+	public class StatePathArgumentsException : UserException
 	{
 		/// <summary>
 		/// Create.
@@ -21,7 +21,7 @@ namespace Grammophone.Domos.Logic
 		/// A dictionary of validation error messages grouped by
 		/// parameter key.
 		/// </param>
-		internal WorkflowActionValidationException(IDictionary<string, ICollection<string>> validationErrors)
+		internal StatePathArgumentsException(IDictionary<string, ICollection<string>> validationErrors)
 			: base(WorkflowManagerMessages.INVALID_ACTION_PARAMETERS)
 		{
 			if (validationErrors == null) throw new ArgumentNullException(nameof(validationErrors));
@@ -32,7 +32,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Used for serialization.
 		/// </summary>
-		protected WorkflowActionValidationException(
+		protected StatePathArgumentsException(
 		System.Runtime.Serialization.SerializationInfo info,
 		System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
 

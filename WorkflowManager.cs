@@ -103,7 +103,7 @@ namespace Grammophone.Domos.Logic
 		/// <exception cref="AccessDeniedDomainException">
 		/// Thrown when the session user has no right to execute the state path.
 		/// </exception>
-		/// <exception cref="WorkflowActionValidationException">
+		/// <exception cref="StatePathArgumentsException">
 		/// Thrown when the <paramref name="actionArguments"/> are not valid
 		/// against the parameter specifications of the path actions.
 		/// </exception>
@@ -138,7 +138,7 @@ namespace Grammophone.Domos.Logic
 		/// <exception cref="AccessDeniedDomainException">
 		/// Thrown when the session user has no right to execute the state path.
 		/// </exception>
-		/// <exception cref="WorkflowActionValidationException">
+		/// <exception cref="StatePathArgumentsException">
 		/// Thrown when the <paramref name="actionArguments"/> are not valid
 		/// against the parameter specifications of the path actions.
 		/// </exception>
@@ -172,7 +172,7 @@ namespace Grammophone.Domos.Logic
 		/// <exception cref="AccessDeniedDomainException">
 		/// Thrown when the session user has no right to execute the state path.
 		/// </exception>
-		/// <exception cref="WorkflowActionValidationException">
+		/// <exception cref="StatePathArgumentsException">
 		/// Thrown when the <paramref name="actionArguments"/> are not valid
 		/// against the parameter specifications of the path actions.
 		/// </exception>
@@ -212,7 +212,7 @@ namespace Grammophone.Domos.Logic
 			var validationErrors = ValidateStatePathArguments(statePath.CodeName, actionArguments);
 
 			if (validationErrors.Count > 0)
-				throw new WorkflowActionValidationException(validationErrors);
+				throw new StatePathArgumentsException(validationErrors);
 
 			ST stateTransition = this.DomainContainer.StateTransitions.Create<ST>();
 

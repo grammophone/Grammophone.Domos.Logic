@@ -8,7 +8,7 @@ using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Workflow;
 
-namespace Grammophone.Domos.Logic
+namespace Grammophone.Domos.Logic.WorkflowActions
 {
 	/// <summary>
 	/// Base for <see cref="IWorkflowAction{U, D, S, ST, SO}"/> implementations
