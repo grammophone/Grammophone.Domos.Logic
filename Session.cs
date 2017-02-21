@@ -879,6 +879,20 @@ namespace Grammophone.Domos.Logic
 		#endregion
 	}
 
+	/// <summary>
+	/// Abstract base for business logic session, which also offers
+	/// a <see cref="PublicDomain"/> data access property.
+	/// </summary>
+	/// <typeparam name="U">
+	/// The type of the user, derived from <see cref="Domain.User"/>.
+	/// </typeparam>
+	/// <typeparam name="D">
+	/// The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.
+	/// </typeparam>
+	/// <typeparam name="PD">
+	/// The type of public domain access instance,
+	/// derived from <see cref="PublicDomain{D}"/>.
+	/// </typeparam>
 	/// <remarks>
 	/// <para>
 	/// Each session depends on a Unity DI container defined in a configuration section.
