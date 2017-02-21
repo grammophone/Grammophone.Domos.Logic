@@ -336,7 +336,7 @@ namespace Grammophone.Domos.Logic
 
 			var actionArguments = new Dictionary<string, object>
 			{
-				[StandardArgumentKeys.BatchItem] = item
+				[StandardArgumentKeys.BillingItem] = item
 			};
 
 			var fundsResponseResult = new FundsResponseResult<SO, ST>
