@@ -8,7 +8,7 @@ namespace Grammophone.Domos.Logic
 {
 	/// <summary>
 	/// Thrown when the arguments passed to ExecuteStatePathAsync methods 
-	/// of <see cref="WorkflowManager{U, BST, D, S, ST, SO}"/>
+	/// of <see cref="WorkflowManager{U, BST, D, S, ST, SO, C}"/>.
 	/// are not valid.
 	/// </summary>
 	[Serializable]

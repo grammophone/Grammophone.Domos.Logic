@@ -14,13 +14,24 @@ namespace Grammophone.Domos.Logic
 	/// Base class for all managers having their own configuration section and handed 
 	/// by <see cref="Session{U, D}"/> descendants.
 	/// </summary>
-	/// <typeparam name="U">The type of the user in the domain container, derived from <see cref="User"/>.</typeparam>
-	/// <typeparam name="D">The type of the domain container, derived from <see cref="IUsersDomainContainer{U}"/>.</typeparam>
-	/// <typeparam name="S">The type of the session, derived from <see cref="Session{U, D}"/>.</typeparam>
-	public abstract class ConfiguredManager<U, D, S> : Manager<U, D, S>
+	/// <typeparam name="U">
+	/// The type of the user in the domain container, derived from <see cref="User"/>.
+	/// </typeparam>
+	/// <typeparam name="D">
+	/// The type of the domain container, derived from <see cref="IUsersDomainContainer{U}"/>.
+	/// </typeparam>
+	/// <typeparam name="S">
+	/// The type of the session, derived from <see cref="Session{U, D}"/>.
+	/// </typeparam>
+	/// <typeparam name="C">
+	/// The type of configurator used to setup the <see cref="ManagerDIContainer"/> property,
+	/// derived from <see cref="Configurator"/>.
+	/// </typeparam>
+	public abstract class ConfiguredManager<U, D, S, C> : Manager<U, D, S>
 		where U : User
 		where D : IUsersDomainContainer<U>
 		where S : Session<U, D>
+		where C : Configurator, new()
 	{
 		#region Constants
 
@@ -48,7 +59,7 @@ namespace Grammophone.Domos.Logic
 		static ConfiguredManager()
 		{
 			diContainersCache = new MRUCache<string, IUnityContainer>(
-				Session<U, D>.CreateDIContainer, 
+				CreateManagerDIContainer, 
 				DIContainersCacheSize);
 		}
 
@@ -74,6 +85,23 @@ namespace Grammophone.Domos.Logic
 		/// The unity container dedicated to this manager.
 		/// </summary>
 		protected IUnityContainer ManagerDIContainer { get; private set; }
+
+		#endregion
+
+		#region Private fields
+
+		private static IUnityContainer CreateManagerDIContainer(string configurationSectionName)
+		{
+			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
+
+			var managerDIContainer = new UnityContainer();
+
+			var configurator = new C();
+
+			configurator.Configure(configurationSectionName, managerDIContainer);
+
+			return managerDIContainer;
+		}
 
 		#endregion
 	}

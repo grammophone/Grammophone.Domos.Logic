@@ -34,18 +34,24 @@ namespace Grammophone.Domos.Logic
 	/// <typeparam name="SO">
 	/// The type of stateful being managed, derived from <see cref="IStateful{U, ST}"/>.
 	/// </typeparam>
+	/// <typeparam name="C">
+	/// The type of configurator used to setup 
+	/// the <see cref="ConfiguredManager{U, D, S, C}.ManagerDIContainer"/> property,
+	/// derived from <see cref="Configurator"/>.
+	/// </typeparam>
 	/// <remarks>
 	/// This manager expects a dedicated Unity DI container for workflow, where at least there 
 	/// are <see cref="StatePathConfiguration{U, D, S, ST, SO}"/> instances named 
 	/// after <see cref="StatePath.CodeName"/> for every <see cref="StatePath"/> in the system.
 	/// </remarks>
-	public abstract class WorkflowManager<U, BST, D, S, ST, SO> : ConfiguredManager<U, D, S>
+	public abstract class WorkflowManager<U, BST, D, S, ST, SO, C> : ConfiguredManager<U, D, S, C>
 		where U : User
 		where BST : StateTransition<U>
 		where D : IWorkflowUsersDomainContainer<U, BST>
 		where S : Session<U, D>
 		where ST : BST, new()
 		where SO : IStateful<U, ST>
+		where C : Configurator, new()
 	{
 		#region Construction
 

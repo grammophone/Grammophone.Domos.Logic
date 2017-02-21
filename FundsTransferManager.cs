@@ -42,7 +42,20 @@ namespace Grammophone.Domos.Logic
 	/// <typeparam name="SO">
 	/// The type of stateful being managed, derived from <see cref="IStateful{U, ST}"/>.
 	/// </typeparam>
-	public abstract class FundsTransferManager<U, BST, A, P, R, J, D, S, ST, SO> : Manager<U, D, S>
+	/// <typeparam name="AS">
+	/// The type of accounting session, derived from <see cref="AccountingSession{U, BST, A, P, R, J, D}"/>.
+	/// </typeparam>
+	/// <typeparam name="C">
+	/// The type of configurator used to setup 
+	/// the <see cref="ConfiguredManager{U, D, S, C}.ManagerDIContainer"/> property
+	/// of the workflow manager associated with this manager,
+	/// derived from <see cref="Configurator"/>.
+	/// </typeparam>
+	/// <typeparam name="W">
+	/// The type of the associated workflow manager,
+	/// derived from <see cref="WorkflowManager{U, BST, D, S, ST, SO, C}"/>.
+	/// </typeparam>
+	public abstract class FundsTransferManager<U, BST, A, P, R, J, D, S, ST, SO, AS, C, W> : Manager<U, D, S>
 		where U : User
 		where BST : StateTransition<U>
 		where A : Account<U>
@@ -53,12 +66,11 @@ namespace Grammophone.Domos.Logic
 		where S : Session<U, D>
 		where ST : BST, new()
 		where SO : IStateful<U, ST>
+		where C : Configurator, new()
+		where W : WorkflowManager<U, BST, D, S, ST, SO, C>
+		where AS : AccountingSession<U, BST, A, P, R, J, D>
 	{
 		#region Private fields
-
-		private AccountingSession<U, BST, A, P, R, J, D> accountingSession;
-
-		private WorkflowManager<U, BST, D, S, ST, SO> workflowManager;
 
 		private AsyncSequentialMRUCache<string, StatePath> statePathsByCodeNameCache;
 
@@ -70,19 +82,19 @@ namespace Grammophone.Domos.Logic
 		/// Create.
 		/// </summary>
 		/// <param name="session">The logic session.</param>
-		/// <param name="accountingSession">The accounting session.</param>
-		/// <param name="workflowManager">The workflow manager.</param>
+		/// <param name="accountingSession">The associated accounting session.</param>
+		/// <param name="workflowManager">The associated workflow manager.</param>
 		protected FundsTransferManager(
 			S session, 
-			AccountingSession<U, BST, A, P, R, J, D> accountingSession,
-			WorkflowManager<U, BST, D, S, ST, SO> workflowManager) 
+			AS accountingSession,
+			W workflowManager) 
 			: base(session)
 		{
 			if (accountingSession == null) throw new ArgumentNullException(nameof(accountingSession));
 			if (workflowManager == null) throw new ArgumentNullException(nameof(workflowManager));
 
-			this.accountingSession = accountingSession;
-			this.workflowManager = workflowManager;
+			this.AccountingSession = accountingSession;
+			this.WorkflowManager = workflowManager;
 
 			this.statePathsByCodeNameCache = 
 				new AsyncSequentialMRUCache<string, StatePath>(LoadStatePathAsync);
@@ -96,6 +108,20 @@ namespace Grammophone.Domos.Logic
 		/// The set of credit systems.
 		/// </summary>
 		public IQueryable<CreditSystem> CreditSystems => this.DomainContainer.CreditSystems;
+
+		#endregion
+
+		#region Protected properties
+
+		/// <summary>
+		/// The associated workflow manager.
+		/// </summary>
+		protected W WorkflowManager { get; private set; }
+
+		/// <summary>
+		/// The associated accounting session.
+		/// </summary>
+		protected AS AccountingSession { get; private set; }
 
 		#endregion
 
@@ -162,7 +188,7 @@ namespace Grammophone.Domos.Logic
 			long creditSystemID,
 			bool includeSubmitted = false)
 		{
-			return accountingSession.FilterPendingFundsTransferRequests(
+			return AccountingSession.FilterPendingFundsTransferRequests(
 				creditSystemID,
 				this.DomainContainer.FundsTransferRequests,
 				includeSubmitted);
@@ -185,7 +211,7 @@ namespace Grammophone.Domos.Logic
 			string stateCodeName,
 			bool includeSubmitted = false)
 		{
-			var query = from so in this.workflowManager.GetManagedStatefulObjects()
+			var query = from so in this.WorkflowManager.GetManagedStatefulObjects()
 									where so.State.CodeName == stateCodeName
 									let lastTransition = so.StateTransitions.OrderByDescending(st => st.ID).FirstOrDefault()
 									where lastTransition != null //&& lastTransition.Path.NextState.CodeName == stateCodeName
@@ -194,7 +220,7 @@ namespace Grammophone.Domos.Logic
 									where e != null
 									select e.Request;
 
-			return accountingSession.FilterPendingFundsTransferRequests(creditSystemID, query, includeSubmitted);
+			return AccountingSession.FilterPendingFundsTransferRequests(creditSystemID, query, includeSubmitted);
 		}
 
 		/// <summary>
@@ -230,7 +256,7 @@ namespace Grammophone.Domos.Logic
 
 			string[] transactionIDs = batch.Items.Select(i => i.TransactionID).ToArray();
 
-			var statefulObjectsQuery = from so in this.workflowManager.GetManagedStatefulObjects()
+			var statefulObjectsQuery = from so in this.WorkflowManager.GetManagedStatefulObjects()
 																 from st in so.StateTransitions
 																 where st.FundsTransferEvent != null
 																 let ftr = st.FundsTransferEvent.Request
@@ -303,7 +329,7 @@ namespace Grammophone.Domos.Logic
 					};
 
 					// Record the submission.
-					await accountingSession.AddFundsTransferEventAsync(
+					await AccountingSession.AddFundsTransferEventAsync(
 						fundsTransferRequest,
 						batch.Date,
 						FundsTransferEventType.Submitted);
@@ -367,7 +393,7 @@ namespace Grammophone.Domos.Logic
 					{
 						var statePath = await statePathsByCodeNameCache.Get(nextStatePathCodeName);
 
-						var transition = await workflowManager.ExecuteStatePathAsync(
+						var transition = await WorkflowManager.ExecuteStatePathAsync(
 							statefulObject,
 							statePath,
 							actionArguments);
