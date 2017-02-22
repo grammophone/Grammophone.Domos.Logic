@@ -45,17 +45,12 @@ namespace Grammophone.Domos.Logic
 	/// <typeparam name="AS">
 	/// The type of accounting session, derived from <see cref="AccountingSession{U, BST, A, P, R, J, D}"/>.
 	/// </typeparam>
-	/// <typeparam name="C">
-	/// The type of configurator used to setup 
-	/// the <see cref="ConfiguredManager{U, D, S, C}.ManagerDIContainer"/> property
-	/// of the workflow manager associated with this manager,
-	/// derived from <see cref="Configurator"/>.
-	/// </typeparam>
 	/// <typeparam name="W">
 	/// The type of the associated workflow manager,
-	/// derived from <see cref="WorkflowManager{U, BST, D, S, ST, SO, C}"/>.
+	/// implementing <see cref="IWorkflowManager{U, ST, SO}"/>.
+	/// Any descendant class from <see cref="WorkflowManager{U, BST, D, S, ST, SO, C}"/> works.
 	/// </typeparam>
-	public abstract class FundsTransferManager<U, BST, A, P, R, J, D, S, ST, SO, AS, C, W> : Manager<U, D, S>
+	public abstract class FundsTransferManager<U, BST, A, P, R, J, D, S, ST, SO, AS, W> : Manager<U, D, S>
 		where U : User
 		where BST : StateTransition<U>
 		where A : Account<U>
@@ -66,8 +61,7 @@ namespace Grammophone.Domos.Logic
 		where S : Session<U, D>
 		where ST : BST, new()
 		where SO : IStateful<U, ST>
-		where C : Configurator, new()
-		where W : WorkflowManager<U, BST, D, S, ST, SO, C>
+		where W : IWorkflowManager<U, ST, SO>
 		where AS : AccountingSession<U, BST, A, P, R, J, D>
 	{
 		#region Private fields

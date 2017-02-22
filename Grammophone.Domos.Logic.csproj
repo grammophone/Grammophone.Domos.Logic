@@ -91,6 +91,7 @@
     </Compile>
     <Compile Include="FundsTransferManager.cs" />
     <Compile Include="IWorkflowAction.cs" />
+    <Compile Include="IWorkflowManager.cs" />
     <Compile Include="Loggable.cs" />
     <Compile Include="LogicException.cs" />
     <Compile Include="Manager.cs" />

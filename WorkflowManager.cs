@@ -44,7 +44,8 @@ namespace Grammophone.Domos.Logic
 	/// are <see cref="StatePathConfiguration{U, D, S, ST, SO}"/> instances named 
 	/// after <see cref="StatePath.CodeName"/> for every <see cref="StatePath"/> in the system.
 	/// </remarks>
-	public abstract class WorkflowManager<U, BST, D, S, ST, SO, C> : ConfiguredManager<U, D, S, C>
+	public abstract class WorkflowManager<U, BST, D, S, ST, SO, C> 
+		: ConfiguredManager<U, D, S, C>, IWorkflowManager<U, ST, SO>
 		where U : User
 		where BST : StateTransition<U>
 		where D : IWorkflowUsersDomainContainer<U, BST>
@@ -98,6 +99,11 @@ namespace Grammophone.Domos.Logic
 		#endregion
 
 		#region Public methods
+
+		IQueryable<SO> IWorkflowManager<U, ST, SO>.GetManagedStatefulObjects()
+		{
+			return this.GetManagedStatefulObjects();
+		}
 
 		/// <summary>
 		/// Execute a state path against a stateful instance.
@@ -768,7 +774,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Gets the set of stateful objects which can be managed by this manager.
 		/// </summary>
-		protected internal abstract IQueryable<SO> GetManagedStatefulObjects();
+		protected abstract IQueryable<SO> GetManagedStatefulObjects();
 
 		#endregion
 
