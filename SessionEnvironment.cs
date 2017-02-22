@@ -13,8 +13,11 @@ using Microsoft.Practices.Unity;
 namespace Grammophone.Domos.Logic
 {
 	/// <summary>
-	/// Binds a session to its configuration environment.
+	/// Binds a session to its configuration environment
+	/// and sets up a unity container using <see cref="Configurator"/>.
 	/// </summary>
+	/// <typeparam name="U">The type of users in the session.</typeparam>
+	/// <typeparam name="D">The type of domain container of the session.</typeparam>
 	internal class SessionEnvironment<U, D>
 		where U : User
 		where D : IUsersDomainContainer<U>
@@ -116,10 +119,11 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Specifies the <see cref="Configurator"/> to use for 
 		/// setting up the <see cref="DIContainer"/>.
+		/// This implementation uses <see cref="DefaultConfigurator"/>.
 		/// </summary>
 		protected virtual Configurator GetConfigurator()
 		{
-			return new Configurator();
+			return new DefaultConfigurator();
 		}
 
 		#endregion
@@ -170,6 +174,46 @@ namespace Grammophone.Domos.Logic
 			return contentTypeAssociations.ToDictionary(
 				a => a.FileExtension.Trim().ToLower(),
 				a => a.MIMEType.Trim());
+		}
+
+		#endregion
+	}
+
+	/// <summary>
+	/// Binds a session to its configuration environment
+	/// and sets up a unity container using a specified configurator.
+	/// </summary>
+	/// <typeparam name="U">The type of users in the session.</typeparam>
+	/// <typeparam name="D">The type of domain container of the session.</typeparam>
+	/// <typeparam name="C">
+	/// The type of configurator to use to setup the <see cref="SessionEnvironment{U, D}.DIContainer"/>
+	/// property.
+	/// </typeparam>
+	internal class SessionEnvironment<U, D, C> : SessionEnvironment<U, D>
+		where U : User
+		where D : IUsersDomainContainer<U>
+		where C : Configurator, new()
+	{
+		#region Construction
+
+		/// <summary>
+		/// Create.
+		/// </summary>
+		/// <param name="configurationSectionName">The name of the Unity configuration section.</param>
+		public SessionEnvironment(string configurationSectionName) : base(configurationSectionName)
+		{
+		}
+
+		#endregion
+
+		#region Protected methods
+
+		/// <summary>
+		/// Returns a configurator of type <typeparamref name="C"/>.
+		/// </summary>
+		protected override Configurator GetConfigurator()
+		{
+			return new C();
 		}
 
 		#endregion

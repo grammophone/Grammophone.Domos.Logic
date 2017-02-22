@@ -11,11 +11,9 @@ namespace Grammophone.Domos.Logic
 {
 	/// <summary>
 	/// Contract for setting up a <see cref="IUnityContainer"/>
-	/// from a configuration section.
-	/// Subclass and override method <see cref="Configure(string, IUnityContainer)"/> 
-	/// to add more registrations to the container.
+	/// from a configuration section and possibly from programmatic registrations.
 	/// </summary>
-	public class Configurator
+	public abstract class Configurator
 	{
 		/// <summary>
 		/// Configure the container by either reading 
@@ -24,20 +22,8 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="configurationSectionName">The name of the configuration section.</param>
 		/// <param name="unityContainer">The container to configure.</param>
-		public virtual void Configure(
+		public abstract void Configure(
 			string configurationSectionName,
-			IUnityContainer unityContainer)
-		{
-			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
-			if (unityContainer == null) throw new ArgumentNullException(nameof(unityContainer));
-
-			var configurationSection = ConfigurationManager.GetSection(configurationSectionName)
-				as UnityConfigurationSection;
-
-			if (configurationSection == null)
-				throw new LogicException($"The '{configurationSectionName}' configuration section is not defined.");
-
-			unityContainer.LoadConfiguration(configurationSection);
-		}
+			IUnityContainer unityContainer);
 	}
 }

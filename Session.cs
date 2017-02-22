@@ -68,7 +68,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The size of <see cref="sessionEnvironmentsCache"/>.
 		/// </summary>
-		private const int SessionEnvironmentsCacheSize = 128;
+		internal const int SessionEnvironmentsCacheSize = 128;
 
 		#endregion
 
@@ -780,6 +780,20 @@ namespace Grammophone.Domos.Logic
 
 		#endregion
 
+		#region Internal methods
+
+		/// <summary>
+		/// Get the session environment corresponding to a configuration section name.
+		/// </summary>
+		internal virtual SessionEnvironment<U, D> GetEnvironment(string configurationSectionName)
+		{
+			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
+
+			return sessionEnvironmentsCache.Get(configurationSectionName);
+		}
+
+		#endregion
+
 		#region Private methods
 
 		/// <summary>
@@ -833,7 +847,7 @@ namespace Grammophone.Domos.Logic
 		{
 			this.ConfigurationSectionName = configurationSectionName;
 
-			this.Environment = sessionEnvironmentsCache.Get(configurationSectionName);
+			this.Environment = this.GetEnvironment(configurationSectionName);
 
 			this.DomainContainer = this.CreateDomainContainer();
 		}
@@ -880,6 +894,185 @@ namespace Grammophone.Domos.Logic
 	}
 
 	/// <summary>
+	/// Abstract base for business logic session.
+	/// </summary>
+	/// <typeparam name="U">
+	/// The type of the user, derived from <see cref="Domain.User"/>.
+	/// </typeparam>
+	/// <typeparam name="D">
+	/// The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.
+	/// </typeparam>
+	/// <typeparam name="C">
+	/// The type of configurator for the <see cref="Session{U, D}.DIContainer"/> property,
+	/// derived from <see cref="Configurator"/>.
+	/// </typeparam>
+	/// <remarks>
+	/// <para>
+	/// Each session depends on a Unity DI container defined in a configuration section.
+	/// This container must provide resolutions for the following:
+	/// <list>
+	/// <item><typeparamref name="D"/> (required)</item>
+	/// <item>
+	/// <see cref="IUserContext"/> (required only when using the constructor which
+	/// implies the current user)
+	/// </item>
+	/// <item><see cref="IPermissionsSetupProvider"/> (required)</item>
+	/// <item>
+	/// <see cref="IRenderProvider"/>
+	/// (required when RenderTemplate methods are used, singleton lifetime is strongly recommended)
+	/// </item>
+	/// </list>
+	/// </para>
+	/// <para>
+	/// If the system is working with <see cref="Domain.Files.IFile"/> entities,
+	/// the session's configuration section must provide resulutions for the following as well:
+	/// <list>
+	/// <item>
+	/// <see cref="Configuration.FilesConfiguration"/> (singleton lifetime is strongly recommended)</item>
+	/// <item>
+	/// Named and/or unnamed registrations of <see cref="Storage.IStorageProvider"/> implementations
+	/// (singleton lifetime is strongly recommended),
+	/// whose name (null or not) matches the <see cref="Domain.Files.IFile.ProviderName"/> property.
+	/// </item>
+	/// </list>
+	/// </para>
+	/// </remarks>
+	public abstract class Session<U, D, C> : Session<U, D>
+		where U : User
+		where D : IUsersDomainContainer<U>
+		where C : Configurator, new()
+	{
+		#region Private fields
+
+		/// <summary>
+		/// Caches <see cref="SessionEnvironment{U, D, C}"/>s by configuration section names.
+		/// </summary>
+		private static MRUCache<string, SessionEnvironment<U, D, C>> sessionEnvironmentsCache;
+
+		#endregion
+
+		#region Construction
+
+		/// <summary>
+		/// Static initialization.
+		/// </summary>
+		static Session()
+		{
+			sessionEnvironmentsCache = new MRUCache<string, SessionEnvironment<U, D, C>>(
+				configurationSectionName => new SessionEnvironment<U, D, C>(configurationSectionName),
+				SessionEnvironmentsCacheSize);
+		}
+
+		/// <summary>
+		/// Create a session impersonating the user specified
+		/// in the registered <see cref="IUserContext"/>
+		/// inside the configuration
+		/// section specified by <paramref name="configurationSectionName"/>.
+		/// </summary>
+		/// <param name="configurationSectionName">The element name of a Unity configuration section.</param>
+		/// <exception cref="LogicException">
+		/// Thrown when the resolved <see cref="IUserContext"/> fails to specify an existing user.
+		/// </exception>
+		/// <remarks>
+		/// Each session depends on a Unity DI container defined in a configuration section.
+		/// This container must at least provide resolutions for the following:
+		/// <list>
+		/// <item><typeparamref name="D"/></item>
+		/// <item><see cref="IUserContext"/></item>
+		/// <item><see cref="IPermissionsSetupProvider"/></item>
+		/// </list>
+		/// </remarks>
+		public Session(string configurationSectionName)
+			: base(configurationSectionName)
+		{
+		}
+
+		/// <summary>
+		/// Create a session impersonating the user specified
+		/// using a predicate.
+		/// </summary>
+		/// <param name="configurationSectionName">The element name of a Unity configuration section.</param>
+		/// <param name="userPickPredicate">A predicate to filter a single user.</param>
+		/// <exception cref="LogicException">
+		/// Thrown when the <paramref name="userPickPredicate"/> fails to specify an existing user.
+		/// </exception>
+		/// <remarks>
+		/// Each session depends on a Unity DI container defined in a configuration section.
+		/// This container must at least provide resolutions for the following:
+		/// <list>
+		/// <item><typeparamref name="D"/></item>
+		/// <item><see cref="IPermissionsSetupProvider"/></item>
+		/// </list>
+		/// </remarks>
+		public Session(string configurationSectionName, Expression<Func<U, bool>> userPickPredicate)
+			: base(configurationSectionName, userPickPredicate)
+		{
+		}
+
+		#endregion
+
+		#region Internal methods
+
+		/// <summary>
+		/// Get the session environment corresponding to a configuration section name.
+		/// </summary>
+		internal override SessionEnvironment<U, D> GetEnvironment(string configurationSectionName)
+		{
+			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
+
+			return sessionEnvironmentsCache.Get(configurationSectionName);
+		}
+
+		#endregion
+
+		#region Protected methods
+
+		/// <summary>
+		/// Flush the cached static resources of sessions created using a
+		/// specific configuration section name.
+		/// Forces new sessions of the given configuration section name to have
+		/// regenerated static resources.
+		/// </summary>
+		/// <param name="configurationSectionName">
+		/// The configuration section name upon which the sessions are set up.
+		/// </param>
+		/// <returns>
+		/// Returns true if the resources were existing and flushed.
+		/// Else, the resources were not found either because no session
+		/// has been created under the configuration section name since the
+		/// start of the application or the previous call of this method,
+		/// either the resources were dropped out of the cache as
+		/// least-recently-used items to make room for other resources.
+		/// </returns>
+		/// <remarks>
+		/// A session environment is created per <paramref name="configurationSectionName"/>
+		/// on an as-needed basis.
+		/// It contains the <see cref="Session{U, D}.DIContainer"/>, the <see cref="AccessResolver"/>
+		/// and mappings of MIME content types for the sessions created using
+		/// the given configuration section name.
+		/// </remarks>
+		protected static new bool FlushSessionsEnvironment(string configurationSectionName)
+		{
+			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
+
+			SessionEnvironment<U, D, C> sessionEnvironment;
+
+			if (sessionEnvironmentsCache.Remove(configurationSectionName, out sessionEnvironment))
+			{
+				sessionEnvironment.DIContainer.Dispose();
+
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		#endregion
+	}
+
+	/// <summary>
 	/// Abstract base for business logic session, which also offers
 	/// a <see cref="PublicDomain"/> data access property.
 	/// </summary>
@@ -888,6 +1081,10 @@ namespace Grammophone.Domos.Logic
 	/// </typeparam>
 	/// <typeparam name="D">
 	/// The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.
+	/// </typeparam>
+	/// <typeparam name="C">
+	/// The type of configurator for the <see cref="Session{U, D}.DIContainer"/> property,
+	/// derived from <see cref="Configurator"/>.
 	/// </typeparam>
 	/// <typeparam name="PD">
 	/// The type of public domain access instance,
@@ -924,9 +1121,10 @@ namespace Grammophone.Domos.Logic
 	/// </list>
 	/// </para>
 	/// </remarks>
-	public abstract class Session<U, D, PD> : Session<U, D>
+	public abstract class Session<U, D, C, PD> : Session<U, D>
 		where U : User
 		where D : IUsersDomainContainer<U>
+		where C : Configurator, new()
 		where PD : PublicDomain<D>
 	{
 		#region Private fields
