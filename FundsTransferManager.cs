@@ -45,12 +45,12 @@ namespace Grammophone.Domos.Logic
 	/// <typeparam name="AS">
 	/// The type of accounting session, derived from <see cref="AccountingSession{U, BST, A, P, R, J, D}"/>.
 	/// </typeparam>
-	/// <typeparam name="W">
+	/// <typeparam name="WM">
 	/// The type of the associated workflow manager,
 	/// implementing <see cref="IWorkflowManager{U, ST, SO}"/>.
 	/// Any descendant class from <see cref="WorkflowManager{U, BST, D, S, ST, SO, C}"/> works.
 	/// </typeparam>
-	public abstract class FundsTransferManager<U, BST, A, P, R, J, D, S, ST, SO, AS, W> : Manager<U, D, S>
+	public abstract class FundsTransferManager<U, BST, A, P, R, J, D, S, ST, SO, AS, WM> : Manager<U, D, S>
 		where U : User
 		where BST : StateTransition<U>
 		where A : Account<U>
@@ -61,7 +61,7 @@ namespace Grammophone.Domos.Logic
 		where S : Session<U, D>
 		where ST : BST, new()
 		where SO : IStateful<U, ST>
-		where W : IWorkflowManager<U, ST, SO>
+		where WM : IWorkflowManager<U, ST, SO>
 		where AS : AccountingSession<U, BST, A, P, R, J, D>
 	{
 		#region Private fields
@@ -81,7 +81,7 @@ namespace Grammophone.Domos.Logic
 		protected FundsTransferManager(
 			S session, 
 			AS accountingSession,
-			W workflowManager) 
+			WM workflowManager) 
 			: base(session)
 		{
 			if (accountingSession == null) throw new ArgumentNullException(nameof(accountingSession));
@@ -110,7 +110,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The associated workflow manager.
 		/// </summary>
-		protected W WorkflowManager { get; private set; }
+		protected WM WorkflowManager { get; private set; }
 
 		/// <summary>
 		/// The associated accounting session.
