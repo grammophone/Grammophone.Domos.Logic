@@ -19,7 +19,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 	/// <typeparam name="S">The type of session, derived from <see cref="Session{U, D}"/>.</typeparam>
 	/// <typeparam name="ST">The type of state transition, derived from <see cref="StateTransition{U}"/>.</typeparam>
 	/// <typeparam name="SO">The type of stateful object, derived from <see cref="IStateful{U, ST}"/>.</typeparam>
-	public abstract class WorkflowAction<U, D, S, ST, SO> : IWorkflowAction<U, D, S, ST, SO>
+	public abstract class WorkflowAction<U, D, S, ST, SO> : Loggable, IWorkflowAction<U, D, S, ST, SO>
 		where U : User
 		where D : IUsersDomainContainer<U>
 		where S : Session<U, D>
