@@ -684,26 +684,6 @@ namespace Grammophone.Domos.Logic
 
 		/// <summary>
 		/// Checks whether the current user has access to a manager
-		/// depending on her roles only.
-		/// </summary>
-		/// <param name="managerType">The type of the manager.</param>
-		/// <remarks>
-		/// If the type of the manager is generic, it uses the full
-		/// name of its generic type definition.
-		/// </remarks>
-		protected bool CanAccessManager(Type managerType)
-		{
-			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
-
-			if (managerType.IsConstructedGenericType) managerType = managerType.GetGenericTypeDefinition();
-
-			string managerName = managerType.FullName;
-
-			return this.AccessResolver.CanUserAccessManager(user, managerName);
-		}
-
-		/// <summary>
-		/// Checks whether the current user has access to a manager
 		/// depending on her roles and her dispositions.
 		/// </summary>
 		/// <param name="managerType">The type of the manager.</param>
@@ -711,8 +691,9 @@ namespace Grammophone.Domos.Logic
 		/// <remarks>
 		/// If the type of the manager is generic, it uses the full
 		/// name of its generic type definition.
+		/// If the user doesn't own the disposition, the method returns false.
 		/// </remarks>
-		protected bool CanAccessManager(Type managerType, long dispositionID)
+		protected bool CanAccessManagerByDisposition(Type managerType, long dispositionID)
 		{
 			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
 
@@ -720,7 +701,75 @@ namespace Grammophone.Domos.Logic
 
 			string managerName = managerType.FullName;
 
-			return this.AccessResolver.CanUserAccessManager(user, dispositionID, managerName);
+			return this.AccessResolver.CanUserAccessManagerByDisposition(user, dispositionID, managerName);
+		}
+
+		/// <summary>
+		/// Checks whether the current user has access to a manager
+		/// depending on her roles and her dispositions.
+		/// </summary>
+		/// <param name="managerType">The type of the manager.</param>
+		/// <param name="disposition">A disposition the user owns.</param>
+		/// <remarks>
+		/// If the type of the manager is generic, it uses the full
+		/// name of its generic type definition.
+		/// If the user doesn't own the disposition, the method returns false.
+		/// </remarks>
+		protected bool CanAccessManagerByDisposition(Type managerType, Disposition disposition)
+		{
+			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
+			if (disposition == null) throw new ArgumentNullException(nameof(disposition));
+
+			if (managerType.IsConstructedGenericType) managerType = managerType.GetGenericTypeDefinition();
+
+			string managerName = managerType.FullName;
+
+			return this.AccessResolver.CanUserAccessManagerByDisposition(user, disposition, managerName);
+		}
+
+		/// <summary>
+		/// Checks whether the current user has access to a manager.
+		/// </summary>
+		/// <param name="managerType">The type of the manager.</param>
+		/// <param name="segregation">
+		/// If not null, check access based on current user roles and 
+		/// dispositions against the segregation as well,
+		/// else check access based on roles only.
+		/// </param>
+		/// <remarks>
+		/// If the type of the manager is generic, it uses the full
+		/// name of its generic type definition.
+		/// </remarks>
+		protected bool CanAccessManager(Type managerType, Segregation<U> segregation = null)
+		{
+			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
+
+			if (managerType.IsConstructedGenericType) managerType = managerType.GetGenericTypeDefinition();
+
+			string managerName = managerType.FullName;
+
+			return this.AccessResolver.CanUserAccessManager(user, managerName, segregation);
+		}
+
+		/// <summary>
+		/// Checks whether the current user has access to a manager
+		/// based on her roles and dispositions against a segregation.
+		/// </summary>
+		/// <param name="managerType">The type of the manager.</param>
+		/// <param name="segregationID">The ID of the segregation.</param>
+		/// <remarks>
+		/// If the type of the manager is generic, it uses the full
+		/// name of its generic type definition.
+		/// </remarks>
+		protected bool CanAccessManager(Type managerType, long segregationID)
+		{
+			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
+
+			if (managerType.IsConstructedGenericType) managerType = managerType.GetGenericTypeDefinition();
+
+			string managerName = managerType.FullName;
+
+			return this.AccessResolver.CanUserAccessManager(user, managerName, segregationID);
 		}
 
 		/// <summary>
@@ -807,7 +856,7 @@ namespace Grammophone.Domos.Logic
 
 			userQuery = IncludeWithUser(userQuery)
 				.Include(u => u.Roles)
-				.Include("Dispositions.Type");
+				.Include(u => u.Dispositions.Select(d => d.Type));
 
 			user = userQuery.FirstOrDefault();
 
