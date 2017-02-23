@@ -68,6 +68,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AccessDeniedException.cs" />
     <Compile Include="CommonMessages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -82,6 +83,7 @@
     <Compile Include="DomainIntegrityException.cs" />
     <Compile Include="ElevatedAccessScope.cs" />
     <Compile Include="EmailSettings.cs" />
+    <Compile Include="EntityAccessDeniedException.cs" />
     <Compile Include="FileException.cs" />
     <Compile Include="FilesManager.cs" />
     <Compile Include="FilesManagerMessages.Designer.cs">
@@ -95,6 +97,7 @@
     <Compile Include="Loggable.cs" />
     <Compile Include="LogicException.cs" />
     <Compile Include="Manager.cs" />
+    <Compile Include="ManagerAccessDeniedException.cs" />
     <Compile Include="Models\FundsTransfer\FundsResponseBatchItemType.cs" />
     <Compile Include="Models\FundsTransfer\FundsResponseResult.cs" />
     <Compile Include="Models\FundsTransfer\FundsRequestBatch.cs" />

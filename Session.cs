@@ -202,31 +202,33 @@ namespace Grammophone.Domos.Logic
 
 				string message;
 
+				string entityName = AccessRight.GetEntityTypeName(entity);
+
 				if (entityWithID != null)
 				{
 					message =
-						$"The user with ID {user.ID} cannot {action} an entity of type {AccessRight.GetEntityTypeName(entity)} with ID {entityWithID.ID}.";
+						$"The user with ID {user.ID} cannot {action} an entity of type {entityName} with ID {entityWithID.ID}.";
 				}
 				else
 				{
 					message =
-						$"The user with ID {user.ID} cannot {action} an entity of type {AccessRight.GetEntityTypeName(entity)}.";
+						$"The user with ID {user.ID} cannot {action} an entity of type {entityName}.";
 				}
 
-				LogAndThrowAccessDenied(entity, message);
+				LogAndThrowAccessDenied(entityName, message);
 			}
 
 			/// <summary>
 			/// Log the denial of access and throw a <see cref="AccessDeniedDomainException"/>.
 			/// </summary>
-			/// <param name="entity">The entity to which the access is denied.</param>
+			/// <param name="entityName">The name of the entity to which the access is denied.</param>
 			/// <param name="message">The message to log and throw.</param>
 			/// <exception cref="AccessDeniedDomainException">Thrown always.</exception>
-			private void LogAndThrowAccessDenied(object entity, string message)
+			private void LogAndThrowAccessDenied(string entityName, string message)
 			{
 				this.Logger.Error(message);
 
-				throw new AccessDeniedDomainException(message, entity);
+				throw new EntityAccessDeniedException(entityName, message);
 			}
 
 			#endregion
