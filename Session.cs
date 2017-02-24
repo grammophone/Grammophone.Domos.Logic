@@ -666,6 +666,16 @@ namespace Grammophone.Domos.Logic
 			IncrementAccessElevationLevel();
 		}
 
+		/// <summary>
+		/// Get the session environment corresponding to a configuration section name.
+		/// </summary>
+		internal virtual SessionEnvironment<U, D> GetEnvironment(string configurationSectionName)
+		{
+			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
+
+			return sessionEnvironmentsCache.Get(configurationSectionName);
+		}
+
 		#endregion
 
 		#region Protected methods
@@ -827,20 +837,6 @@ namespace Grammophone.Domos.Logic
 			{
 				return false;
 			}
-		}
-
-		#endregion
-
-		#region Internal methods
-
-		/// <summary>
-		/// Get the session environment corresponding to a configuration section name.
-		/// </summary>
-		internal virtual SessionEnvironment<U, D> GetEnvironment(string configurationSectionName)
-		{
-			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
-
-			return sessionEnvironmentsCache.Get(configurationSectionName);
 		}
 
 		#endregion
