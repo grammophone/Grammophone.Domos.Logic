@@ -24,11 +24,10 @@ namespace Grammophone.Domos.Logic
 	/// <typeparam name="BST">
 	/// The base type of the system's state transitions, derived fom <see cref="StateTransition{U}"/>.
 	/// </typeparam>
-	/// <typeparam name="A">The type of accounts, derived from <see cref="Account{U}"/>.</typeparam>
-	/// <typeparam name="P">The type of the postings, derived from <see cref="Posting{U, A}"/>.</typeparam>
-	/// <typeparam name="R">The type of remittances, derived from <see cref="Remittance{U, A}"/>.</typeparam>
+	/// <typeparam name="P">The type of the postings, derived from <see cref="Posting{U}"/>.</typeparam>
+	/// <typeparam name="R">The type of remittances, derived from <see cref="Remittance{U}"/>.</typeparam>
 	/// <typeparam name="J">
-	/// The type of accounting journals, derived from <see cref="Journal{U, ST, A, P, R}"/>.
+	/// The type of accounting journals, derived from <see cref="Journal{U, ST, P, R}"/>.
 	/// </typeparam>
 	/// <typeparam name="D">
 	/// The type of domain container, derived from <see cref="IWorkflowUsersDomainContainer{U, ST}"/>.
@@ -43,26 +42,25 @@ namespace Grammophone.Domos.Logic
 	/// The type of stateful being managed, derived from <see cref="IStateful{U, ST}"/>.
 	/// </typeparam>
 	/// <typeparam name="AS">
-	/// The type of accounting session, derived from <see cref="AccountingSession{U, BST, A, P, R, J, D}"/>.
+	/// The type of accounting session, derived from <see cref="AccountingSession{U, BST, P, R, J, D}"/>.
 	/// </typeparam>
 	/// <typeparam name="WM">
 	/// The type of the associated workflow manager,
 	/// implementing <see cref="IWorkflowManager{U, ST, SO}"/>.
 	/// Any descendant class from <see cref="WorkflowManager{U, BST, D, S, ST, SO, C}"/> works.
 	/// </typeparam>
-	public abstract class FundsTransferManager<U, BST, A, P, R, J, D, S, ST, SO, AS, WM> : Manager<U, D, S>
+	public abstract class FundsTransferManager<U, BST, P, R, J, D, S, ST, SO, AS, WM> : Manager<U, D, S>
 		where U : User
 		where BST : StateTransition<U>
-		where A : Account<U>
-		where P : Posting<U, A>
-		where R : Remittance<U, A>
-		where J : Journal<U, BST, A, P, R>
-		where D : IDomosDomainContainer<U, BST, A, P, R, J>
+		where P : Posting<U>
+		where R : Remittance<U>
+		where J : Journal<U, BST, P, R>
+		where D : IDomosDomainContainer<U, BST, P, R, J>
 		where S : Session<U, D>
 		where ST : BST, new()
 		where SO : IStateful<U, ST>
 		where WM : IWorkflowManager<U, ST, SO>
-		where AS : AccountingSession<U, BST, A, P, R, J, D>
+		where AS : AccountingSession<U, BST, P, R, J, D>
 	{
 		#region Private fields
 
@@ -173,17 +171,19 @@ namespace Grammophone.Domos.Logic
 		/// Get the set of <see cref="FundsTransferRequest"/>s which
 		/// have no response yet.
 		/// </summary>
-		/// <param name="creditSystemID">The ID of the credit system of the transfer requests.</param>
+		/// <param name="creditSystem">The credit system of the transfer requests.</param>
 		/// <param name="includeSubmitted">
 		/// If true, include the already submitted requests in the results,
 		/// else exclude the submitted requests.
 		/// </param>
 		public IQueryable<FundsTransferRequest> GetPendingFundTransferRequests(
-			long creditSystemID,
+			CreditSystem creditSystem,
 			bool includeSubmitted = false)
 		{
+			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
+
 			return AccountingSession.FilterPendingFundsTransferRequests(
-				creditSystemID,
+				creditSystem,
 				this.DomainContainer.FundsTransferRequests,
 				includeSubmitted);
 		}
@@ -192,7 +192,7 @@ namespace Grammophone.Domos.Logic
 		/// Get the set of <see cref="FundsTransferRequest"/>s which
 		/// have no response yet.
 		/// </summary>
-		/// <param name="creditSystemID">The ID of the credit system of the transfer requests.</param>
+		/// <param name="creditSystem">The credit system of the transfer requests.</param>
 		/// <param name="stateCodeName">
 		/// The state code name of the stateful objects corresponding to the requests.
 		/// </param>
@@ -201,10 +201,13 @@ namespace Grammophone.Domos.Logic
 		/// else exclude the submitted requests.
 		/// </param>
 		public IQueryable<FundsTransferRequest> GetPendingFundsTransferRequests(
-			long creditSystemID,
+			CreditSystem creditSystem,
 			string stateCodeName,
 			bool includeSubmitted = false)
 		{
+			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
+			if (stateCodeName == null) throw new ArgumentNullException(nameof(stateCodeName));
+
 			var query = from so in this.WorkflowManager.GetManagedStatefulObjects()
 									where so.State.CodeName == stateCodeName
 									let lastTransition = so.StateTransitions.OrderByDescending(st => st.ID).FirstOrDefault()
@@ -214,7 +217,7 @@ namespace Grammophone.Domos.Logic
 									where e != null
 									select e.Request;
 
-			return AccountingSession.FilterPendingFundsTransferRequests(creditSystemID, query, includeSubmitted);
+			return AccountingSession.FilterPendingFundsTransferRequests(creditSystem, query, includeSubmitted);
 		}
 
 		/// <summary>

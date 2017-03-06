@@ -17,11 +17,10 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 	/// </summary>
 	/// <typeparam name="U">The type of user.</typeparam>
 	/// <typeparam name="BST">The base type of state transitions, derived from <see cref="StateTransition{U}"/>.</typeparam>
-	/// <typeparam name="A">The base type of account, derived from <see cref="Account{U}"/>.</typeparam>
-	/// <typeparam name="P">The type of posting, derived from <see cref="Posting{U, A}"/>.</typeparam>
-	/// <typeparam name="R">The type of remittance, derived from <see cref="Remittance{U, A}"/>.</typeparam>
-	/// <typeparam name="J">The type of journal, derived from <see cref="Journal{U, BST, A, P, R}"/>.</typeparam>
-	/// <typeparam name="D">The type of domain container, derived from <see cref="IDomosDomainContainer{U, BST, A, P, R, J}"/>.</typeparam>
+	/// <typeparam name="P">The type of posting, derived from <see cref="Posting{U}"/>.</typeparam>
+	/// <typeparam name="R">The type of remittance, derived from <see cref="Remittance{U}"/>.</typeparam>
+	/// <typeparam name="J">The type of journal, derived from <see cref="Journal{U, BST, P, R}"/>.</typeparam>
+	/// <typeparam name="D">The type of domain container, derived from <see cref="IDomosDomainContainer{U, BST, P, R, J}"/>.</typeparam>
 	/// <typeparam name="S">The type of session, derived from <see cref="Session{U, D}"/>.</typeparam>
 	/// <typeparam name="ST">The type of state transition, derived from <typeparamref name="BST"/></typeparam>
 	/// <typeparam name="SO">The type of stateful object, derived from <see cref="IStateful{U, ST}"/>.</typeparam>
@@ -34,15 +33,14 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 	/// Warning: The <see cref="ExecuteAsync(S, D, SO, ST, IDictionary{string, object})"/> method implementation
 	/// elevates the rights of any existing outer transaction.
 	/// </remarks>
-	public abstract class AccountingAction<U, BST, A, P, R, J, D, S, ST, SO, B>
+	public abstract class AccountingAction<U, BST, P, R, J, D, S, ST, SO, B>
 		: WorkflowAction<U, D, S, ST, SO>
 		where U : User
 		where BST : StateTransition<U>
-		where A : Account<U>
-		where P : Posting<U, A>
-		where R : Remittance<U, A>
-		where J : Journal<U, BST, A, P, R>
-		where D : IDomosDomainContainer<U, BST, A, P, R, J>
+		where P : Posting<U>
+		where R : Remittance<U>
+		where J : Journal<U, BST, P, R>
+		where D : IDomosDomainContainer<U, BST, P, R, J>
 		where S : Session<U, D>
 		where ST : BST
 		where SO : IStateful<U, ST>
@@ -139,7 +137,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// <returns>
 		/// Returns the result of the accounting action.
 		/// </returns>
-		protected abstract Task<AccountingSession<U, BST, A, P, R, J, D>.ActionResult> ExecuteAccountingAsync(
+		protected abstract Task<AccountingSession<U, BST, P, R, J, D>.ActionResult> ExecuteAccountingAsync(
 			D domainContainer,
 			U user,
 			SO stateful,
