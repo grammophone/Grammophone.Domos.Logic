@@ -709,11 +709,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
 
-			if (managerType.IsConstructedGenericType) managerType = managerType.GetGenericTypeDefinition();
-
-			string managerName = managerType.FullName;
-
-			return this.AccessResolver.CanUserAccessManagerByDisposition(user, dispositionID, managerName);
+			return this.AccessResolver.CanUserAccessManagerByDisposition(user, dispositionID, managerType);
 		}
 
 		/// <summary>
@@ -732,11 +728,7 @@ namespace Grammophone.Domos.Logic
 			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
 			if (disposition == null) throw new ArgumentNullException(nameof(disposition));
 
-			if (managerType.IsConstructedGenericType) managerType = managerType.GetGenericTypeDefinition();
-
-			string managerName = managerType.FullName;
-
-			return this.AccessResolver.CanUserAccessManagerByDisposition(user, disposition, managerName);
+			return this.AccessResolver.CanUserAccessManagerByDisposition(user, disposition, managerType);
 		}
 
 		/// <summary>
@@ -756,11 +748,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
 
-			if (managerType.IsConstructedGenericType) managerType = managerType.GetGenericTypeDefinition();
-
-			string managerName = managerType.FullName;
-
-			return this.AccessResolver.CanUserAccessManager(user, managerName, segregation);
+			return this.AccessResolver.CanUserAccessManager(user, managerType, segregation);
 		}
 
 		/// <summary>
@@ -777,11 +765,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
 
-			if (managerType.IsConstructedGenericType) managerType = managerType.GetGenericTypeDefinition();
-
-			string managerName = managerType.FullName;
-
-			return this.AccessResolver.CanUserAccessManager(user, managerName, segregationID);
+			return this.AccessResolver.CanUserAccessManager(user, managerType, segregationID);
 		}
 
 		/// <summary>
