@@ -55,7 +55,7 @@ namespace Grammophone.Domos.Logic
 
 			var permissionsSetupProvider = this.DIContainer.Resolve<IPermissionsSetupProvider>();
 
-			this.AccessResolver = new AccessResolver(permissionsSetupProvider);
+			this.AccessResolver = new AccessResolver<U>(permissionsSetupProvider);
 
 			this.lazyContentTypeIDsByMIME = new Lazy<IReadOnlyDictionary<string, int>>(
 				this.LoadContentTypeIDsByMIME,
@@ -83,7 +83,7 @@ namespace Grammophone.Domos.Logic
 		/// The access resolver using the <see cref="IPermissionsSetupProvider"/>
 		/// specified in <see cref="DIContainer"/>.
 		/// </summary>
-		public AccessResolver AccessResolver { get; private set; }
+		public AccessResolver<U> AccessResolver { get; private set; }
 
 		/// <summary>
 		/// Dictionary of content type IDs by MIME.

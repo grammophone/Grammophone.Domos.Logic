@@ -81,7 +81,7 @@ namespace Grammophone.Domos.Logic
 		{
 			#region Private fields
 
-			private readonly AccessResolver accessResolver;
+			private readonly AccessResolver<U> accessResolver;
 
 			private readonly U user;
 
@@ -97,9 +97,9 @@ namespace Grammophone.Domos.Logic
 			/// for proper performance.
 			/// </param>
 			/// <param name="accessResolver">
-			/// The <see cref="AccessChecking.AccessResolver"/> to use in order to enforce entity rights.
+			/// The <see cref="AccessChecking.AccessResolver{U}"/> to use in order to enforce entity rights.
 			/// </param>
-			public EntityListener(U user, AccessResolver accessResolver)
+			public EntityListener(U user, AccessResolver<U> accessResolver)
 			{
 				if (user == null) throw new ArgumentNullException(nameof(user));
 				if (accessResolver == null) throw new ArgumentNullException(nameof(accessResolver));
@@ -135,11 +135,24 @@ namespace Grammophone.Domos.Logic
 					trackedEntity.CreationDate = now;
 					trackedEntity.LastModificationDate = now;
 
-					var userTrackingEntity = trackedEntity as IUserTrackingEntity;
+					var userTrackingEntity = trackedEntity as IUserTrackingEntity<U>;
 
-					if (userTrackingEntity.OwningUserID == 0L)
+					if (userTrackingEntity != null)
 					{
-						userTrackingEntity.OwningUserID = user.ID;
+						if (userTrackingEntity.OwningUserID == 0L && userTrackingEntity.OwningUser == null)
+						{
+							userTrackingEntity.OwningUserID = user.ID;
+						}
+					}
+
+					var userGroupTrackingEntity = trackedEntity as IUserGroupTrackingEntity<U>;
+
+					if (userGroupTrackingEntity != null)
+					{
+						if (!userGroupTrackingEntity.OwningUsers.Contains(user))
+						{
+							userGroupTrackingEntity.OwningUsers.Add(user);
+						}
 					}
 				}
 
@@ -416,7 +429,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Provides low and high-level access checking for entities and managers.
 		/// </summary>
-		protected internal AccessResolver AccessResolver => this.Environment.AccessResolver;
+		protected internal AccessResolver<U> AccessResolver => this.Environment.AccessResolver;
 
 		#endregion
 
@@ -1078,7 +1091,7 @@ namespace Grammophone.Domos.Logic
 		/// <remarks>
 		/// A session environment is created per <paramref name="configurationSectionName"/>
 		/// on an as-needed basis.
-		/// It contains the <see cref="Session{U, D}.DIContainer"/>, the <see cref="AccessResolver"/>
+		/// It contains the <see cref="Session{U, D}.DIContainer"/>, the <see cref="AccessResolver{U}"/>
 		/// and mappings of MIME content types for the sessions created using
 		/// the given configuration section name.
 		/// </remarks>

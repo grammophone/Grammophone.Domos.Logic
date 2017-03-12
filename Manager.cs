@@ -52,7 +52,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The access information associated with the <see cref="Session"/>.
 		/// </summary>
-		protected AccessResolver AccessResolver
+		protected AccessResolver<U> AccessResolver
 		{
 			get
 			{
