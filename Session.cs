@@ -514,6 +514,21 @@ namespace Grammophone.Domos.Logic
 			{
 				emailClient.EnableSsl = emailSettings.UseSSL;
 
+				if (emailSettings.UserName != null || emailSettings.Password != null)
+				{
+					emailClient.UseDefaultCredentials = false;
+
+					emailClient.Credentials = new System.Net.NetworkCredential
+					{
+						UserName = emailSettings.UserName,
+						Password = emailSettings.Password
+					};
+				}
+				else
+				{
+					emailClient.UseDefaultCredentials = true;
+				}
+
 				await emailClient.SendMailAsync(mailMessage);
 			}
 		}
