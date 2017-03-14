@@ -82,7 +82,6 @@
     <Compile Include="DefaultConfigurator.cs" />
     <Compile Include="DomainIntegrityException.cs" />
     <Compile Include="ElevatedAccessScope.cs" />
-    <Compile Include="EmailSettings.cs" />
     <Compile Include="EntityAccessDeniedException.cs" />
     <Compile Include="FileException.cs" />
     <Compile Include="FilesManager.cs" />
@@ -174,6 +173,10 @@
     <ProjectReference Include="..\Grammophone.Domos.Environment\Grammophone.Domos.Environment.csproj">
       <Project>{2c981885-79db-49ee-bc62-429a6164807d}</Project>
       <Name>Grammophone.Domos.Environment</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Grammophone.Email\Grammophone.Email.csproj">
+      <Project>{69e69a59-609b-441d-8e34-650e4d72f177}</Project>
+      <Name>Grammophone.Email</Name>
     </ProjectReference>
     <ProjectReference Include="..\Grammophone.Storage\Grammophone.Storage.csproj">
       <Project>{5ecd757e-e8e8-4cd2-9e01-f0fb946980da}</Project>

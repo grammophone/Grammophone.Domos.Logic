@@ -16,6 +16,7 @@ using Grammophone.Domos.Environment;
 using Grammophone.TemplateRendering;
 using Microsoft.Practices.Unity;
 using Microsoft.Practices.Unity.Configuration;
+using Grammophone.Email;
 
 namespace Grammophone.Domos.Logic
 {
@@ -472,23 +473,15 @@ namespace Grammophone.Domos.Logic
 
 			var emailSettings = this.DIContainer.Resolve<EmailSettings>();
 
-			var mailMessage = new System.Net.Mail.MailMessage
+			using (var emailClient = new EmailClient(emailSettings))
 			{
-				Sender = new System.Net.Mail.MailAddress(sender ?? emailSettings.DefaultSenderAddress),
-				Subject = subject,
-				Body = body,
-				IsBodyHtml = isBodyHTML,
-				BodyEncoding = Encoding.UTF8,
-				SubjectEncoding = Encoding.UTF8,
-				HeadersEncoding = Encoding.UTF8,
-			};
-
-			foreach (string recepient in recepients.Split(';', ','))
-			{
-				mailMessage.To.Add(recepient.Trim());
+				await emailClient.SendEmailAsync(
+					recepients,
+					subject,
+					body,
+					isBodyHTML,
+					sender);
 			}
-
-			await SendEmailAsync(mailMessage);
 		}
 
 		/// <summary>
@@ -505,31 +498,9 @@ namespace Grammophone.Domos.Logic
 
 			var emailSettings = this.DIContainer.Resolve<EmailSettings>();
 
-			if (mailMessage.Sender == null)
+			using (var emailClient = new EmailClient(emailSettings))
 			{
-				mailMessage.Sender = new System.Net.Mail.MailAddress(emailSettings.DefaultSenderAddress);
-			}
-
-			using (var emailClient = new System.Net.Mail.SmtpClient(emailSettings.SmtpServerName, emailSettings.SmtpServerPort))
-			{
-				emailClient.EnableSsl = emailSettings.UseSSL;
-
-				if (emailSettings.UserName != null || emailSettings.Password != null)
-				{
-					emailClient.UseDefaultCredentials = false;
-
-					emailClient.Credentials = new System.Net.NetworkCredential
-					{
-						UserName = emailSettings.UserName,
-						Password = emailSettings.Password
-					};
-				}
-				else
-				{
-					emailClient.UseDefaultCredentials = true;
-				}
-
-				await emailClient.SendMailAsync(mailMessage);
+				await emailClient.SendEmailAsync(mailMessage);
 			}
 		}
 
