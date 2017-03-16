@@ -9,6 +9,7 @@ using Grammophone.Domos.AccessChecking;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Microsoft.Practices.Unity;
+using Grammophone.TemplateRendering;
 
 namespace Grammophone.Domos.Logic
 {
@@ -41,7 +42,7 @@ namespace Grammophone.Domos.Logic
 
 		#endregion
 
-		#region Cosntruction
+		#region Construction
 
 		/// <summary>
 		/// Create.
@@ -75,11 +76,6 @@ namespace Grammophone.Domos.Logic
 		#region Public properties
 
 		/// <summary>
-		/// The Unity DI container.
-		/// </summary>
-		public IUnityContainer DIContainer { get; private set; }
-
-		/// <summary>
 		/// The access resolver using the <see cref="IPermissionsSetupProvider"/>
 		/// specified in <see cref="DIContainer"/>.
 		/// </summary>
@@ -98,6 +94,15 @@ namespace Grammophone.Domos.Logic
 
 		#endregion
 
+		#region Internal properties
+
+		/// <summary>
+		/// The Unity DI container.
+		/// </summary>
+		internal IUnityContainer DIContainer { get; private set; }
+
+		#endregion
+
 		#region Public methods
 
 		/// <summary>
@@ -111,6 +116,21 @@ namespace Grammophone.Domos.Logic
 
 			return storageProvidersCache.Get(providerName);
 		}
+
+		/// <summary>
+		/// Create the configured client for sending e-mail.
+		/// </summary>
+		public Email.EmailClient CreateEmailClient()
+		{
+			var emailSettings = this.DIContainer.Resolve<Email.EmailSettings>();
+
+			return new Email.EmailClient(emailSettings);
+		}
+
+		/// <summary>
+		/// Get the configured template rendering provider.
+		/// </summary>
+		public IRenderProvider GetRenderProvider() => this.DIContainer.Resolve<IRenderProvider>();
 
 		#endregion
 

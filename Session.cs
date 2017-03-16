@@ -412,6 +412,11 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		public string ConfigurationSectionName { get; private set; }
 
+		/// <summary>
+		/// Provides low and high-level access checking for entities and managers.
+		/// </summary>
+		public AccessResolver<U> AccessResolver => this.Environment.AccessResolver;
+
 		#endregion
 
 		#region Protected properties
@@ -426,11 +431,6 @@ namespace Grammophone.Domos.Logic
 		/// The Unity dependency injection container for this session.
 		/// </summary>
 		protected internal IUnityContainer DIContainer => this.Environment.DIContainer;
-
-		/// <summary>
-		/// Provides low and high-level access checking for entities and managers.
-		/// </summary>
-		protected internal AccessResolver<U> AccessResolver => this.Environment.AccessResolver;
 
 		#endregion
 
@@ -483,9 +483,7 @@ namespace Grammophone.Domos.Logic
 			if (subject == null) throw new ArgumentNullException(nameof(subject));
 			if (body == null) throw new ArgumentNullException(nameof(body));
 
-			var emailSettings = this.DIContainer.Resolve<EmailSettings>();
-
-			using (var emailClient = new EmailClient(emailSettings))
+			using (var emailClient = this.Environment.CreateEmailClient())
 			{
 				await emailClient.SendEmailAsync(
 					recepients,
@@ -508,9 +506,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (mailMessage == null) throw new ArgumentNullException(nameof(mailMessage));
 
-			var emailSettings = this.DIContainer.Resolve<EmailSettings>();
-
-			using (var emailClient = new EmailClient(emailSettings))
+			using (var emailClient = this.Environment.CreateEmailClient())
 			{
 				await emailClient.SendEmailAsync(mailMessage);
 			}
@@ -530,7 +526,7 @@ namespace Grammophone.Domos.Logic
 			M model,
 			IDictionary<string, object> dynamicProperties = null)
 		{
-			var renderProvider = this.DIContainer.Resolve<IRenderProvider>();
+			var renderProvider = this.Environment.GetRenderProvider();
 
 			renderProvider.Render(templateKey, textWriter, model, dynamicProperties);
 		}
@@ -546,7 +542,7 @@ namespace Grammophone.Domos.Logic
 			System.IO.TextWriter textWriter,
 			IDictionary<string, object> dynamicProperties)
 		{
-			var renderProvider = this.DIContainer.Resolve<IRenderProvider>();
+			var renderProvider = this.Environment.GetRenderProvider();
 
 			renderProvider.Render(templateKey, textWriter, dynamicProperties);
 		}
@@ -690,7 +686,8 @@ namespace Grammophone.Domos.Logic
 		#region Protected methods
 
 		/// <summary>
-		/// Override to specify any additional eager fetches along the current user.
+		/// Override to specify any additional eager fetches along the current user
+		/// during session login.
 		/// </summary>
 		/// <param name="userQuery">The query to append.</param>
 		/// <returns>Returns the appended query.</returns>
@@ -808,7 +805,8 @@ namespace Grammophone.Domos.Logic
 		/// least-recently-used items to make room for other resources.
 		/// </returns>
 		/// <remarks>
-		/// A session environment is created per <paramref name="configurationSectionName"/>
+		/// A <see cref="SessionEnvironment{U, D}"/>
+		/// is created per <paramref name="configurationSectionName"/>
 		/// on an as-needed basis.
 		/// It contains the <see cref="DIContainer"/>, the <see cref="AccessResolver"/>
 		/// and mappings of MIME content types for the sessions created using
@@ -875,7 +873,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		private D CreateDomainContainer()
 		{
-			return this.Environment.DIContainer.Resolve<D>();
+			return this.DIContainer.Resolve<D>();
 		}
 
 		/// <summary>
@@ -1102,7 +1100,8 @@ namespace Grammophone.Domos.Logic
 		/// least-recently-used items to make room for other resources.
 		/// </returns>
 		/// <remarks>
-		/// A session environment is created per <paramref name="configurationSectionName"/>
+		/// A <see cref="SessionEnvironment{U, D, C}"/>
+		/// is created per <paramref name="configurationSectionName"/>
 		/// on an as-needed basis.
 		/// It contains the <see cref="Session{U, D}.DIContainer"/>, the <see cref="AccessResolver{U}"/>
 		/// and mappings of MIME content types for the sessions created using
