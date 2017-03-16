@@ -741,20 +741,20 @@ namespace Grammophone.Domos.Logic
 		/// Checks whether the current user has access to a manager.
 		/// </summary>
 		/// <param name="managerType">The type of the manager.</param>
-		/// <param name="segregation">
+		/// <param name="segregatedEntity">
 		/// If not null, check access based on current user roles and 
-		/// dispositions against the segregation as well,
+		/// dispositions against the segregation where the entity belongs as well,
 		/// else check access based on roles only.
 		/// </param>
 		/// <remarks>
 		/// If the type of the manager is generic, it uses the full
 		/// name of its generic type definition.
 		/// </remarks>
-		protected bool CanAccessManager(Type managerType, Segregation<U> segregation = null)
+		protected bool CanAccessManager(Type managerType, ISegregatedEntity segregatedEntity = null)
 		{
 			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
 
-			return this.AccessResolver.CanUserAccessManager(user, managerType, segregation);
+			return this.AccessResolver.CanUserAccessManager(user, managerType, segregatedEntity);
 		}
 
 		/// <summary>
@@ -772,6 +772,56 @@ namespace Grammophone.Domos.Logic
 			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
 
 			return this.AccessResolver.CanUserAccessManager(user, managerType, segregationID);
+		}
+
+		/// <summary>
+		/// Get a manager of type <typeparamref name="M"/>
+		/// for an entity under a segregation
+		/// or null if the user is not authorized.
+		/// </summary>
+		/// <typeparam name="M">The type of the manager.</typeparam>
+		/// <param name="managerCreator">
+		/// The function to construct the manager.
+		/// </param>
+		/// <param name="segregatedEntity">
+		/// If not null, check access based on current user roles and 
+		/// dispositions against the segregation where this entity belongs as well,
+		/// else check access based on roles only.
+		/// </param>
+		protected M TryGetManager<M>(Func<M> managerCreator, ISegregatedEntity segregatedEntity = null)
+			where M : class
+		{
+			if (managerCreator == null) throw new ArgumentNullException(nameof(managerCreator));
+
+			if (!CanAccessManager(typeof(M), segregatedEntity)) return null;
+
+			return managerCreator.Invoke();
+		}
+
+		/// <summary>
+		/// Get a manager of type <typeparamref name="M"/>
+		/// for an entity under a segregation.
+		/// </summary>
+		/// <typeparam name="M">The type of the manager.</typeparam>
+		/// <param name="managerCreator">
+		/// The function to construct the manager.
+		/// </param>
+		/// <param name="segregatedEntity">
+		/// If not null, check access based on current user roles and 
+		/// dispositions against the segregation where this entity belongs as well,
+		/// else check access based on roles only.
+		/// </param>
+		/// <exception cref="ManagerAccessDeniedException">
+		/// Thrown when the session user is not authorized.
+		/// </exception>
+		protected M GetManager<M>(Func<M> managerCreator, ISegregatedEntity segregatedEntity = null)
+			where M : class
+		{
+			M manager = TryGetManager(managerCreator, segregatedEntity);
+
+			if (manager == null) throw new ManagerAccessDeniedException(typeof(M));
+
+			return manager;
 		}
 
 		/// <summary>
