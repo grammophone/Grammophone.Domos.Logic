@@ -446,6 +446,18 @@ namespace Grammophone.Domos.Logic
 		#region Public methods
 
 		/// <summary>
+		/// Get the session environment which corresponds to a configuration section.
+		/// </summary>
+		/// <param name="configurationSectionName">The name of the configuration section.</param>
+		/// <returns>Returns the environment, if successful.</returns>
+		public static SessionEnvironment<U, D> GetEnvironment(string configurationSectionName)
+		{
+			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
+
+			return sessionEnvironmentsCache.Get(configurationSectionName);
+		}
+
+		/// <summary>
 		/// Send an e-mail.
 		/// </summary>
 		/// <param name="recepients">A list of recepients separated by comma or semicolon.</param>
@@ -668,11 +680,9 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Get the session environment corresponding to a configuration section name.
 		/// </summary>
-		internal virtual SessionEnvironment<U, D> GetEnvironment(string configurationSectionName)
+		internal virtual SessionEnvironment<U, D> ResolveEnvironment()
 		{
-			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
-
-			return sessionEnvironmentsCache.Get(configurationSectionName);
+			return sessionEnvironmentsCache.Get(this.ConfigurationSectionName);
 		}
 
 		#endregion
@@ -877,7 +887,7 @@ namespace Grammophone.Domos.Logic
 		{
 			this.ConfigurationSectionName = configurationSectionName;
 
-			this.Environment = this.GetEnvironment(configurationSectionName);
+			this.Environment = this.ResolveEnvironment();
 
 			this.DomainContainer = this.CreateDomainContainer();
 		}
@@ -1041,16 +1051,33 @@ namespace Grammophone.Domos.Logic
 
 		#endregion
 
+		#region Public methods
+
+		/// <summary>
+		/// Get the session environment which corresponds to a configuration section.
+		/// </summary>
+		/// <param name="configurationSectionName">The name of the configuration section.</param>
+		/// <returns>Returns the environment, if successful.</returns>
+		public static new SessionEnvironment<U, D, C> GetEnvironment(string configurationSectionName)
+		{
+			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
+
+			return sessionEnvironmentsCache.Get(configurationSectionName);
+		}
+
+		#endregion
+
 		#region Internal methods
 
 		/// <summary>
 		/// Get the session environment corresponding to a configuration section name.
 		/// </summary>
-		internal override SessionEnvironment<U, D> GetEnvironment(string configurationSectionName)
+		internal override SessionEnvironment<U, D> ResolveEnvironment()
 		{
-			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
-
-			return sessionEnvironmentsCache.Get(configurationSectionName);
+			// Implementation seems the same as the original method being overriden, 
+			// but this Session<U, D, C>.GetEnvironment static method is not the same as
+			// the parent's Session<U, D>.GetEnvironment static method.
+			return GetEnvironment(this.ConfigurationSectionName);
 		}
 
 		#endregion

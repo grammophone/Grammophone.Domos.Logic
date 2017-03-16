@@ -18,7 +18,7 @@ namespace Grammophone.Domos.Logic
 	/// </summary>
 	/// <typeparam name="U">The type of users in the session.</typeparam>
 	/// <typeparam name="D">The type of domain container of the session.</typeparam>
-	internal class SessionEnvironment<U, D>
+	public class SessionEnvironment<U, D>
 		where U : User
 		where D : IUsersDomainContainer<U>
 	{
@@ -189,7 +189,7 @@ namespace Grammophone.Domos.Logic
 	/// The type of configurator to use to setup the <see cref="SessionEnvironment{U, D}.DIContainer"/>
 	/// property.
 	/// </typeparam>
-	internal class SessionEnvironment<U, D, C> : SessionEnvironment<U, D>
+	public class SessionEnvironment<U, D, C> : SessionEnvironment<U, D>
 		where U : User
 		where D : IUsersDomainContainer<U>
 		where C : Configurator, new()
