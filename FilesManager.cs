@@ -173,7 +173,7 @@ namespace Grammophone.Domos.Logic
 			if (containerName == null) throw new ArgumentNullException(nameof(containerName));
 			if (stream == null) throw new ArgumentNullException(nameof(stream));
 
-			string contentType = GetFilenameContentType(filename);
+			string contentType = TryGetFilenameContentType(filename);
 
 			if (contentType == null)
 			{
@@ -250,7 +250,7 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Get the content type matching the extension of
+		/// Attempt to get the content type matching the extension of
 		/// a <paramref name="filename"/>.
 		/// </summary>
 		/// <param name="filename">The file name.</param>
@@ -258,7 +258,7 @@ namespace Grammophone.Domos.Logic
 		/// Returns the corresponding extension according to the 
 		/// configured <see cref="Configuration.ContentTypeAssociations"/> or null if no match.
 		/// </returns>
-		protected string GetFilenameContentType(string filename)
+		protected string TryGetFilenameContentType(string filename)
 		{
 			if (filename == null) throw new ArgumentNullException(nameof(filename));
 
