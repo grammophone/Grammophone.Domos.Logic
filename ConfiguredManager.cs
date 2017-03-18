@@ -37,7 +37,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The size of the cache of <see cref="settingsFactory"/>.
 		/// </summary>
-		private const int SettingsFactoryCacheSize = 2048;
+		private const int SettingsCacheSize = 2048;
 
 		#endregion
 
@@ -57,7 +57,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		static ConfiguredManager()
 		{
-			settingsFactory = new SettingsFactory<C>(SettingsFactoryCacheSize);
+			settingsFactory = new SettingsFactory<C>(SettingsCacheSize);
 		}
 
 		/// <summary>
