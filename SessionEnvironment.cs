@@ -8,7 +8,6 @@ using Grammophone.Configuration;
 using Grammophone.Domos.AccessChecking;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
-using Microsoft.Practices.Unity;
 using Grammophone.TemplateRendering;
 using Grammophone.Setup;
 
