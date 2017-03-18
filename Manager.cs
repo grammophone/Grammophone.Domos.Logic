@@ -7,7 +7,7 @@ using Grammophone.DataAccess;
 using Grammophone.Domos.AccessChecking;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
-using Microsoft.Practices.Unity;
+using Grammophone.Setup;
 
 namespace Grammophone.Domos.Logic
 {
@@ -75,11 +75,11 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The Unity IoC container set up for the <see cref="Session"/>.
 		/// </summary>
-		protected IUnityContainer SessionDIContainer
+		protected Settings SessionSettings
 		{
 			get
 			{
-				return this.Session.DIContainer;
+				return this.Session.Settings;
 			}
 		}
 

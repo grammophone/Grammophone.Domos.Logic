@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Grammophone.Caching;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
-using Microsoft.Practices.Unity;
+using Grammophone.Setup;
 
 namespace Grammophone.Domos.Logic
 {
@@ -24,7 +23,7 @@ namespace Grammophone.Domos.Logic
 	/// The type of the session, derived from <see cref="Session{U, D}"/>.
 	/// </typeparam>
 	/// <typeparam name="C">
-	/// The type of configurator used to setup the <see cref="ManagerDIContainer"/> property,
+	/// The type of configurator used to setup the <see cref="ManagerSettings"/> property,
 	/// derived from <see cref="Configurator"/>.
 	/// </typeparam>
 	public abstract class ConfiguredManager<U, D, S, C> : Manager<U, D, S>
@@ -36,9 +35,9 @@ namespace Grammophone.Domos.Logic
 		#region Constants
 
 		/// <summary>
-		/// The size of <see cref="diContainersCache"/>.
+		/// The size of the cache of <see cref="settingsFactory"/>.
 		/// </summary>
-		private const int DIContainersCacheSize = 4096;
+		private const int SettingsFactoryCacheSize = 2048;
 
 		#endregion
 
@@ -47,7 +46,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Cache of DI conainers by configuration section names.
 		/// </summary>
-		private static MRUCache<string, IUnityContainer> diContainersCache;
+		private static SettingsFactory<C> settingsFactory;
 
 		#endregion
 
@@ -58,9 +57,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		static ConfiguredManager()
 		{
-			diContainersCache = new MRUCache<string, IUnityContainer>(
-				CreateManagerDIContainer, 
-				DIContainersCacheSize);
+			settingsFactory = new SettingsFactory<C>(SettingsFactoryCacheSize);
 		}
 
 		/// <summary>
@@ -74,7 +71,8 @@ namespace Grammophone.Domos.Logic
 			if (session == null) throw new ArgumentNullException(nameof(session));
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 
-			this.ManagerDIContainer = diContainersCache.Get(configurationSectionName);
+			this.ManagerSettings = settingsFactory.Get(configurationSectionName);
+			this.ManagerConfigurationSectionName = configurationSectionName;
 		}
 
 		#endregion
@@ -82,27 +80,31 @@ namespace Grammophone.Domos.Logic
 		#region Protected properties
 
 		/// <summary>
-		/// The unity container dedicated to this manager.
+		/// The settings dedicated to this manager.
 		/// </summary>
-		protected IUnityContainer ManagerDIContainer { get; private set; }
+		protected Settings ManagerSettings { get; private set; }
+
+		/// <summary>
+		/// The name of the configuration section associated with the <see cref="ManagerSettings"/>.
+		/// </summary>
+		protected string ManagerConfigurationSectionName { get; private set; }
 
 		#endregion
 
-		#region Private fields
+		#region Protected methods
 
-		private static IUnityContainer CreateManagerDIContainer(string configurationSectionName)
-		{
-			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
-
-			var managerDIContainer = new UnityContainer();
-
-			var configurator = new C();
-
-			configurator.Configure(configurationSectionName, managerDIContainer);
-
-			return managerDIContainer;
-		}
+		/// <summary>
+		/// Flush the cached <see cref="ManagerSettings"/> created for 
+		/// some configuration section name.
+		/// If the settings existed in the cache, a subsequent new manager
+		/// will cause the settings to be reloaded and reconfigured.
+		/// </summary>
+		/// <param name="configurationSectionName">The name of the Unity configuration section dedicated to the manager.</param>
+		/// <returns>Returns true if the settings were found in the cache and removed, else returns false.</returns>
+		protected static bool FlushSettings(string configurationSectionName)
+			=> settingsFactory.Flush(configurationSectionName);
 
 		#endregion
+
 	}
 }

@@ -10,16 +10,18 @@ using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Microsoft.Practices.Unity;
 using Grammophone.TemplateRendering;
+using Grammophone.Setup;
 
 namespace Grammophone.Domos.Logic
 {
 	/// <summary>
 	/// Binds a session to its configuration environment
-	/// and sets up a unity container using <see cref="Configurator"/>.
+	/// and sets up a unity container using configurator 
+	/// of type <see cref="DefaultConfigurator"/>.
 	/// </summary>
 	/// <typeparam name="U">The type of users in the session.</typeparam>
 	/// <typeparam name="D">The type of domain container of the session.</typeparam>
-	public class SessionEnvironment<U, D>
+	public class SessionEnvironment<U, D> : IDisposable
 		where U : User
 		where D : IUsersDomainContainer<U>
 	{
@@ -52,9 +54,9 @@ namespace Grammophone.Domos.Logic
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 
-			this.DIContainer = CreateDIContainer(configurationSectionName);
+			this.Settings = LoadSettings(configurationSectionName);
 
-			var permissionsSetupProvider = this.DIContainer.Resolve<IPermissionsSetupProvider>();
+			var permissionsSetupProvider = this.Settings.Resolve<IPermissionsSetupProvider>();
 
 			this.AccessResolver = new AccessResolver<U>(permissionsSetupProvider);
 
@@ -67,7 +69,7 @@ namespace Grammophone.Domos.Logic
 				true);
 
 			this.storageProvidersCache = new MRUCache<string, Storage.IStorageProvider>(
-				name => this.DIContainer.Resolve<Storage.IStorageProvider>(name),
+				name => this.Settings.Resolve<Storage.IStorageProvider>(name),
 				StorageProvidersCacheSize);
 		}
 
@@ -77,7 +79,7 @@ namespace Grammophone.Domos.Logic
 
 		/// <summary>
 		/// The access resolver using the <see cref="IPermissionsSetupProvider"/>
-		/// specified in <see cref="DIContainer"/>.
+		/// specified in <see cref="Settings"/>.
 		/// </summary>
 		public AccessResolver<U> AccessResolver { get; private set; }
 
@@ -99,7 +101,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The Unity DI container.
 		/// </summary>
-		internal IUnityContainer DIContainer { get; private set; }
+		internal Settings Settings { get; private set; }
 
 		#endregion
 
@@ -122,7 +124,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		public Email.EmailClient CreateEmailClient()
 		{
-			var emailSettings = this.DIContainer.Resolve<Email.EmailSettings>();
+			var emailSettings = this.Settings.Resolve<Email.EmailSettings>();
 
 			return new Email.EmailClient(emailSettings);
 		}
@@ -130,48 +132,35 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Get the configured template rendering provider.
 		/// </summary>
-		public IRenderProvider GetRenderProvider() => this.DIContainer.Resolve<IRenderProvider>();
+		public IRenderProvider GetRenderProvider() => this.Settings.Resolve<IRenderProvider>();
+
+		/// <summary>
+		/// Dispose the environment.
+		/// </summary>
+		public void Dispose()
+		{
+			this.Settings.Dispose();
+			storageProvidersCache.Clear();
+		}
 
 		#endregion
 
 		#region Protected methods
 
 		/// <summary>
-		/// Specifies the <see cref="Configurator"/> to use for 
-		/// setting up the <see cref="DIContainer"/>.
-		/// This implementation uses <see cref="DefaultConfigurator"/>.
+		/// Load the settings corresponding to a configuration section.
 		/// </summary>
-		protected virtual Configurator GetConfigurator()
-		{
-			return new DefaultConfigurator();
-		}
+		/// <param name="configurationSectionName">The name of the configuration section.</param>
+		protected virtual Settings LoadSettings(string configurationSectionName)
+			=> Settings.Load(configurationSectionName);
 
 		#endregion
 
 		#region Private methods
 
-		/// <summary>
-		/// Create a unity container and set it up using the configurator
-		/// provided by <see cref="GetConfigurator"/> method.
-		/// </summary>
-		/// <param name="configurationSectionName">The name of the configuration section.</param>
-		/// <returns>Returns the configured unity container.</returns>
-		private IUnityContainer CreateDIContainer(string configurationSectionName)
-		{
-			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
-
-			var diContainer = new UnityContainer();
-
-			var configurator = GetConfigurator();
-
-			configurator.Configure(configurationSectionName, diContainer);
-
-			return diContainer;
-		}
-
 		private IReadOnlyDictionary<string, int> LoadContentTypeIDsByMIME()
 		{
-			using (var domainContainer = this.DIContainer.Resolve<D>())
+			using (var domainContainer = this.Settings.Resolve<D>())
 			{
 				var query = from ct in domainContainer.ContentTypes
 										select new { ct.ID, ct.MIME };
@@ -182,7 +171,7 @@ namespace Grammophone.Domos.Logic
 
 		private IReadOnlyDictionary<string, string> LoadContentTypesByExtension()
 		{
-			var filesConfiguration = this.DIContainer.Resolve<Configuration.FilesConfiguration>();
+			var filesConfiguration = this.Settings.Resolve<Configuration.FilesConfiguration>();
 
 			if (String.IsNullOrWhiteSpace(filesConfiguration.ContentTypeAssociationsXamlPath))
 				throw new LogicException("The ContentTypeAssociationsXamlPath property of FilesConfiguration is not specified.");
@@ -201,12 +190,13 @@ namespace Grammophone.Domos.Logic
 
 	/// <summary>
 	/// Binds a session to its configuration environment
-	/// and sets up a unity container using a specified configurator.
+	/// and sets up a unity container using a specified configurator
+	/// of type <typeparamref name="C"/>.
 	/// </summary>
 	/// <typeparam name="U">The type of users in the session.</typeparam>
 	/// <typeparam name="D">The type of domain container of the session.</typeparam>
 	/// <typeparam name="C">
-	/// The type of configurator to use to setup the <see cref="SessionEnvironment{U, D}.DIContainer"/>
+	/// The type of configurator to use to setup the <see cref="Settings"/>.
 	/// property.
 	/// </typeparam>
 	public class SessionEnvironment<U, D, C> : SessionEnvironment<U, D>
@@ -214,7 +204,7 @@ namespace Grammophone.Domos.Logic
 		where D : IUsersDomainContainer<U>
 		where C : Configurator, new()
 	{
-		#region Construction
+		#region Construiction
 
 		/// <summary>
 		/// Create.
@@ -229,12 +219,11 @@ namespace Grammophone.Domos.Logic
 		#region Protected methods
 
 		/// <summary>
-		/// Returns a configurator of type <typeparamref name="C"/>.
+		/// Load the settings corresponding to a configuration section.
 		/// </summary>
-		protected override Configurator GetConfigurator()
-		{
-			return new C();
-		}
+		/// <param name="configurationSectionName">The name of the configuration section.</param>
+		protected override Settings LoadSettings(string configurationSectionName)
+			=> Settings.Load<C>(configurationSectionName);
 
 		#endregion
 	}

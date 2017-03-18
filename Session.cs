@@ -7,16 +7,14 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Grammophone.Caching;
-using Grammophone.Configuration;
 using Grammophone.DataAccess;
 using Grammophone.Domos.AccessChecking;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.Domos.Environment;
 using Grammophone.TemplateRendering;
-using Microsoft.Practices.Unity;
-using Microsoft.Practices.Unity.Configuration;
 using Grammophone.Email;
+using Grammophone.Setup;
 
 namespace Grammophone.Domos.Logic
 {
@@ -311,7 +309,7 @@ namespace Grammophone.Domos.Logic
 
 			Initialize(configurationSectionName);
 
-			var userContext = this.DIContainer.Resolve<IUserContext>();
+			var userContext = this.Settings.Resolve<IUserContext>();
 
 			long? userID = userContext.UserID;
 
@@ -430,7 +428,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The Unity dependency injection container for this session.
 		/// </summary>
-		protected internal IUnityContainer DIContainer => this.Environment.DIContainer;
+		protected internal Settings Settings => this.Environment.Settings;
 
 		#endregion
 
@@ -950,7 +948,7 @@ namespace Grammophone.Domos.Logic
 		/// A <see cref="SessionEnvironment{U, D}"/>
 		/// is created per <paramref name="configurationSectionName"/>
 		/// on an as-needed basis.
-		/// It contains the <see cref="DIContainer"/>, the <see cref="AccessResolver"/>
+		/// It contains the <see cref="Settings"/>, the <see cref="AccessResolver"/>
 		/// and mappings of MIME content types for the sessions created using
 		/// the given configuration section name.
 		/// </remarks>
@@ -962,7 +960,7 @@ namespace Grammophone.Domos.Logic
 
 			if (sessionEnvironmentsCache.Remove(configurationSectionName, out sessionEnvironment))
 			{
-				sessionEnvironment.DIContainer.Dispose();
+				sessionEnvironment.Settings.Dispose();
 
 				return true;
 			}
@@ -1015,11 +1013,11 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		private D CreateDomainContainer()
 		{
-			return this.DIContainer.Resolve<D>();
+			return this.Settings.Resolve<D>();
 		}
 
 		/// <summary>
-		/// Set up <see cref="DIContainer"/>, <see cref="DomainContainer"/>
+		/// Set up <see cref="Settings"/>, <see cref="DomainContainer"/>
 		/// and <see cref="AccessResolver"/> based on the configuration.
 		/// </summary>
 		/// <param name="configurationSectionName">The name of a Unity configuration section.</param>
@@ -1083,7 +1081,7 @@ namespace Grammophone.Domos.Logic
 	/// The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.
 	/// </typeparam>
 	/// <typeparam name="C">
-	/// The type of configurator for the <see cref="Session{U, D}.DIContainer"/> property,
+	/// The type of configurator for the <see cref="Session{U, D}.Settings"/> property,
 	/// derived from <see cref="Configurator"/>.
 	/// </typeparam>
 	/// <remarks>
@@ -1245,7 +1243,7 @@ namespace Grammophone.Domos.Logic
 		/// A <see cref="SessionEnvironment{U, D, C}"/>
 		/// is created per <paramref name="configurationSectionName"/>
 		/// on an as-needed basis.
-		/// It contains the <see cref="Session{U, D}.DIContainer"/>, the <see cref="AccessResolver{U}"/>
+		/// It contains the <see cref="Session{U, D}.Settings"/>, the <see cref="AccessResolver{U}"/>
 		/// and mappings of MIME content types for the sessions created using
 		/// the given configuration section name.
 		/// </remarks>
@@ -1253,18 +1251,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 
-			SessionEnvironment<U, D, C> sessionEnvironment;
-
-			if (sessionEnvironmentsCache.Remove(configurationSectionName, out sessionEnvironment))
-			{
-				sessionEnvironment.DIContainer.Dispose();
-
-				return true;
-			}
-			else
-			{
-				return false;
-			}
+			return sessionEnvironmentsCache.Remove(configurationSectionName);
 		}
 
 		#endregion
@@ -1281,7 +1268,7 @@ namespace Grammophone.Domos.Logic
 	/// The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.
 	/// </typeparam>
 	/// <typeparam name="C">
-	/// The type of configurator for the <see cref="Session{U, D}.DIContainer"/> property,
+	/// The type of configurator for the <see cref="Session{U, D}.Settings"/> property,
 	/// derived from <see cref="Configurator"/>.
 	/// </typeparam>
 	/// <typeparam name="PD">

@@ -4,14 +4,13 @@ using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Grammophone.Caching;
 using Grammophone.Domos.AccessChecking;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Workflow;
 using Grammophone.Domos.Logic.Configuration;
 using Grammophone.Domos.Logic.Models.Workflow;
-using Microsoft.Practices.Unity;
+using Grammophone.Setup;
 
 namespace Grammophone.Domos.Logic
 {
@@ -36,7 +35,7 @@ namespace Grammophone.Domos.Logic
 	/// </typeparam>
 	/// <typeparam name="C">
 	/// The type of configurator used to setup 
-	/// the <see cref="ConfiguredManager{U, D, S, C}.ManagerDIContainer"/> property,
+	/// the <see cref="ConfiguredManager{U, D, S, C}.ManagerSettings"/> property,
 	/// derived from <see cref="Configurator"/>.
 	/// </typeparam>
 	/// <remarks>
@@ -816,7 +815,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (pathCodeName == null) throw new ArgumentNullException(nameof(pathCodeName));
 
-			return this.ManagerDIContainer.Resolve<StatePathConfiguration<U, D, S, ST, SO>>(pathCodeName);
+			return this.ManagerSettings.Resolve<StatePathConfiguration<U, D, S, ST, SO>>(pathCodeName);
 		}
 
 		/// <summary>
