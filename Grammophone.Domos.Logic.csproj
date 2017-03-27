@@ -89,7 +89,7 @@
       <DependentUpon>FilesManagerMessages.resx</DependentUpon>
     </Compile>
     <Compile Include="FundsTransferManager.cs" />
-    <Compile Include="IPublicDomainContainer.cs" />
+    <Compile Include="IPublicDomainProvider.cs" />
     <Compile Include="IWorkflowAction.cs" />
     <Compile Include="IWorkflowManager.cs" />
     <Compile Include="Loggable.cs" />
