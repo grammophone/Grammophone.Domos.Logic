@@ -20,7 +20,7 @@ namespace Grammophone.Domos.Logic
 	/// </summary>
 	/// <typeparam name="U">The type of users in the session.</typeparam>
 	/// <typeparam name="D">The type of domain container of the session.</typeparam>
-	public class SessionEnvironment<U, D> : IDisposable
+	public class LogicSessionEnvironment<U, D> : IDisposable
 		where U : User
 		where D : IUsersDomainContainer<U>
 	{
@@ -49,7 +49,7 @@ namespace Grammophone.Domos.Logic
 		/// Create.
 		/// </summary>
 		/// <param name="configurationSectionName">The name of the Unity configuration section.</param>
-		public SessionEnvironment(string configurationSectionName)
+		public LogicSessionEnvironment(string configurationSectionName)
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 
@@ -198,7 +198,7 @@ namespace Grammophone.Domos.Logic
 	/// The type of configurator to use to setup the <see cref="Settings"/>.
 	/// property.
 	/// </typeparam>
-	public class SessionEnvironment<U, D, C> : SessionEnvironment<U, D>
+	public class LogicSessionEnvironment<U, D, C> : LogicSessionEnvironment<U, D>
 		where U : User
 		where D : IUsersDomainContainer<U>
 		where C : Configurator, new()
@@ -209,7 +209,7 @@ namespace Grammophone.Domos.Logic
 		/// Create.
 		/// </summary>
 		/// <param name="configurationSectionName">The name of the Unity configuration section.</param>
-		public SessionEnvironment(string configurationSectionName) : base(configurationSectionName)
+		public LogicSessionEnvironment(string configurationSectionName) : base(configurationSectionName)
 		{
 		}
 

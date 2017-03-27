@@ -33,7 +33,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="domainContainer">
 		/// The domain container to wrap, preferrably with enabled entity access security.
-		/// See	<see cref="Session{U, D}.CreateSecuredDomainContainer"/>.
+		/// See	<see cref="LogicSession{U, D}.CreateSecuredDomainContainer"/>.
 		/// </param>
 		/// <param name="ownsDomainContainer">
 		/// If true, the public domain instance owns the <paramref name="domainContainer"/>

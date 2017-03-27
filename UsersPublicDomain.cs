@@ -22,7 +22,7 @@ namespace Grammophone.Domos.Logic
 	/// Public domain instances can be handed off by the session, either as a property,
 	/// where the session owns the (secured) domain container, or via a Create method,
 	/// where the public domain should own the domain container, created preferrably
-	/// using <see cref="Session{U, D}.CreateSecuredDomainContainer"/>.
+	/// using <see cref="LogicSession{U, D}.CreateSecuredDomainContainer"/>.
 	/// </remarks>
 	public abstract class UsersPublicDomain<U, D> : PublicDomain<D>
 		where U : User
@@ -35,7 +35,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="domainContainer">
 		/// The domain container to wrap, preferrably with enabled entity access security.
-		/// See	<see cref="Session{U, D}.CreateSecuredDomainContainer"/>.
+		/// See	<see cref="LogicSession{U, D}.CreateSecuredDomainContainer"/>.
 		/// </param>
 		/// <param name="ownsDomainContainer">
 		/// If true, the public domain instance owns the <paramref name="domainContainer"/>

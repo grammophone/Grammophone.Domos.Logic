@@ -11,7 +11,7 @@ namespace Grammophone.Domos.Logic
 {
 	/// <summary>
 	/// Base class for all managers having their own configuration section and handed 
-	/// by <see cref="Session{U, D}"/> descendants.
+	/// by <see cref="LogicSession{U, D}"/> descendants.
 	/// </summary>
 	/// <typeparam name="U">
 	/// The type of the user in the domain container, derived from <see cref="User"/>.
@@ -20,7 +20,7 @@ namespace Grammophone.Domos.Logic
 	/// The type of the domain container, derived from <see cref="IUsersDomainContainer{U}"/>.
 	/// </typeparam>
 	/// <typeparam name="S">
-	/// The type of the session, derived from <see cref="Session{U, D}"/>.
+	/// The type of the session, derived from <see cref="LogicSession{U, D}"/>.
 	/// </typeparam>
 	/// <typeparam name="C">
 	/// The type of configurator used to setup the <see cref="ManagerSettings"/> property,
@@ -29,7 +29,7 @@ namespace Grammophone.Domos.Logic
 	public abstract class ConfiguredManager<U, D, S, C> : Manager<U, D, S>
 		where U : User
 		where D : IUsersDomainContainer<U>
-		where S : Session<U, D>
+		where S : LogicSession<U, D>
 		where C : Configurator, new()
 	{
 		#region Constants

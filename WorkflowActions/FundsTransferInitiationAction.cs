@@ -20,7 +20,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 	/// <typeparam name="R">The type of remittance, derived from <see cref="Remittance{U}"/>.</typeparam>
 	/// <typeparam name="J">The type of journal, derived from <see cref="Journal{U, BST, P, R}"/>.</typeparam>
 	/// <typeparam name="D">The type of domain container, derived from <see cref="IDomosDomainContainer{U, BST, P, R, J}"/>.</typeparam>
-	/// <typeparam name="S">The type of session, derived from <see cref="Session{U, D}"/>.</typeparam>
+	/// <typeparam name="S">The type of session, derived from <see cref="LogicSession{U, D}"/>.</typeparam>
 	/// <typeparam name="ST">The type of state transition, derived from <typeparamref name="BST"/></typeparam>
 	/// <typeparam name="SO">The type of stateful object, derived from <see cref="IStateful{U, ST}"/>.</typeparam>
 	public abstract class FundsTransferInitiationAction<U, BST, P, R, J, D, S, ST, SO>
@@ -31,7 +31,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		where R : Remittance<U>
 		where J : Journal<U, BST, P, R>
 		where D : IDomosDomainContainer<U, BST, P, R, J>
-		where S : Session<U, D>
+		where S : LogicSession<U, D>
 		where ST : BST
 		where SO : IStateful<U, ST>
 	{

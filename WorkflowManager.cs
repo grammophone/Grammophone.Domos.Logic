@@ -25,7 +25,7 @@ namespace Grammophone.Domos.Logic
 	/// The type of domain container, derived from <see cref="IWorkflowUsersDomainContainer{U, ST}"/>.
 	/// </typeparam>
 	/// <typeparam name="S">
-	/// The type of session, derived from <see cref="Session{U, D}"/>.
+	/// The type of session, derived from <see cref="LogicSession{U, D}"/>.
 	/// </typeparam>
 	/// <typeparam name="ST">
 	/// The type of state transition, derived from <typeparamref name="BST"/>.
@@ -48,7 +48,7 @@ namespace Grammophone.Domos.Logic
 		where U : User
 		where BST : StateTransition<U>
 		where D : IWorkflowUsersDomainContainer<U, BST>
-		where S : Session<U, D>
+		where S : LogicSession<U, D>
 		where ST : BST, new()
 		where SO : IStateful<U, ST>
 		where C : Configurator, new()

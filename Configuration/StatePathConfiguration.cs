@@ -14,7 +14,7 @@ namespace Grammophone.Domos.Logic.Configuration
 	/// </summary>
 	/// <typeparam name="U">The type of the user, derived from <see cref="User"/>.</typeparam>
 	/// <typeparam name="D">The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.</typeparam>
-	/// <typeparam name="S">The type of session, derived from <see cref="Session{U, D}"/>.</typeparam>
+	/// <typeparam name="S">The type of session, derived from <see cref="LogicSession{U, D}"/>.</typeparam>
 	/// <typeparam name="ST">The type of state transition, derived from <see cref="StateTransition{U}"/>.</typeparam>
 	/// <typeparam name="SO">The type of stateful object, derived from <see cref="IStateful{U, ST}"/>.</typeparam>
 	/// <remarks>
@@ -25,7 +25,7 @@ namespace Grammophone.Domos.Logic.Configuration
 	public class StatePathConfiguration<U, D, S, ST, SO>
 		where U : User
 		where D : IUsersDomainContainer<U>
-		where S : Session<U, D>
+		where S : LogicSession<U, D>
 		where ST : StateTransition<U>
 		where SO : IStateful<U, ST>
 	{

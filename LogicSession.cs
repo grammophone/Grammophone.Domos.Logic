@@ -58,7 +58,7 @@ namespace Grammophone.Domos.Logic
 	/// </list>
 	/// </para>
 	/// </remarks>
-	public abstract class Session<U, D> : Loggable, IDisposable
+	public abstract class LogicSession<U, D> : Loggable, IDisposable
 		where U : User
 		where D : IUsersDomainContainer<U>
 	{
@@ -251,9 +251,9 @@ namespace Grammophone.Domos.Logic
 		#region Private fields
 
 		/// <summary>
-		/// Caches <see cref="SessionEnvironment{U, D}"/>s by configuration section names.
+		/// Caches <see cref="LogicSessionEnvironment{U, D}"/>s by configuration section names.
 		/// </summary>
-		private static MRUCache<string, SessionEnvironment<U, D>> sessionEnvironmentsCache;
+		private static MRUCache<string, LogicSessionEnvironment<U, D>> sessionEnvironmentsCache;
 
 		/// <summary>
 		/// The user owning the session.
@@ -277,10 +277,10 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Static initialization.
 		/// </summary>
-		static Session()
+		static LogicSession()
 		{
-			sessionEnvironmentsCache = new MRUCache<string, SessionEnvironment<U, D>>(
-				configurationSectionName => new SessionEnvironment<U, D>(configurationSectionName), 
+			sessionEnvironmentsCache = new MRUCache<string, LogicSessionEnvironment<U, D>>(
+				configurationSectionName => new LogicSessionEnvironment<U, D>(configurationSectionName), 
 				SessionEnvironmentsCacheSize);
 		}
 
@@ -303,7 +303,7 @@ namespace Grammophone.Domos.Logic
 		/// <item><see cref="IPermissionsSetupProvider"/></item>
 		/// </list>
 		/// </remarks>
-		public Session(string configurationSectionName)
+		public LogicSession(string configurationSectionName)
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 
@@ -344,7 +344,7 @@ namespace Grammophone.Domos.Logic
 		/// <item><see cref="IPermissionsSetupProvider"/></item>
 		/// </list>
 		/// </remarks>
-		public Session(string configurationSectionName, Expression<Func<U, bool>> userPickPredicate)
+		public LogicSession(string configurationSectionName, Expression<Func<U, bool>> userPickPredicate)
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 			if (userPickPredicate == null) throw new ArgumentNullException(nameof(userPickPredicate));
@@ -437,7 +437,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The environment of the session.
 		/// </summary>
-		internal SessionEnvironment<U, D> Environment { get; private set; }
+		internal LogicSessionEnvironment<U, D> Environment { get; private set; }
 
 		#endregion
 
@@ -448,7 +448,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="configurationSectionName">The name of the configuration section.</param>
 		/// <returns>Returns the environment, if successful.</returns>
-		public static SessionEnvironment<U, D> GetEnvironment(string configurationSectionName)
+		public static LogicSessionEnvironment<U, D> GetEnvironment(string configurationSectionName)
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 
@@ -674,7 +674,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Get the session environment corresponding to a configuration section name.
 		/// </summary>
-		internal virtual SessionEnvironment<U, D> ResolveEnvironment()
+		internal virtual LogicSessionEnvironment<U, D> ResolveEnvironment()
 		{
 			return sessionEnvironmentsCache.Get(this.ConfigurationSectionName);
 		}
@@ -945,7 +945,7 @@ namespace Grammophone.Domos.Logic
 		/// least-recently-used items to make room for other resources.
 		/// </returns>
 		/// <remarks>
-		/// A <see cref="SessionEnvironment{U, D}"/>
+		/// A <see cref="LogicSessionEnvironment{U, D}"/>
 		/// is created per <paramref name="configurationSectionName"/>
 		/// on an as-needed basis.
 		/// It contains the <see cref="Settings"/>, the <see cref="AccessResolver"/>
@@ -956,7 +956,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 
-			SessionEnvironment<U, D> sessionEnvironment;
+			LogicSessionEnvironment<U, D> sessionEnvironment;
 
 			if (sessionEnvironmentsCache.Remove(configurationSectionName, out sessionEnvironment))
 			{
@@ -1081,7 +1081,7 @@ namespace Grammophone.Domos.Logic
 	/// The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.
 	/// </typeparam>
 	/// <typeparam name="C">
-	/// The type of configurator for the <see cref="Session{U, D}.Settings"/> property,
+	/// The type of configurator for the <see cref="LogicSession{U, D}.Settings"/> property,
 	/// derived from <see cref="Configurator"/>.
 	/// </typeparam>
 	/// <remarks>
@@ -1115,7 +1115,7 @@ namespace Grammophone.Domos.Logic
 	/// </list>
 	/// </para>
 	/// </remarks>
-	public abstract class Session<U, D, C> : Session<U, D>
+	public abstract class LogicSession<U, D, C> : LogicSession<U, D>
 		where U : User
 		where D : IUsersDomainContainer<U>
 		where C : Configurator, new()
@@ -1123,9 +1123,9 @@ namespace Grammophone.Domos.Logic
 		#region Private fields
 
 		/// <summary>
-		/// Caches <see cref="SessionEnvironment{U, D, C}"/>s by configuration section names.
+		/// Caches <see cref="LogicSessionEnvironment{U, D, C}"/>s by configuration section names.
 		/// </summary>
-		private static MRUCache<string, SessionEnvironment<U, D, C>> sessionEnvironmentsCache;
+		private static MRUCache<string, LogicSessionEnvironment<U, D, C>> sessionEnvironmentsCache;
 
 		#endregion
 
@@ -1134,10 +1134,10 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Static initialization.
 		/// </summary>
-		static Session()
+		static LogicSession()
 		{
-			sessionEnvironmentsCache = new MRUCache<string, SessionEnvironment<U, D, C>>(
-				configurationSectionName => new SessionEnvironment<U, D, C>(configurationSectionName),
+			sessionEnvironmentsCache = new MRUCache<string, LogicSessionEnvironment<U, D, C>>(
+				configurationSectionName => new LogicSessionEnvironment<U, D, C>(configurationSectionName),
 				SessionEnvironmentsCacheSize);
 		}
 
@@ -1160,7 +1160,7 @@ namespace Grammophone.Domos.Logic
 		/// <item><see cref="IPermissionsSetupProvider"/></item>
 		/// </list>
 		/// </remarks>
-		public Session(string configurationSectionName)
+		public LogicSession(string configurationSectionName)
 			: base(configurationSectionName)
 		{
 		}
@@ -1182,7 +1182,7 @@ namespace Grammophone.Domos.Logic
 		/// <item><see cref="IPermissionsSetupProvider"/></item>
 		/// </list>
 		/// </remarks>
-		public Session(string configurationSectionName, Expression<Func<U, bool>> userPickPredicate)
+		public LogicSession(string configurationSectionName, Expression<Func<U, bool>> userPickPredicate)
 			: base(configurationSectionName, userPickPredicate)
 		{
 		}
@@ -1196,7 +1196,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="configurationSectionName">The name of the configuration section.</param>
 		/// <returns>Returns the environment, if successful.</returns>
-		public static new SessionEnvironment<U, D, C> GetEnvironment(string configurationSectionName)
+		public static new LogicSessionEnvironment<U, D, C> GetEnvironment(string configurationSectionName)
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 
@@ -1210,7 +1210,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Get the session environment corresponding to a configuration section name.
 		/// </summary>
-		internal override SessionEnvironment<U, D> ResolveEnvironment()
+		internal override LogicSessionEnvironment<U, D> ResolveEnvironment()
 		{
 			// Implementation seems the same as the original method being overriden, 
 			// but this Session<U, D, C>.GetEnvironment static method is not the same as
@@ -1240,10 +1240,10 @@ namespace Grammophone.Domos.Logic
 		/// least-recently-used items to make room for other resources.
 		/// </returns>
 		/// <remarks>
-		/// A <see cref="SessionEnvironment{U, D, C}"/>
+		/// A <see cref="LogicSessionEnvironment{U, D, C}"/>
 		/// is created per <paramref name="configurationSectionName"/>
 		/// on an as-needed basis.
-		/// It contains the <see cref="Session{U, D}.Settings"/>, the <see cref="AccessResolver{U}"/>
+		/// It contains the <see cref="LogicSession{U, D}.Settings"/>, the <see cref="AccessResolver{U}"/>
 		/// and mappings of MIME content types for the sessions created using
 		/// the given configuration section name.
 		/// </remarks>
@@ -1268,7 +1268,7 @@ namespace Grammophone.Domos.Logic
 	/// The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.
 	/// </typeparam>
 	/// <typeparam name="C">
-	/// The type of configurator for the <see cref="Session{U, D}.Settings"/> property,
+	/// The type of configurator for the <see cref="LogicSession{U, D}.Settings"/> property,
 	/// derived from <see cref="Configurator"/>.
 	/// </typeparam>
 	/// <typeparam name="PD">
@@ -1306,7 +1306,7 @@ namespace Grammophone.Domos.Logic
 	/// </list>
 	/// </para>
 	/// </remarks>
-	public abstract class Session<U, D, C, PD> : Session<U, D>, IPublicDomainProvider<D, PD>
+	public abstract class LogicSession<U, D, C, PD> : LogicSession<U, D>, IPublicDomainProvider<D, PD>
 		where U : User
 		where D : IUsersDomainContainer<U>
 		where C : Configurator, new()
@@ -1342,7 +1342,7 @@ namespace Grammophone.Domos.Logic
 		/// <item><see cref="IPermissionsSetupProvider"/></item>
 		/// </list>
 		/// </remarks>
-		public Session(string configurationSectionName) 
+		public LogicSession(string configurationSectionName) 
 			: base(configurationSectionName)
 		{
 		}
@@ -1364,7 +1364,7 @@ namespace Grammophone.Domos.Logic
 		/// <item><see cref="IPermissionsSetupProvider"/></item>
 		/// </list>
 		/// </remarks>
-		public Session(string configurationSectionName, Expression<Func<U, bool>> userPickPredicate)
+		public LogicSession(string configurationSectionName, Expression<Func<U, bool>> userPickPredicate)
 			: base(configurationSectionName, userPickPredicate)
 		{
 		}
