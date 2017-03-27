@@ -1306,7 +1306,7 @@ namespace Grammophone.Domos.Logic
 	/// </list>
 	/// </para>
 	/// </remarks>
-	public abstract class Session<U, D, C, PD> : Session<U, D>
+	public abstract class Session<U, D, C, PD> : Session<U, D>, IPublicDomainProvider<D, PD>
 		where U : User
 		where D : IUsersDomainContainer<U>
 		where C : Configurator, new()
