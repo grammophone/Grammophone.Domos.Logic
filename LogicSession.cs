@@ -736,29 +736,17 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Checks whether the current user has access to a manager.
-		/// </summary>
-		/// <param name="managerType">The type of the manager.</param>
-		protected bool CanAccessManager(Type managerType)
-		{
-			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
-
-			return this.AccessResolver.CanUserAccessManager(user, managerType);
-		}
-
-		/// <summary>
-		/// Checks whether the current user has access to a manager
-		/// for an entity under a segregation.
+		/// Checks whether the current user has access to a manager,
 		/// </summary>
 		/// <param name="managerType">The type of the manager.</param>
 		/// <param name="segregatedEntity">
-		/// The entity belonging to a segregation. It allows access cheking 
+		/// If specified, the segregated entity to manage. It allows access checking 
 		/// based on the current user's dispositions against the segregation, beyond user roles.
+		/// Otherwise, checks whether the current user's roles suffice to manage entities of all segregations.
 		/// </param>
-		protected bool CanAccessManager(Type managerType, ISegregatedEntity segregatedEntity)
+		protected bool CanAccessManager(Type managerType, ISegregatedEntity segregatedEntity = null)
 		{
 			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
-			if (segregatedEntity == null) throw new ArgumentNullException(nameof(segregatedEntity));
 
 			return this.AccessResolver.CanUserAccessManager(user, managerType, segregatedEntity);
 		}
