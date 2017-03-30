@@ -624,6 +624,42 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Determine whether a user has a permission via the user's roles alone or optionally
+		/// via her dispositions against a segregated entity.
+		/// </summary>
+		/// <param name="permissionCodeName">The code name of the permission.</param>
+		/// <param name="segregatedEntity">The optional segregated entity to check user dispositions against.</param>
+		public bool HasPermission(string permissionCodeName, ISegregatedEntity segregatedEntity = null)
+			=> this.AccessResolver.UserHasPermission(user, permissionCodeName, segregatedEntity);
+
+		/// <summary>
+		/// Determine whether a user has a permission via the user's roles alone or optionally
+		/// via her dispositions against a segregation.
+		/// </summary>
+		/// <param name="permissionCodeName">The code name of the permission.</param>
+		/// <param name="segregationID">The ID of the segregation to check user dispositions against.</param>
+		public bool HasPermission(string permissionCodeName, long segregationID)
+			=> this.AccessResolver.UserHasPermission(user, permissionCodeName, segregationID);
+
+		/// <summary>
+		/// Determines whether a user has a permission as implied from a
+		/// user's roles and a disposition she owns as current context.
+		/// </summary>
+		/// <param name="permissionCodeName">The code name of the permission.</param>
+		/// <param name="currentDisposition">The current disposition.</param>
+		public bool HasPermissionByDisposition(string permissionCodeName, Disposition currentDisposition)
+			=> this.AccessResolver.UserHasPermissionByDisposition(user, permissionCodeName, currentDisposition);
+
+		/// <summary>
+		/// Determines whether a user has a permission as implied from a
+		/// user's roles and a disposition she owns as current context.
+		/// </summary>
+		/// <param name="permissionCodeName">The code name of the permission.</param>
+		/// <param name="currentDispositionID">The ID of the current disposition.</param>
+		public bool HasPermissionByDisposition(string permissionCodeName, long currentDispositionID)
+			=> this.AccessResolver.UserHasPermissionByDisposition(user, permissionCodeName, currentDispositionID);
+
+		/// <summary>
 		/// Disposes the underlying resources of the <see cref="DomainContainer"/>.
 		/// </summary>
 		public void Dispose()
@@ -713,7 +749,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
 
-			return this.AccessResolver.CanUserAccessManagerByDisposition(user, dispositionID, managerType);
+			return this.AccessResolver.CanUserAccessManagerByDisposition(user, managerType, dispositionID);
 		}
 
 		/// <summary>
@@ -732,7 +768,7 @@ namespace Grammophone.Domos.Logic
 			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
 			if (disposition == null) throw new ArgumentNullException(nameof(disposition));
 
-			return this.AccessResolver.CanUserAccessManagerByDisposition(user, disposition, managerType);
+			return this.AccessResolver.CanUserAccessManagerByDisposition(user, managerType, disposition);
 		}
 
 		/// <summary>
