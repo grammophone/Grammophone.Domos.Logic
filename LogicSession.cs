@@ -624,7 +624,7 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Determine whether a user has a permission via the user's roles alone or optionally
+		/// Determine whether the current user has a permission via the user's roles alone or optionally
 		/// via her dispositions against a segregated entity.
 		/// </summary>
 		/// <param name="permissionCodeName">The code name of the permission.</param>
@@ -633,7 +633,7 @@ namespace Grammophone.Domos.Logic
 			=> this.AccessResolver.UserHasPermission(user, permissionCodeName, segregatedEntity);
 
 		/// <summary>
-		/// Determine whether a user has a permission via the user's roles alone or optionally
+		/// Determine whether the current user has a permission via the user's roles alone or optionally
 		/// via her dispositions against a segregation.
 		/// </summary>
 		/// <param name="permissionCodeName">The code name of the permission.</param>
@@ -642,7 +642,7 @@ namespace Grammophone.Domos.Logic
 			=> this.AccessResolver.UserHasPermission(user, permissionCodeName, segregationID);
 
 		/// <summary>
-		/// Determines whether a user has a permission as implied from a
+		/// Determines whether the current user has a permission as implied from a
 		/// user's roles and a disposition she owns as current context.
 		/// </summary>
 		/// <param name="permissionCodeName">The code name of the permission.</param>
@@ -651,7 +651,7 @@ namespace Grammophone.Domos.Logic
 			=> this.AccessResolver.UserHasPermissionByDisposition(user, permissionCodeName, currentDisposition);
 
 		/// <summary>
-		/// Determines whether a user has a permission as implied from a
+		/// Determines whether the current user has a permission as implied from a
 		/// user's roles and a disposition she owns as current context.
 		/// </summary>
 		/// <param name="permissionCodeName">The code name of the permission.</param>
