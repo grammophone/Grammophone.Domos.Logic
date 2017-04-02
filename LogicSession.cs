@@ -444,6 +444,17 @@ namespace Grammophone.Domos.Logic
 		#region Public methods
 
 		/// <summary>
+		/// Create a container proxy for a new object of type <typeparamref name="T"/>.
+		/// </summary>
+		/// <typeparam name="T">The type of the object to be proxied.</typeparam>
+		/// <returns>Returns a proxy for the new object.</returns>
+		public T Create<T>()
+			where T : class
+		{
+			return this.DomainContainer.Create<T>();
+		}
+
+		/// <summary>
 		/// Get the session environment which corresponds to a configuration section.
 		/// </summary>
 		/// <param name="configurationSectionName">The name of the configuration section.</param>
