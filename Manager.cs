@@ -114,6 +114,30 @@ namespace Grammophone.Domos.Logic
 		/// </remarks>
 		protected ElevatedAccessScope GetElevatedAccessScope() => this.Session.GetElevatedAccessScope();
 
+		/// <summary>
+		/// Update an object graph asynchronously.
+		/// </summary>
+		/// <typeparam name="T">The type of the root of the graph.</typeparam>
+		/// <param name="objectGraphRoot">The root of the graph.</param>
+		/// <param name="attachAsModified">
+		/// If this is true and the graph is disconnected, 
+		/// it is attached with a 'modified' state,
+		/// else this parameter has no effect.
+		/// </param>
+		/// <returns>Returns a task completing the action.</returns>
+		protected async Task UpdateObjectGraphAsync<T>(T objectGraphRoot, bool attachAsModified = false)
+			where T : class
+		{
+			if (objectGraphRoot == null) throw new ArgumentNullException(nameof(objectGraphRoot));
+
+			using (var transaction = DomainContainer.BeginTransaction())
+			{
+				if (attachAsModified) this.DomainContainer.AttachGraphAsModified(objectGraphRoot);
+
+				await transaction.CommitAsync();
+			}
+		}
+
 		#endregion
 	}
 }
