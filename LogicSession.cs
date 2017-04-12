@@ -84,6 +84,8 @@ namespace Grammophone.Domos.Logic
 
 			private readonly U user;
 
+			private readonly D domainContainer;
+
 			#endregion
 
 			#region Construction
@@ -98,13 +100,18 @@ namespace Grammophone.Domos.Logic
 			/// <param name="accessResolver">
 			/// The <see cref="AccessChecking.AccessResolver{U}"/> to use in order to enforce entity rights.
 			/// </param>
-			public EntityListener(U user, AccessResolver<U> accessResolver)
+			/// <param name="domainContainer">
+			/// The domain container.
+			/// </param>
+			public EntityListener(U user, AccessResolver<U> accessResolver, D domainContainer)
 			{
 				if (user == null) throw new ArgumentNullException(nameof(user));
 				if (accessResolver == null) throw new ArgumentNullException(nameof(accessResolver));
+				if (domainContainer == null) throw new ArgumentNullException(nameof(domainContainer));
 
 				this.user = user;
 				this.accessResolver = accessResolver;
+				this.domainContainer = domainContainer;
 			}
 
 			#endregion
@@ -138,7 +145,8 @@ namespace Grammophone.Domos.Logic
 
 					if (userTrackingEntity != null)
 					{
-						if (userTrackingEntity.OwningUserID == 0L && userTrackingEntity.OwningUser == null)
+						if (userTrackingEntity.OwningUserID == 0L 
+							&& !domainContainer.Entry(userTrackingEntity).Reference(ute => ute.OwningUser).IsLoaded)
 						{
 							userTrackingEntity.OwningUserID = user.ID;
 						}
@@ -174,10 +182,7 @@ namespace Grammophone.Domos.Logic
 				{
 					trackedEntity.LastModifierUserID = user.ID;
 
-					var now = DateTime.UtcNow;
-					trackedEntity.LastModificationDate = now;
-
-					var userTrackingEntity = trackedEntity as IUserTrackingEntity;
+					trackedEntity.LastModificationDate = DateTime.UtcNow;
 				}
 			}
 
@@ -1037,7 +1042,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (domainContainer == null) throw new ArgumentNullException(nameof(domainContainer));
 
-			entityListener = new EntityListener(user, this.AccessResolver);
+			entityListener = new EntityListener(user, this.AccessResolver, domainContainer);
 
 			domainContainer.EntityListeners.Add(entityListener);
 		}
