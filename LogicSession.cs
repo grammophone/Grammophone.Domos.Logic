@@ -703,27 +703,6 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Elevate access to all entities for the duration of a <paramref name="transaction"/>,
-		/// taking care of any nesting.
-		/// </summary>
-		/// <param name="transaction">The transaction.</param>
-		/// <remarks>
-		/// This is suitable for domain containers having <see cref="TransactionMode.Deferred"/>,
-		/// where the saving takes place at the topmost transaction.
-		/// The <see cref="GetElevatedAccessScope"/> method for elevating access rights might 
-		/// restore them too soon.
-		/// </remarks>
-		internal void ElevateTransactionAccessRights(ITransaction transaction)
-		{
-			if (transaction == null) throw new ArgumentNullException(nameof(transaction));
-
-			transaction.Succeeding += DecrementAccessElevationLevel;
-			transaction.RollingBack += DecrementAccessElevationLevel;
-
-			IncrementAccessElevationLevel();
-		}
-
-		/// <summary>
 		/// Get the session environment corresponding to a configuration section name.
 		/// </summary>
 		internal virtual LogicSessionEnvironment<U, D> ResolveEnvironment()
@@ -734,6 +713,27 @@ namespace Grammophone.Domos.Logic
 		#endregion
 
 		#region Protected methods
+
+		/// <summary>
+		/// Elevate access to all entities for the duration of a <paramref name="transaction"/>,
+		/// taking care of any nesting.
+		/// </summary>
+		/// <param name="transaction">The transaction.</param>
+		/// <remarks>
+		/// This is suitable for domain containers having <see cref="TransactionMode.Deferred"/>,
+		/// where the saving takes place at the topmost transaction.
+		/// The <see cref="GetElevatedAccessScope"/> method for elevating access rights might
+		/// restore them too soon.
+		/// </remarks>
+		protected internal void ElevateTransactionAccessRights(ITransaction transaction)
+		{
+			if (transaction == null) throw new ArgumentNullException(nameof(transaction));
+
+			transaction.Succeeding += DecrementAccessElevationLevel;
+			transaction.RollingBack += DecrementAccessElevationLevel;
+
+			IncrementAccessElevationLevel();
+		}
 
 		/// <summary>
 		/// Override to specify any additional eager fetches along the current user

@@ -99,9 +99,7 @@ namespace Grammophone.Domos.Logic
 		/// restore them too soon.
 		/// </remarks>
 		protected void ElevateTransactionAccessRights(ITransaction transaction)
-		{
-			this.Session.ElevateTransactionAccessRights(transaction);
-		}
+			=> this.Session.ElevateTransactionAccessRights(transaction);
 
 		/// <summary>
 		/// Get a scope of elevated access, taking care of nesting.
