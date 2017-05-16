@@ -839,6 +839,25 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Get a manager of type <typeparamref name="M"/> asynchronously
+		/// for an entity under a segregation
+		/// or null if the user is not authorized.
+		/// </summary>
+		/// <typeparam name="M">The type of the manager.</typeparam>
+		/// <param name="asyncManagerCreator">
+		/// The asynchronous function to construct the manager.
+		/// </param>
+		protected async Task<M> TryGetManagerAsync<M>(Func<Task<M>> asyncManagerCreator)
+			where M : class
+		{
+			if (asyncManagerCreator == null) throw new ArgumentNullException(nameof(asyncManagerCreator));
+
+			if (!CanAccessManager(typeof(M))) return null;
+
+			return await asyncManagerCreator.Invoke();
+		}
+
+		/// <summary>
 		/// Get a manager of type <typeparamref name="M"/>
 		/// for an entity under a segregation
 		/// or null if the user is not authorized.
@@ -860,6 +879,32 @@ namespace Grammophone.Domos.Logic
 			if (!CanAccessManager(typeof(M), segregatedEntity)) return null;
 
 			return managerCreator.Invoke();
+		}
+
+		/// <summary>
+		/// Get a manager of type <typeparamref name="M"/> asynchronously
+		/// for an entity under a segregation
+		/// or null if the user is not authorized.
+		/// </summary>
+		/// <typeparam name="M">The type of the manager.</typeparam>
+		/// <param name="asyncManagerCreator">
+		/// The asynchronous function to construct the manager.
+		/// </param>
+		/// <param name="segregatedEntity">
+		/// The entity belonging to a segregation. It allows access cheking 
+		/// based on the current user's dispositions against the segregation, beyond user roles.
+		/// </param>
+		protected async Task<M> TryGetManagerAsync<M>(
+			Func<Task<M>> asyncManagerCreator, 
+			ISegregatedEntity segregatedEntity)
+			where M : class
+		{
+			if (asyncManagerCreator == null) throw new ArgumentNullException(nameof(asyncManagerCreator));
+			if (segregatedEntity == null) throw new ArgumentNullException(nameof(segregatedEntity));
+
+			if (!CanAccessManager(typeof(M), segregatedEntity)) return null;
+
+			return await asyncManagerCreator.Invoke();
 		}
 
 		/// <summary>
@@ -886,6 +931,29 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Get a manager of type <typeparamref name="M"/> asynchornously
+		/// for an entity under a segregation
+		/// or null if the user is not authorized.
+		/// </summary>
+		/// <typeparam name="M">The type of the manager.</typeparam>
+		/// <param name="asyncManagerCreator">
+		/// The asynchronous function to construct the manager.
+		/// </param>
+		/// <param name="segregationID">
+		/// The ID of the segregation. It allows access cheking 
+		/// based on the current user's dispositions against the segregation, beyond user roles.
+		/// </param>
+		protected async Task<M> TryGetManagerAsync<M>(Func<Task<M>> asyncManagerCreator, long segregationID)
+			where M : class
+		{
+			if (asyncManagerCreator == null) throw new ArgumentNullException(nameof(asyncManagerCreator));
+
+			if (!CanAccessManager(typeof(M), segregationID)) return null;
+
+			return await asyncManagerCreator.Invoke();
+		}
+
+		/// <summary>
 		/// Get a manager of type <typeparamref name="M"/>
 		/// for an entity under a segregation.
 		/// </summary>
@@ -900,6 +968,27 @@ namespace Grammophone.Domos.Logic
 			where M : class
 		{
 			M manager = TryGetManager(managerCreator);
+
+			if (manager == null) throw new ManagerAccessDeniedException(typeof(M));
+
+			return manager;
+		}
+
+		/// <summary>
+		/// Get a manager of type <typeparamref name="M"/> asynchornously
+		/// for an entity under a segregation.
+		/// </summary>
+		/// <typeparam name="M">The type of the manager.</typeparam>
+		/// <param name="asyncManagerCreator">
+		/// The asynchronous function to construct the manager.
+		/// </param>
+		/// <exception cref="ManagerAccessDeniedException">
+		/// Thrown when the session user is not authorized.
+		/// </exception>
+		protected async Task<M> GetManagerAsync<M>(Func<Task<M>> asyncManagerCreator)
+			where M : class
+		{
+			M manager = await TryGetManagerAsync(asyncManagerCreator);
 
 			if (manager == null) throw new ManagerAccessDeniedException(typeof(M));
 
@@ -932,6 +1021,33 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Get a manager of type <typeparamref name="M"/> asynchronously
+		/// for an entity under a segregation.
+		/// </summary>
+		/// <typeparam name="M">The type of the manager.</typeparam>
+		/// <param name="asyncManagerCreator">
+		/// The asynchronous function to construct the manager.
+		/// </param>
+		/// <param name="segregatedEntity">
+		/// The entity belonging to a segregation. It allows access cheking 
+		/// based on the current user's dispositions against the segregation, beyond user roles.
+		/// </param>
+		/// <exception cref="ManagerAccessDeniedException">
+		/// Thrown when the session user is not authorized.
+		/// </exception>
+		protected async Task<M> GetManagerAsync<M>(
+			Func<Task<M>> asyncManagerCreator, 
+			ISegregatedEntity segregatedEntity)
+			where M : class
+		{
+			M manager = await TryGetManagerAsync(asyncManagerCreator, segregatedEntity);
+
+			if (manager == null) throw new ManagerAccessDeniedException(typeof(M));
+
+			return manager;
+		}
+
+		/// <summary>
 		/// Get a manager of type <typeparamref name="M"/>
 		/// for an entity under a segregation
 		/// or null if the user is not authorized.
@@ -948,6 +1064,29 @@ namespace Grammophone.Domos.Logic
 			where M : class
 		{
 			M manager = TryGetManager(managerCreator, segregationID);
+
+			if (manager == null) throw new ManagerAccessDeniedException(typeof(M));
+
+			return manager;
+		}
+
+		/// <summary>
+		/// Get a manager of type <typeparamref name="M"/> asynchronously
+		/// for an entity under a segregation
+		/// or null if the user is not authorized.
+		/// </summary>
+		/// <typeparam name="M">The type of the manager.</typeparam>
+		/// <param name="asyncManagerCreator">
+		/// The asynchronous function to construct the manager.
+		/// </param>
+		/// <param name="segregationID">
+		/// The ID of the segregation. It allows access cheking 
+		/// based on the current user's dispositions against the segregation, beyond user roles.
+		/// </param>
+		protected async Task<M> GetManagerAsync<M>(Func<Task<M>> asyncManagerCreator, long segregationID)
+			where M : class
+		{
+			M manager = await TryGetManagerAsync(asyncManagerCreator, segregationID);
 
 			if (manager == null) throw new ManagerAccessDeniedException(typeof(M));
 
