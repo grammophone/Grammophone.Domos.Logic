@@ -52,9 +52,9 @@ namespace Grammophone.Domos.Logic
 
 			using (var transaction = this.DomainContainer.BeginTransaction())
 			{
-				await DeleteFileContentsAsync(file);
-
 				filesSet.Remove(file);
+
+				transaction.Succeeding += () => ScheduleFileContentsDeletion(file);
 
 				await transaction.CommitAsync();
 			}
@@ -285,6 +285,20 @@ namespace Grammophone.Domos.Logic
 		#endregion
 
 		#region Private methods
+
+		private void ScheduleFileContentsDeletion(IFile file)
+		{
+			if (file == null) throw new ArgumentNullException(nameof(file));
+
+			Task.Run(() => DeleteFileContentsAsync(file))
+				.ContinueWith((result) =>
+				{
+					Logger.Error(
+						$"Could not delete contents of file {file.FullName} in container {file.ContainerName}.", 
+						result.Exception);
+				},
+				TaskContinuationOptions.OnlyOnFaulted);
+		}
 
 		private async Task<IStorageFile> OpenStorageFileAsync(IFile file)
 		{
