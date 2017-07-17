@@ -180,7 +180,7 @@ namespace Grammophone.Domos.Logic
 				throw new FileException(FilesManagerMessages.UNSUPPORTED_CONTENT_TYPE);
 			}
 
-			var fileGuid = new Guid();
+			var fileGuid = Guid.NewGuid();
 
 			string fullName = $"{user.Guid}/{fileGuid}_{filename}";
 
