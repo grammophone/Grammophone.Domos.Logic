@@ -134,6 +134,9 @@ namespace Grammophone.Domos.Logic
 
 				var container = await storageClient.GetContainerAsync(containerName);
 
+				if (container == null)
+					throw new LogicException($"The container '{containerName}' was not found by the storage client.");
+
 				transaction.RollingBack += () => // Compensate for transaction failure and remove leftover files.
 				{
 					container.DeleteFileAsync(fullName).Wait();
