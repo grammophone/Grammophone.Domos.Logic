@@ -139,7 +139,7 @@ namespace Grammophone.Domos.Logic
 
 				transaction.RollingBack += () => // Compensate for transaction failure and remove leftover files.
 				{
-					container.DeleteFileAsync(fullName).Wait();
+					container.DeleteFile(fullName);
 				};
 
 				var storageFile = await container.CreateFileAsync(fullName, contentType);
