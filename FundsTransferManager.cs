@@ -370,9 +370,7 @@ namespace Grammophone.Domos.Logic
 
 			try
 			{
-				SO statefulObject;
-
-				if (statefulObjectsByTransactionID.TryGetValue(item.TransactionID, out statefulObject))
+				if (statefulObjectsByTransactionID.TryGetValue(item.TransactionID, out SO statefulObject))
 				{
 					fundsResponseResult.ExecutionResult.StatefulObject = statefulObject;
 

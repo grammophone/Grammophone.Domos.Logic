@@ -130,9 +130,7 @@ namespace Grammophone.Domos.Logic
 
 			public void OnAdding(object entity)
 			{
-				var trackedEntity = entity as ITrackingEntity;
-
-				if (trackedEntity != null)
+				if (entity is ITrackingEntity trackedEntity)
 				{
 					trackedEntity.CreatorUserID = user.ID;
 					trackedEntity.LastModifierUserID = user.ID;
@@ -141,20 +139,16 @@ namespace Grammophone.Domos.Logic
 					trackedEntity.CreationDate = now;
 					trackedEntity.LastModificationDate = now;
 
-					var userTrackingEntity = trackedEntity as IUserTrackingEntity<U>;
-
-					if (userTrackingEntity != null)
+					if (trackedEntity is IUserTrackingEntity<U> userTrackingEntity)
 					{
-						if (userTrackingEntity.OwningUserID == 0L 
+						if (userTrackingEntity.OwningUserID == 0L
 							&& !domainContainer.Entry(userTrackingEntity).Reference(ute => ute.OwningUser).IsLoaded)
 						{
 							userTrackingEntity.OwningUserID = user.ID;
 						}
 					}
 
-					var userGroupTrackingEntity = trackedEntity as IUserGroupTrackingEntity<U>;
-
-					if (userGroupTrackingEntity != null)
+					if (trackedEntity is IUserGroupTrackingEntity<U> userGroupTrackingEntity)
 					{
 						if (!userGroupTrackingEntity.OwningUsers.Contains(user))
 						{
@@ -176,9 +170,7 @@ namespace Grammophone.Domos.Logic
 					LogActionAndThrowAccessDenied(entity, "write");
 				}
 
-				var trackedEntity = entity as ITrackingEntity;
-
-				if (trackedEntity != null)
+				if (entity is ITrackingEntity trackedEntity)
 				{
 					trackedEntity.LastModifierUserID = user.ID;
 
@@ -1135,9 +1127,10 @@ namespace Grammophone.Domos.Logic
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 
-			LogicSessionEnvironment<U, D> sessionEnvironment;
 
-			if (sessionEnvironmentsCache.Remove(configurationSectionName, out sessionEnvironment))
+			if (sessionEnvironmentsCache.Remove(
+				configurationSectionName, 
+				out LogicSessionEnvironment<U, D> sessionEnvironment))
 			{
 				sessionEnvironment.Settings.Dispose();
 

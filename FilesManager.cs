@@ -110,11 +110,9 @@ namespace Grammophone.Domos.Logic
 			if (fullName == null) throw new ArgumentNullException(nameof(fullName));
 			if (stream == null) throw new ArgumentNullException(nameof(stream));
 
-			int contentTypeID;
-
 			var environment = this.Session.Environment;
 
-			if (!environment.ContentTypeIDsByMIME.TryGetValue(contentType, out contentTypeID))
+			if (!environment.ContentTypeIDsByMIME.TryGetValue(contentType, out int contentTypeID))
 			{
 				throw new FileException(FilesManagerMessages.UNSUPPORTED_CONTENT_TYPE);
 			}
@@ -273,9 +271,7 @@ namespace Grammophone.Domos.Logic
 
 			string extension = filename.Substring(dotIndex).ToLower();
 
-			string contentType;
-
-			if (this.Session.Environment.ContentTypesByExtension.TryGetValue(extension, out contentType))
+			if (this.Session.Environment.ContentTypesByExtension.TryGetValue(extension, out string contentType))
 			{
 				return contentType;
 			}
