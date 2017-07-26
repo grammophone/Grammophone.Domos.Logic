@@ -233,8 +233,6 @@ namespace Grammophone.Domos.Logic
 
 			using (var transaction = this.DomainContainer.BeginTransaction())
 			{
-				stateTransition.OwningUsers.Add(this.Session.User);
-
 				stateTransition.Path = statePath;
 				stateTransition.ChangeStampBefore = stateful.ChangeStamp;
 
