@@ -445,6 +445,36 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Get the set of all the possible next state paths which are allowed to 
+		/// be executed by the current user on a stateful object.
+		/// </summary>
+		/// <param name="statefulID">The ID of the stateful object.</param>
+		/// <returns>
+		/// Returns all the state paths which are allowed to be executed by the current user.
+		/// </returns>
+		public async Task<IEnumerable<StatePath>> GetAllowedNextPathsAsync(long statefulID)
+		{
+			SO stateful = await this.GetManagedStatefulObjects().SingleAsync(so => so.ID == statefulID);
+
+			return await GetAllowedNextPathsAsync(stateful);
+		}
+
+		/// <summary>
+		/// Get the set of all the possible next state paths which are allowed to 
+		/// be executed by the current user on a <paramref name="stateful"/> object.
+		/// </summary>
+		/// <param name="stateful">The stateful object.</param>
+		/// <returns>
+		/// Returns all the state paths which are allowed to be executed by the current user.
+		/// </returns>
+		public async Task<IEnumerable<StatePath>> GetAllowedNextPathsAsync(SO stateful)
+		{
+			var nextPaths = await GetNextPaths(stateful).ToArrayAsync();
+
+			return FilterAllowedStatePaths(stateful, nextPaths);
+		}
+
+		/// <summary>
 		/// Get the set of state transitions of a stateful object.
 		/// </summary>
 		/// <param name="statefulID">The ID of the stateful object.</param>
