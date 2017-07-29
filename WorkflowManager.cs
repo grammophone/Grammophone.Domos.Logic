@@ -469,7 +469,11 @@ namespace Grammophone.Domos.Logic
 		/// </returns>
 		public async Task<IEnumerable<StatePath>> GetAllowedNextPathsAsync(SO stateful)
 		{
-			var nextPaths = await GetNextPaths(stateful).ToArrayAsync();
+			var nextPaths = await GetNextPaths(stateful)
+				.Include(sp => sp.PreviousState)
+				.Include(sp => sp.NextState)
+				.Include(sp => sp.WorkflowGraph)
+				.ToArrayAsync();
 
 			return FilterAllowedStatePaths(stateful, nextPaths);
 		}
