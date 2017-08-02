@@ -147,14 +147,6 @@ namespace Grammophone.Domos.Logic
 							userTrackingEntity.OwningUserID = user.ID;
 						}
 					}
-
-					if (trackedEntity is IUserGroupTrackingEntity<U> userGroupTrackingEntity)
-					{
-						if (!userGroupTrackingEntity.OwningUsers.Contains(user))
-						{
-							userGroupTrackingEntity.OwningUsers.Add(user);
-						}
-					}
 				}
 
 				if (!SupressAccessCheck && !accessResolver.CanUserCreateEntity(user, entity))
