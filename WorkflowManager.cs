@@ -272,19 +272,7 @@ namespace Grammophone.Domos.Logic
 
 			var statePathConfiguration = GetStatePathConfiguration(pathCodeName);
 
-			var parameterSpecificationsByKey = new Dictionary<string, ParameterSpecification>();
-
-			foreach (var action in statePathConfiguration.PreActions)
-			{
-				var actionParameterSpecifications = action.GetParameterSpecifications();
-
-				foreach (var parameterSpecification in actionParameterSpecifications)
-				{
-					parameterSpecificationsByKey[parameterSpecification.Key] = parameterSpecification;
-				}
-			}
-
-			return parameterSpecificationsByKey;
+			return GetPathParameterSpecifications(statePathConfiguration);
 		}
 
 		/// <summary>
@@ -956,6 +944,48 @@ namespace Grammophone.Domos.Logic
 			}
 
 			parameterValidationMessages.Add(message);
+		}
+
+		/// <summary>
+		/// Get the specifications of parameters required by all pre-actions
+		/// and post-actions of a state path.
+		/// </summary>
+		/// <param name="statePathConfiguration">The configuration of the state path.</param>
+		/// <returns>
+		/// Returns a dictionary of the parameter specifications having as key 
+		/// the <see cref="ParameterSpecification.Key"/> property.
+		/// If actions specify parametrs with overlapping keys, the last one 
+		/// in the actions list overwrites the previous, first from pre-actions to
+		/// post-actions.
+		/// </returns>
+		private static IReadOnlyDictionary<string, ParameterSpecification> GetPathParameterSpecifications(
+			StatePathConfiguration<U, D, S, ST, SO> statePathConfiguration)
+		{
+			var parameterSpecificationsByKey = new Dictionary<string, ParameterSpecification>();
+
+			foreach (var action in statePathConfiguration.PreActions)
+			{
+				var actionParameterSpecifications = action.GetParameterSpecifications();
+
+				foreach (var parameterSpecification in actionParameterSpecifications)
+				{
+					parameterSpecificationsByKey[parameterSpecification.Key] = parameterSpecification;
+				}
+			}
+
+			foreach (var action in statePathConfiguration.PostActions)
+			{
+				var actionParameterSpecifications = action.GetParameterSpecifications();
+
+				foreach (var parameterSpecification in actionParameterSpecifications)
+				{
+					if (parameterSpecificationsByKey.ContainsKey(parameterSpecification.Key)) continue; // Don't overwrite pre-actions parameters.
+
+					parameterSpecificationsByKey[parameterSpecification.Key] = parameterSpecification;
+				}
+			}
+
+			return parameterSpecificationsByKey;
 		}
 
 		#endregion
