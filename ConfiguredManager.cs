@@ -41,12 +41,12 @@ namespace Grammophone.Domos.Logic
 
 		#endregion
 
-		#region Private fields
+		#region Protected fields
 
 		/// <summary>
 		/// Cache of DI conainers by configuration section names.
 		/// </summary>
-		private static SettingsFactory<C> settingsFactory;
+		protected static SettingsFactory<C> settingsFactory;
 
 		#endregion
 

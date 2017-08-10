@@ -259,9 +259,9 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="pathCodeName">The code name of the state path.</param>
 		/// <returns>
-		/// Returns a dictionary of the parameter specifications having as key 
+		/// Returns a dictionary of the parameter specifications having as key
 		/// the <see cref="ParameterSpecification.Key"/> property.
-		/// If actions specify parametrs with overlapping keys, the last one 
+		/// If actions specify parametrs with overlapping keys, the last one
 		/// in the actions list overwrites the previous, first from pre-actions to
 		/// post-actions.
 		/// </returns>
@@ -273,6 +273,33 @@ namespace Grammophone.Domos.Logic
 			var statePathConfiguration = GetStatePathConfiguration(pathCodeName);
 
 			return GetPathParameterSpecifications(statePathConfiguration);
+		}
+
+		/// <summary>
+		/// Get the specifications of parameters required by all pre-actions
+		/// and post-actions of a state path.
+		/// </summary>
+		/// <param name="configurationSectionName">The name of the Unity configuration section dedicated to the manager.</param>
+		/// <param name="pathCodeName">The code name of the state path.</param>
+		/// <returns>
+		/// Returns a dictionary of the parameter specifications having as key
+		/// the <see cref="ParameterSpecification.Key"/> property.
+		/// If actions specify parametrs with overlapping keys, the last one
+		/// in the actions list overwrites the previous, first from pre-actions to
+		/// post-actions.
+		/// </returns>
+		public static IReadOnlyDictionary<string, ParameterSpecification> GetPathParameterSpecifications(
+			string configurationSectionName,
+			string pathCodeName)
+		{
+			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
+			if (pathCodeName == null) throw new ArgumentNullException(nameof(pathCodeName));
+
+			var settings = settingsFactory.Get(configurationSectionName);
+
+			var configuration = GetStatePathConfiguration(settings, pathCodeName);
+
+			return GetPathParameterSpecifications(configuration);
 		}
 
 		/// <summary>
@@ -832,10 +859,20 @@ namespace Grammophone.Domos.Logic
 		/// <param name="pathCodeName">The <see cref="StatePath.CodeName"/> of the path.</param>
 		/// <returns>Returns the actions specifications.</returns>
 		private StatePathConfiguration<U, D, S, ST, SO> GetStatePathConfiguration(string pathCodeName)
+			=> GetStatePathConfiguration(this.ManagerSettings, pathCodeName);
+
+		/// <summary>
+		/// Get the pre and post actions for a state paths.
+		/// </summary>
+		/// <param name="managerSettings">The settings containing the state paths configuration.</param>
+		/// <param name="pathCodeName">The <see cref="StatePath.CodeName"/> of the path.</param>
+		/// <returns>Returns the actions specifications.</returns>
+		private static StatePathConfiguration<U, D, S, ST, SO> GetStatePathConfiguration(Settings managerSettings, string pathCodeName)
 		{
+			if (managerSettings == null) throw new ArgumentNullException(nameof(managerSettings));
 			if (pathCodeName == null) throw new ArgumentNullException(nameof(pathCodeName));
 
-			return this.ManagerSettings.Resolve<StatePathConfiguration<U, D, S, ST, SO>>(pathCodeName);
+			return managerSettings.Resolve<StatePathConfiguration<U, D, S, ST, SO>>(pathCodeName);
 		}
 
 		/// <summary>
