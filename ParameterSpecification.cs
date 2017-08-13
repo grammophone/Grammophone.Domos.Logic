@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,7 +36,16 @@ namespace Grammophone.Domos.Logic
 		/// <param name="type">
 		/// The type of the parameter.
 		/// </param>
-		public ParameterSpecification(string key, bool isRequired, string caption, string description, Type type)
+		/// <param name="validationAttributes">
+		/// Optional validation attributes for the parameter.
+		/// </param>
+		public ParameterSpecification(
+			string key, 
+			bool isRequired, 
+			string caption, 
+			string description, 
+			Type type, 
+			IEnumerable<ValidationAttribute> validationAttributes = null)
 		{
 			if (key == null) throw new ArgumentNullException(nameof(key));
 			if (caption == null) throw new ArgumentNullException(nameof(caption));
@@ -47,6 +57,7 @@ namespace Grammophone.Domos.Logic
 			this.Caption = caption;
 			this.Description = description;
 			this.Type = type;
+			this.ValidationAttributes = validationAttributes ?? Enumerable.Empty<ValidationAttribute>();
 		}
 
 		#endregion
@@ -56,27 +67,32 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The key used in the parameters dictionary.
 		/// </summary>
-		public string Key { get; private set; }
+		public string Key { get; }
 
 		/// <summary>
 		/// If true, the parameter must exist in the dictionary.
 		/// </summary>
-		public bool IsRequired { get; private set; }
+		public bool IsRequired { get; }
 
 		/// <summary>
 		/// The caption of the parameter.
 		/// </summary>
-		public string Caption { get; private set; }
+		public string Caption { get; }
 
 		/// <summary>
 		/// The description of the parameter.
 		/// </summary>
-		public string Description { get; private set; }
+		public string Description { get; }
 
 		/// <summary>
 		/// The type of the parameter.
 		/// </summary>
-		public Type Type { get; private set; }
+		public Type Type { get; }
+
+		/// <summary>
+		/// Any validation attributes for the parameter.
+		/// </summary>
+		public IEnumerable<ValidationAttribute> ValidationAttributes { get; }
 
 		#endregion
 	}
