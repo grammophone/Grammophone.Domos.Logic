@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -116,7 +117,8 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 				false,
 				AccountingActionResources.DATE_CAPTION,
 				AccountingActionResources.DATE_DESCRIPTION,
-				typeof(DateTime));
+				typeof(DateTime),
+				new ValidationAttribute[] { new DataTypeAttribute(DataType.DateTime) });
 		}
 
 		#endregion
