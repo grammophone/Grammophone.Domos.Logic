@@ -13,7 +13,6 @@ namespace Grammophone.Domos.Logic
 	/// method. The collection of the parameter specifications for the dictionary is provided 
 	/// by <see cref="IWorkflowAction{U, D, S, ST, SO}.GetParameterSpecifications"/> method.
 	/// </summary>
-	[Serializable]
 	public class ParameterSpecification
 	{
 		#region Construction
@@ -53,7 +52,7 @@ namespace Grammophone.Domos.Logic
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			this.Key = key;
-			this.IsRequired = IsRequired;
+			this.IsRequired = isRequired;
 			this.Caption = caption;
 			this.Description = description;
 			this.Type = type;
