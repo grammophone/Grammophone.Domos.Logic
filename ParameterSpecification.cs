@@ -15,6 +15,12 @@ namespace Grammophone.Domos.Logic
 	/// </summary>
 	public class ParameterSpecification
 	{
+		#region Private fields
+
+		private Func<object> defaultValueFunction;
+
+		#endregion
+
 		#region Construction
 
 		/// <summary>
@@ -38,13 +44,17 @@ namespace Grammophone.Domos.Logic
 		/// <param name="validationAttributes">
 		/// Optional validation attributes for the parameter.
 		/// </param>
+		/// <param name="defaultValueFunction">
+		/// Optional function to provide the default value of the parameter.
+		/// </param>
 		public ParameterSpecification(
 			string key, 
 			bool isRequired, 
 			string caption, 
 			string description, 
 			Type type, 
-			IEnumerable<ValidationAttribute> validationAttributes = null)
+			IEnumerable<ValidationAttribute> validationAttributes = null,
+			Func<object> defaultValueFunction = null)
 		{
 			if (key == null) throw new ArgumentNullException(nameof(key));
 			if (caption == null) throw new ArgumentNullException(nameof(caption));
@@ -57,6 +67,7 @@ namespace Grammophone.Domos.Logic
 			this.Description = description;
 			this.Type = type;
 			this.ValidationAttributes = validationAttributes ?? Enumerable.Empty<ValidationAttribute>();
+			this.defaultValueFunction = defaultValueFunction;
 		}
 
 		#endregion
@@ -92,6 +103,51 @@ namespace Grammophone.Domos.Logic
 		/// Any validation attributes for the parameter.
 		/// </summary>
 		public IEnumerable<ValidationAttribute> ValidationAttributes { get; }
+
+		#endregion
+
+		#region Public methods
+
+		/// <summary>
+		/// Get the default value of the parameter.
+		/// </summary>
+		/// <returns>
+		/// If specified in the constructor, it uses the given default value function,
+		/// else creates the appropriate default value for the defined <see cref="Type"/>.
+		/// </returns>
+		public object GetDefaultValue()
+		{
+			if (defaultValueFunction != null) 
+			{
+				object defaultVlaue = defaultValueFunction();
+
+				if (defaultVlaue == null)
+				{
+					if (this.Type.IsValueType)
+					{
+						throw new LogicException("The default value cannot be null because the parameter's type is value-type.");
+					}
+				}
+				else
+				{
+					if (!this.Type.IsAssignableFrom(defaultVlaue.GetType()))
+					{
+						throw new LogicException("The default value is incompatible to the parameter's type.");
+					}
+				}
+
+				return defaultVlaue;
+			}
+
+			if (this.Type.IsValueType)
+			{
+				return Activator.CreateInstance(this.Type);
+			}
+			else
+			{
+				return null;
+			}
+		}
 
 		#endregion
 	}
