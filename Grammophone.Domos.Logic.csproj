@@ -228,7 +228,7 @@
     <EmbeddedResource Include="FilesManagerMessages.fr.resx" />
     <EmbeddedResource Include="Models\FundsTransfer\FundsRequestBatchItemResources.fr.resx" />
     <EmbeddedResource Include="Models\FundsTransfer\FundsRequestBatchItemResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>FundsRequestBatchItemResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Models\FundsTransfer\FundsResponseBatchItemResources.fr.resx" />
