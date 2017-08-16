@@ -32,6 +32,9 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[Required]
 		[MaxLength(225)]
 		[XmlAttribute]
+		[Display(
+			Name = nameof(FundsRequestBatchItemResources.TransactionID_Name),
+			ResourceType = typeof(FundsRequestBatchItemResources))]
 		public virtual string TransactionID { get; set; }
 
 		/// <summary>
@@ -39,12 +42,19 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// by <see cref="BankAccountInfo"/>, else it is withdrawed.
 		/// </summary>
 		[XmlAttribute]
+		[Display(
+			Name = nameof(FundsRequestBatchItemResources.Amount_Name),
+			ResourceType = typeof(FundsRequestBatchItemResources))]
+		[DataType(DataType.Currency)]
 		public decimal Amount { get; set; }
 
 		/// <summary>
 		/// The bank account info.
 		/// </summary>
 		[Required]
+		[Display(
+			Name = nameof(FundsRequestBatchItemResources.BankAccountInfo_Name),
+			ResourceType = typeof(FundsRequestBatchItemResources))]
 		public BankAccountInfo BankAccountInfo
 		{
 			get

@@ -96,7 +96,22 @@
     <Compile Include="LogicException.cs" />
     <Compile Include="Manager.cs" />
     <Compile Include="ManagerAccessDeniedException.cs" />
+    <Compile Include="Models\FundsTransfer\FundsRequestBatchItemResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FundsRequestBatchItemResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Models\FundsTransfer\FundsResponseBatchItemResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FundsResponseBatchItemResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Models\FundsTransfer\FundsResponseBatchItemType.cs" />
+    <Compile Include="Models\FundsTransfer\FundsResponseBatchItemTypeResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FundsResponseBatchItemTypeResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Models\FundsTransfer\FundsResponseResult.cs" />
     <Compile Include="Models\FundsTransfer\FundsRequestBatch.cs" />
     <Compile Include="Models\FundsTransfer\FundsRequestBatchItem.cs" />
@@ -211,6 +226,21 @@
       <LastGenOutput>FilesManagerMessages.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="FilesManagerMessages.fr.resx" />
+    <EmbeddedResource Include="Models\FundsTransfer\FundsRequestBatchItemResources.fr.resx" />
+    <EmbeddedResource Include="Models\FundsTransfer\FundsRequestBatchItemResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>FundsRequestBatchItemResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseBatchItemResources.fr.resx" />
+    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseBatchItemResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>FundsResponseBatchItemResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseBatchItemTypeResources.fr.resx" />
+    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseBatchItemTypeResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>FundsResponseBatchItemTypeResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="WorkflowActions\AccountingActionResources.fr.resx" />
     <EmbeddedResource Include="WorkflowActions\AccountingActionResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
