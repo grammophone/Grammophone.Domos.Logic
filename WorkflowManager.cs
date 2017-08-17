@@ -355,18 +355,18 @@ namespace Grammophone.Domos.Logic
 				}
 				else
 				{
-					if (value != null)
+					if (value == null)
 					{
 						if (parameterSpecification.IsRequired)
 						{
 							AddValidationEntry(validationDictionary, entry.Key, WorkflowManagerMessages.PARAMETER_IS_REQUIRED);
 						}
-						else
+					}
+					else
+					{
+						if (!parameterSpecification.Type.IsAssignableFrom(value.GetType()))
 						{
-							if (!parameterSpecification.Type.IsAssignableFrom(value.GetType()))
-							{
-								AddValidationEntry(validationDictionary, parameterKey, WorkflowManagerMessages.WRONG_PARAMETER_TYPE);
-							}
+							AddValidationEntry(validationDictionary, parameterKey, WorkflowManagerMessages.WRONG_PARAMETER_TYPE);
 						}
 					}
 				}
