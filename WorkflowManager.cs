@@ -231,10 +231,19 @@ namespace Grammophone.Domos.Logic
 
 			stateTransition.BindToStateful(stateful);
 
+			var now = DateTime.UtcNow;
+
 			using (var transaction = this.DomainContainer.BeginTransaction())
 			{
 				stateTransition.Path = statePath;
 				stateTransition.ChangeStampBefore = stateful.ChangeStamp;
+
+				stateful.LastStateChangeDate = now;
+
+				if (statePath.PreviousState.GroupID != statePath.NextState.GroupID)
+				{
+					stateful.LastStateGroupChangeDate = now;
+				}
 
 				await ExecuteActionsAsync(statePathConfiguration.PreActions, stateful, stateTransition, actionArguments);
 
