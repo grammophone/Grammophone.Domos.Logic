@@ -476,21 +476,7 @@ namespace Grammophone.Domos.Logic
 			string body,
 			bool isBodyHTML,
 			string sender = null)
-		{
-			if (recepients == null) throw new ArgumentNullException(nameof(recepients));
-			if (subject == null) throw new ArgumentNullException(nameof(subject));
-			if (body == null) throw new ArgumentNullException(nameof(body));
-
-			using (var emailClient = this.Environment.CreateEmailClient())
-			{
-				await emailClient.SendEmailAsync(
-					recepients,
-					subject,
-					body,
-					isBodyHTML,
-					sender);
-			}
-		}
+			=> await this.Environment.SendEmailAsync(recepients, subject, body, isBodyHTML, sender);
 
 		/// <summary>
 		/// Send an e-mail.
@@ -501,14 +487,37 @@ namespace Grammophone.Domos.Logic
 		/// </param>
 		/// <returns>Returns a task completing the action.</returns>
 		public async Task SendEmailAsync(System.Net.Mail.MailMessage mailMessage)
-		{
-			if (mailMessage == null) throw new ArgumentNullException(nameof(mailMessage));
+			=> await this.Environment.SendEmailAsync(mailMessage);
 
-			using (var emailClient = this.Environment.CreateEmailClient())
-			{
-				await emailClient.SendEmailAsync(mailMessage);
-			}
-		}
+		/// <summary>
+		/// Queue an e-mail message to be sent asynchronously.
+		/// </summary>
+		/// <param name="recepients">A list of recepients separated by comma or semicolon.</param>
+		/// <param name="subject">The subject of the message.</param>
+		/// <param name="body">The body of the message.</param>
+		/// <param name="isBodyHTML">If true, the format of the body message is HTML.</param>
+		/// <param name="sender">
+		/// The sender of the message, is specified, else 
+		/// the configured <see cref="EmailSettings.DefaultSenderAddress"/> is used.
+		/// </param>
+		/// <returns>Returns a task completing the action.</returns>
+		/// <remarks>
+		/// The message's subject, headers and body encoding is set to UTF8.
+		/// </remarks>
+		public void QueueEmail(
+			string recepients,
+			string subject,
+			string body,
+			bool isBodyHTML,
+			string sender = null)
+			=> this.Environment.QueueEmail(recepients, subject, body, isBodyHTML, sender);
+
+		/// <summary>
+		/// Queue an e-mail message to be sent asynchronously.
+		/// </summary>
+		/// <param name="mailMessage">The e-mail message to queue.</param>
+		public void QueueEmail(System.Net.Mail.MailMessage mailMessage)
+			=> this.Environment.QueueEmail(mailMessage);
 
 		/// <summary>
 		/// Render a template using a strong-type <paramref name="model"/>.

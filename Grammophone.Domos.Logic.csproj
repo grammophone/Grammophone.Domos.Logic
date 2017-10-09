@@ -150,6 +150,7 @@
       <DependentUpon>WorkflowManagerMessages.resx</DependentUpon>
     </Compile>
     <Compile Include="WorkflowPublicDomain.cs" />
+    <Compile Include="AsyncWorkQueue.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\LifeAccount.Domain\LifeAccount.Domain.csproj">

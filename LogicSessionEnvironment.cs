@@ -41,6 +41,8 @@ namespace Grammophone.Domos.Logic
 
 		private MRUCache<string, Storage.IStorageProvider> storageProvidersCache;
 
+		private AsyncWorkQueue<System.Net.Mail.MailMessage> mailQueue;
+
 		#endregion
 
 		#region Construction
@@ -59,17 +61,19 @@ namespace Grammophone.Domos.Logic
 
 			this.AccessResolver = new AccessResolver<U>(permissionsSetupProvider);
 
-			this.lazyContentTypeIDsByMIME = new Lazy<IReadOnlyDictionary<string, int>>(
+			lazyContentTypeIDsByMIME = new Lazy<IReadOnlyDictionary<string, int>>(
 				this.LoadContentTypeIDsByMIME,
 				true);
 
-			this.lazyContentTypesByExtension = new Lazy<IReadOnlyDictionary<string, string>>(
+			lazyContentTypesByExtension = new Lazy<IReadOnlyDictionary<string, string>>(
 				this.LoadContentTypesByExtension,
 				true);
 
-			this.storageProvidersCache = new MRUCache<string, Storage.IStorageProvider>(
+			storageProvidersCache = new MRUCache<string, Storage.IStorageProvider>(
 				name => this.Settings.Resolve<Storage.IStorageProvider>(name),
 				StorageProvidersCacheSize);
+
+			mailQueue = new AsyncWorkQueue<System.Net.Mail.MailMessage>(SendEmailAsync);
 		}
 
 		#endregion
@@ -126,6 +130,120 @@ namespace Grammophone.Domos.Logic
 			var emailSettings = this.Settings.Resolve<Email.EmailSettings>();
 
 			return new Email.EmailClient(emailSettings);
+		}
+
+		/// <summary>
+		/// Send an e-mail.
+		/// </summary>
+		/// <param name="mailMessage">
+		/// The message to send. If its Sender property is not set, 
+		/// the configured <see cref="Email.EmailSettings.DefaultSenderAddress"/> is used.
+		/// </param>
+		/// <returns>Returns a task completing the action.</returns>
+		public async Task SendEmailAsync(System.Net.Mail.MailMessage mailMessage)
+		{
+			if (mailMessage == null) throw new ArgumentNullException(nameof(mailMessage));
+
+			using (var emailClient = this.CreateEmailClient())
+			{
+				await emailClient.SendEmailAsync(mailMessage);
+			}
+		}
+
+		/// <summary>
+		/// Send an e-mail.
+		/// </summary>
+		/// <param name="recepients">A list of recepients separated by comma or semicolon.</param>
+		/// <param name="subject">The subject of the message.</param>
+		/// <param name="body">The body of the message.</param>
+		/// <param name="isBodyHTML">If true, the format of the body message is HTML.</param>
+		/// <param name="sender">
+		/// The sender of the message, is specified, else 
+		/// the configured <see cref="Email.EmailSettings.DefaultSenderAddress"/> is used.
+		/// </param>
+		/// <returns>Returns a task completing the action.</returns>
+		/// <remarks>
+		/// The message's subject, headers and body encoding is set to UTF8.
+		/// </remarks>
+		public async Task SendEmailAsync(
+			string recepients,
+			string subject,
+			string body,
+			bool isBodyHTML,
+			string sender = null)
+		{
+			if (recepients == null) throw new ArgumentNullException(nameof(recepients));
+			if (subject == null) throw new ArgumentNullException(nameof(subject));
+			if (body == null) throw new ArgumentNullException(nameof(body));
+
+			using (var emailClient = this.CreateEmailClient())
+			{
+				await emailClient.SendEmailAsync(
+					recepients,
+					subject,
+					body,
+					isBodyHTML,
+					sender);
+			}
+		}
+
+		/// <summary>
+		/// Queue an e-mail message to be sent asynchronously.
+		/// </summary>
+		/// <param name="recepients">A list of recepients separated by comma or semicolon.</param>
+		/// <param name="subject">The subject of the message.</param>
+		/// <param name="body">The body of the message.</param>
+		/// <param name="isBodyHTML">If true, the format of the body message is HTML.</param>
+		/// <param name="sender">
+		/// The sender of the message, is specified, else 
+		/// the configured <see cref="Email.EmailSettings.DefaultSenderAddress"/> is used.
+		/// </param>
+		/// <returns>Returns a task completing the action.</returns>
+		/// <remarks>
+		/// The message's subject, headers and body encoding is set to UTF8.
+		/// </remarks>
+		public void QueueEmail(
+			string recepients,
+			string subject,
+			string body,
+			bool isBodyHTML,
+			string sender = null)
+		{
+			if (recepients == null) throw new ArgumentNullException(nameof(recepients));
+			if (subject == null) throw new ArgumentNullException(nameof(subject));
+			if (body == null) throw new ArgumentNullException(nameof(body));
+
+			var emailSettings = this.Settings.Resolve<Email.EmailSettings>();
+
+			var mailMessage = new System.Net.Mail.MailMessage
+			{
+				Sender = new System.Net.Mail.MailAddress(sender ?? emailSettings.DefaultSenderAddress),
+				From = new System.Net.Mail.MailAddress(sender ?? emailSettings.DefaultSenderAddress),
+				Subject = subject,
+				Body = body,
+				IsBodyHtml = isBodyHTML,
+				BodyEncoding = Encoding.UTF8,
+				SubjectEncoding = Encoding.UTF8,
+				HeadersEncoding = Encoding.UTF8,
+			};
+
+			foreach (string recepient in recepients.Split(';', ','))
+			{
+				mailMessage.To.Add(recepient.Trim());
+			}
+
+			QueueEmail(mailMessage);
+		}
+
+		/// <summary>
+		/// Queue an e-mail message to be sent asynchronously.
+		/// </summary>
+		/// <param name="mailMessage">The e-mail message to queue.</param>
+		public void QueueEmail(System.Net.Mail.MailMessage mailMessage)
+		{
+			if (mailMessage == null) throw new ArgumentNullException(nameof(mailMessage));
+
+			mailQueue.Enqueue(mailMessage);
 		}
 
 		/// <summary>
