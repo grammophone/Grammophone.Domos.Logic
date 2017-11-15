@@ -23,6 +23,10 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 
 		private string creditSystemCodeName;
 
+		private Guid batchID;
+
+		private Guid collationID;
+
 		#endregion
 
 		#region Construction
@@ -41,12 +45,14 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <param name="creditSystemCodeName">The code name of the credit system.</param>
 		/// <param name="date">The date of the batch in UTC.</param>
 		/// <param name="capacity">The initial capacity of items to reserve.</param>
-		/// <param name="batchID">Optional ID of the batch.</param>
+		/// <param name="batchID">Optional ID of the batch. If not set, a new GUID will be assigned.</param>
+		/// <param name="collationID">Optional ID of the collation of events in the batch. If not set, a new GUID will be assigned.</param>
 		public FundsRequestBatch(
 			string creditSystemCodeName,
 			DateTime date,
 			int capacity,
-			string batchID = null)
+			Guid? batchID = null,
+			Guid? collationID = null)
 		{
 			if (creditSystemCodeName == null) throw new ArgumentNullException(nameof(creditSystemCodeName));
 			if (date.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(date));
@@ -54,8 +60,9 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			this.items = new FundsRequestBatchItems(capacity);
 
 			this.creditSystemCodeName = creditSystemCodeName;
-			this.Date = date;
-			this.BatchID = batchID;
+			this.date = date;
+			this.batchID = batchID ?? Guid.NewGuid();
+			this.collationID = collationID ?? Guid.NewGuid();
 		}
 
 		#endregion
@@ -63,10 +70,34 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		#region Public properties
 
 		/// <summary>
-		/// The optional ID of the batch.
+		/// The ID of the batch.
 		/// </summary>
-		[MaxLength(225)]
-		public string BatchID { get; set; }
+		public Guid BatchID
+		{
+			get
+			{
+				return batchID;
+			}
+			set
+			{
+				batchID = value;
+			}
+		}
+
+		/// <summary>
+		/// The ID of the events collation.
+		/// </summary>
+		public Guid CollationID
+		{
+			get
+			{
+				return collationID;
+			}
+			set
+			{
+				collationID = value;
+			}
+		}
 
 		/// <summary>
 		/// The date and time, in UTC.
@@ -80,8 +111,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			}
 			set
 			{
-				if (value.Kind != DateTimeKind.Utc)
-					throw new ArgumentException("The value must be UTC.");
+				if (value.Kind == DateTimeKind.Local)
+					throw new ArgumentException("The value must not be local.");
 
 				date = value;
 			}

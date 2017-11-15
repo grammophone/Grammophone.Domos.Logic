@@ -39,7 +39,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 		/// <summary>
 		/// Create a funds transfer request using 
-		/// the <see cref="CreateFundsTransferRequestAsync(D, U, SO, DateTime, string, string)"/>.
+		/// the <see cref="CreateFundsTransferRequestAsync(D, U, SO, DateTime, string, Guid?, Guid?)"/>.
 		/// method.
 		/// </summary>
 		public override async Task ExecuteAsync(
@@ -57,7 +57,9 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 			string transactionID = Guid.NewGuid().ToString("D");
 
-			string batchID = GetBatchID(actionArguments);
+			Guid? batchID = GetBatchID(actionArguments);
+
+			Guid? collationID = GetCollationID(actionArguments);
 
 			using (var transaction = domainContainer.BeginTransaction())
 			{
@@ -69,7 +71,8 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 					stateful,
 					DateTime.UtcNow,
 					transactionID,
-					batchID);
+					batchID,
+					collationID);
 
 				if (queueingEvent != null)
 				{
@@ -81,8 +84,8 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		}
 
 		/// <summary>
-		/// Returns the specification list containing a single parameter for
-		/// an optional batch ID.
+		/// Returns the specification list containing parameters for
+		/// an optional batch ID and an optional collation ID for the funds transfer queueing event.
 		/// </summary>
 		public override IEnumerable<ParameterSpecification> GetParameterSpecifications()
 		{
@@ -91,7 +94,14 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 				false,
 				FundsTransferInitiationActionResources.BATCH_ID_CAPTION,
 				FundsTransferInitiationActionResources.BATCH_ID_DESCRIPTION,
-				typeof(string));
+				typeof(Guid));
+
+			yield return new ParameterSpecification(
+				StandardArgumentKeys.CollationID,
+				false,
+				FundsTransferInitiationActionResources.COLLATION_ID_CAPTION,
+				FundsTransferInitiationActionResources.COLLATION_ID_DESCRIPTION,
+				typeof(Guid));
 		}
 
 		#endregion
@@ -107,6 +117,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// <param name="utcDate">The date, in UTC.</param>
 		/// <param name="transactionID">The ID of the transaction.</param>
 		/// <param name="batchID">The optional batch ID.</param>
+		/// <param name="queueEventCollationID">The optional ID of the collation of the funds transfer queuing event.</param>
 		/// <returns>
 		/// Returns the queuing event of the created transfer request.
 		/// </returns>
@@ -116,15 +127,24 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 			SO stateful,
 			DateTime utcDate,
 			string transactionID,
-			string batchID = null);
+			Guid? batchID,
+			Guid? queueEventCollationID);
 
 		/// <summary>
 		/// Get the batch ID from the action arguments or null if not specified.
 		/// </summary>
 		/// <param name="actionArguments">The action arguments.</param>
 		/// <returns>Returns the batch ID ot null if not given.</returns>
-		protected string GetBatchID(IDictionary<string, object> actionArguments)
-			=> GetParameterValue<string>(actionArguments, StandardArgumentKeys.BatchID, false);
+		protected Guid? GetBatchID(IDictionary<string, object> actionArguments)
+			=> GetOptionalParameterValue<Guid>(actionArguments, StandardArgumentKeys.BatchID);
+
+		/// <summary>
+		/// Get the collation ID from the action arguments or null if not specified.
+		/// </summary>
+		/// <param name="actionArguments">The action arguments.</param>
+		/// <returns>Returns the collation ID ot null if not given.</returns>
+		protected Guid? GetCollationID(IDictionary<string, object> actionArguments)
+			=> GetOptionalParameterValue<Guid>(actionArguments, StandardArgumentKeys.CollationID);
 
 		#endregion
 	}

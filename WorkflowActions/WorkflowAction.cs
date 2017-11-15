@@ -26,6 +26,34 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		where ST : StateTransition<U>
 		where SO : IStateful<U, ST>
 	{
+		#region Private fields
+
+		private IReadOnlyDictionary<string, ParameterSpecification> parameterSpecificationsByKey;
+
+		#endregion
+
+		#region Public properties
+
+		/// <summary>
+		/// Dictionary of <see cref="ParameterSpecification"/>s
+		/// defined by <see cref="GetParameterSpecifications"/>,
+		/// indexed by their <see cref="ParameterSpecification.Key"/>
+		/// </summary>
+		public IReadOnlyDictionary<string, ParameterSpecification> ParameterSpecificationsByKey
+		{
+			get
+			{
+				if (parameterSpecificationsByKey == null)
+				{
+					parameterSpecificationsByKey = GetParameterSpecifications().ToDictionary(s => s.Key);
+				}
+
+				return parameterSpecificationsByKey;
+			}
+		}
+
+		#endregion
+
 		#region Public methods
 
 		/// <summary>
@@ -99,14 +127,13 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// Thrown when the parameter is not found in <paramref name="actionArguments"/>
 		/// and the <paramref name="isRequired"/> is true.
 		/// </exception>
-		protected T GetParameterValue<T>(IDictionary<string, object> actionArguments, string parameterKey, bool isRequired)
+		protected T GetParameterObject<T>(IDictionary<string, object> actionArguments, string parameterKey, bool isRequired)
+			where T : class
 		{
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
 			if (parameterKey == null) throw new ArgumentNullException(nameof(parameterKey));
 
-			object valueObject;
-
-			if (actionArguments.TryGetValue(parameterKey, out valueObject))
+			if (actionArguments.TryGetValue(parameterKey, out object valueObject))
 			{
 				return (T)valueObject;
 			}
@@ -119,6 +146,97 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 				return default(T);
 			}
+		}
+
+		/// <summary>
+		/// Attempt to get the value of a parameter inside the action arguments.
+		/// </summary>
+		/// <typeparam name="T">The type of the value, which must be a reference type.</typeparam>
+		/// <param name="actionArguments">The action arguments.</param>
+		/// <param name="parameterKey">The key of the parameter.</param>
+		/// <returns>
+		/// Returns the value found in <paramref name="actionArguments"/> or
+		/// null if the parameter is optional and not found.
+		/// </returns>
+		/// <exception cref="ArgumentException">
+		/// Thrown when the parameter is not defined by <see cref="GetParameterSpecifications"/> or
+		/// when not found in <paramref name="actionArguments"/>
+		/// while specified as required.
+		/// </exception>
+		protected T GetParameterValue<T>(IDictionary<string, object> actionArguments, string parameterKey)
+		{
+			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
+			if (parameterKey == null) throw new ArgumentNullException(nameof(parameterKey));
+
+			var parameterSpecification = GetParameterSpecification(parameterKey);
+
+			if (actionArguments.TryGetValue(parameterKey, out object valueObject))
+			{
+				return (T)valueObject;
+			}
+			else
+			{
+				if (parameterSpecification.IsRequired)
+					throw new ArgumentException(
+						$"The required parameter '{parameterKey}' does not exist in the action arguments.",
+						nameof(actionArguments));
+
+				return default(T);
+			}
+		}
+
+		/// <summary>
+		/// Attempt to get the value of a parameter inside the action arguments.
+		/// </summary>
+		/// <typeparam name="V">The type of the value, which must be a value type.</typeparam>
+		/// <param name="actionArguments">The action arguments.</param>
+		/// <param name="parameterKey">The key of the parameter.</param>
+		/// <returns>
+		/// Returns the value found in <paramref name="actionArguments"/> or
+		/// null if the parameter is optional and not found.
+		/// </returns>
+		/// <exception cref="ArgumentException">
+		/// Thrown when the parameter is not defined by <see cref="GetParameterSpecifications"/> or
+		/// when not found in <paramref name="actionArguments"/>
+		/// while specified as required.
+		/// </exception>
+		protected V? GetOptionalParameterValue<V>(IDictionary<string, object> actionArguments, string parameterKey)
+			where V : struct
+		{
+			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
+			if (parameterKey == null) throw new ArgumentNullException(nameof(parameterKey));
+
+			var parameterSpecification = GetParameterSpecification(parameterKey);
+
+			if (actionArguments.TryGetValue(parameterKey, out object valueObject))
+			{
+				return (V)valueObject;
+			}
+			else
+			{
+				if (parameterSpecification.IsRequired)
+					throw new ArgumentException(
+						$"The required parameter '{parameterKey}' does not exist in the action arguments.",
+						nameof(actionArguments));
+
+				return null;
+			}
+		}
+
+		#endregion
+
+		#region Private methods
+
+		private ParameterSpecification GetParameterSpecification(string parameterKey)
+		{
+			ParameterSpecification parameterSpecification;
+
+			if (!this.ParameterSpecificationsByKey.TryGetValue(parameterKey, out parameterSpecification))
+			{
+				throw new ArgumentException($"The parameter with key '{parameterKey}' does not exist in the defined parameters.");
+			}
+
+			return parameterSpecification;
 		}
 
 		#endregion

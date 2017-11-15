@@ -154,7 +154,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// in the <paramref name="actionArguments"/>.
 		/// </exception>
 		protected B GetBillingItem(IDictionary<string, object> actionArguments)
-			=> GetParameterValue<B>(actionArguments, StandardArgumentKeys.BillingItem, true);
+			=> GetParameterValue<B>(actionArguments, StandardArgumentKeys.BillingItem);
 
 		/// <summary>
 		/// Get the batch date from action arguments, if it exists, else return the
@@ -164,14 +164,14 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		{
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
 
-			if (actionArguments.ContainsKey(StandardArgumentKeys.Date))
-			{
-				DateTime date = GetParameterValue<DateTime>(actionArguments, StandardArgumentKeys.Date, true);
+			DateTime? date = GetOptionalParameterValue<DateTime>(actionArguments, StandardArgumentKeys.Date);
 
-				if (date.Kind != DateTimeKind.Utc)
-					return DateTime.SpecifyKind(date, DateTimeKind.Utc);
+			if (date.HasValue)
+			{
+				if (date.Value.Kind != DateTimeKind.Utc)
+					return DateTime.SpecifyKind(date.Value, DateTimeKind.Utc);
 				else
-					return date;
+					return date.Value;
 			}
 			else
 			{

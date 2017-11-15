@@ -88,6 +88,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>FilesManagerMessages.resx</DependentUpon>
     </Compile>
+    <Compile Include="WorkflowFundsTransferManager.cs" />
     <Compile Include="FundsTransferManager.cs" />
     <Compile Include="IPublicDomainProvider.cs" />
     <Compile Include="IWorkflowAction.cs" />

@@ -421,6 +421,5 @@ namespace Grammophone.Domos.Logic
 			IDictionary<string, object> actionArguments);
 
 		#endregion
-
 	}
 }

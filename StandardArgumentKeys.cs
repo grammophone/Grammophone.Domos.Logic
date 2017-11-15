@@ -20,6 +20,12 @@ namespace Grammophone.Domos.Logic
 		public const string BatchID = nameof(BatchID);
 
 		/// <summary>
+		/// Specifies the <see cref="FundsTransferEvent.CollationID"/>
+		/// of <see cref="FundsTransferEvent"/>s.
+		/// </summary>
+		public const string CollationID = nameof(CollationID);
+
+		/// <summary>
 		/// Specifies the <see cref="FundsTransferRequest.TransactionID"/>
 		/// of a <see cref="FundsTransferRequest"/>.
 		/// </summary>

@@ -123,6 +123,12 @@
   <data name="BATCH_ID_DESCRIPTION" xml:space="preserve">
     <value>Optional ID of the batch.</value>
   </data>
+  <data name="COLLATION_ID_CAPTION" xml:space="preserve">
+    <value>Collation ID</value>
+  </data>
+  <data name="COLLATION_ID_DESCRIPTION" xml:space="preserve">
+    <value>Optional ID of the queuing event collation.</value>
+  </data>
   <data name="TRANSACTION_ID_CAPTION" xml:space="preserve">
     <value>Transaction ID</value>
   </data>
