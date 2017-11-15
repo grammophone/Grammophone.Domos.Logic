@@ -52,7 +52,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// Consumes the billing item of type <typeparamref name="B"/> in arguments
 		/// key <see cref="StandardArgumentKeys.BillingItem"/> and the <see cref="DateTime"/>
 		/// in key <see cref="StandardArgumentKeys.Date"/> and performs the accounting
-		/// using method <see cref="ExecuteAccountingAsync(D, U, SO, DateTime, B)"/>.
+		/// using method <see cref="ExecuteAccountingAsync(D, U, SO, DateTime, B, Guid?)"/>.
 		/// </summary>
 		public override async Task ExecuteAsync(
 			S session,
@@ -69,7 +69,9 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 			DateTime date = GetDate(actionArguments);
 
-			var billingItem = GetBillingItem(actionArguments);
+			B billingItem = GetBillingItem(actionArguments);
+
+			Guid? collationID = GetCollationID(actionArguments);
 
 			using (var transaction = domainContainer.BeginTransaction())
 			{
@@ -80,7 +82,8 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 					session.User,
 					stateful,
 					date,
-					billingItem);
+					billingItem,
+					collationID);
 
 				if (result.Journal != null)
 				{
@@ -113,6 +116,13 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 				typeof(B));
 
 			yield return new ParameterSpecification(
+				StandardArgumentKeys.CollationID,
+				false,
+				AccountingActionResources.COLLATION_ID_CAPTION,
+				AccountingActionResources.COLLATION_ID_DESCRIPTION,
+				typeof(Guid));
+
+			yield return new ParameterSpecification(
 				StandardArgumentKeys.Date,
 				false,
 				AccountingActionResources.DATE_CAPTION,
@@ -136,6 +146,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// <param name="stateful">The stateful object.</param>
 		/// <param name="utcDate">The date, in UTC.</param>
 		/// <param name="billingItem">The billing item.</param>
+		/// <param name="collationID">The optional collation ID for the produced funds transfer events.</param>
 		/// <returns>
 		/// Returns the result of the accounting action.
 		/// </returns>
@@ -144,7 +155,8 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 			U user,
 			SO stateful,
 			DateTime utcDate,
-			B billingItem);
+			B billingItem,
+			Guid? collationID);
 
 		/// <summary>
 		/// Get the billing item from the action arguments.
@@ -155,6 +167,14 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// </exception>
 		protected B GetBillingItem(IDictionary<string, object> actionArguments)
 			=> GetParameterValue<B>(actionArguments, StandardArgumentKeys.BillingItem);
+
+		/// <summary>
+		/// Get the collation ID from the action arguments or null if not specified.
+		/// </summary>
+		/// <param name="actionArguments">The action arguments.</param>
+		/// <returns>Returns the collation ID ot null if not given.</returns>
+		protected Guid? GetCollationID(IDictionary<string, object> actionArguments)
+			=> GetOptionalParameterValue<Guid>(actionArguments, StandardArgumentKeys.CollationID);
 
 		/// <summary>
 		/// Get the batch date from action arguments, if it exists, else return the

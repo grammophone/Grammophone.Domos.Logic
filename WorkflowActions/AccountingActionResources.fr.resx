@@ -123,6 +123,12 @@
   <data name="BILLING_ITEM_DESCRIPTION" xml:space="preserve">
     <value>Objet qui représente une transaction de facturation.</value>
   </data>
+  <data name="COLLATION_ID_CAPTION" xml:space="preserve">
+    <value>ID de Groupement</value>
+  </data>
+  <data name="COLLATION_ID_DESCRIPTION" xml:space="preserve">
+    <value>ID de Groupement de l'événement.</value>
+  </data>
   <data name="DATE_CAPTION" xml:space="preserve">
     <value>Date et heure de facturation (UTC)</value>
   </data>

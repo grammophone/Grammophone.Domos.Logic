@@ -123,6 +123,12 @@
   <data name="BILLING_ITEM_DESCRIPTION" xml:space="preserve">
     <value>An object representing a billing transaction.</value>
   </data>
+  <data name="COLLATION_ID_CAPTION" xml:space="preserve">
+    <value>Collation ID</value>
+  </data>
+  <data name="COLLATION_ID_DESCRIPTION" xml:space="preserve">
+    <value>Optional collation ID of the any funds tranfer events being generated.</value>
+  </data>
   <data name="DATE_CAPTION" xml:space="preserve">
     <value>Date and time of billing (UTC)</value>
   </data>
