@@ -1,35 +1,38 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xs:schema xmlns:tns="urn:grammophone-domos/fundstransfer/responsebatch" elementFormDefault="qualified" targetNamespace="urn:grammophone-domos/fundstransfer/responsebatch" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <xs:element name="FundsResponseBatch" nillable="true" type="tns:FundsResponseBatch" />
-  <xs:complexType name="FundsResponseBatch">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="1" name="Items" type="tns:ArrayOfFundsResponseBatchItem" />
-    </xs:sequence>
-    <xs:attribute name="CreditSystemCodeName" type="xs:string" />
-    <xs:attribute name="Date" type="xs:dateTime" use="required" />
-    <xs:attribute name="BatchID" type="xs:string" />
-  </xs:complexType>
-  <xs:complexType name="ArrayOfFundsResponseBatchItem">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="unbounded" name="FundsResponseBatchItem" nillable="true" type="tns:FundsResponseBatchItem" />
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="FundsResponseBatchItem">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="1" name="ResponseCode" type="xs:string" />
-      <xs:element minOccurs="0" maxOccurs="1" name="TraceCode" type="xs:string" />
-      <xs:element minOccurs="1" maxOccurs="1" name="Type" type="tns:FundsTransferEventType" />
-      <xs:element minOccurs="0" maxOccurs="1" name="Comments" type="xs:string" />
-    </xs:sequence>
-    <xs:attribute name="TransactionID" type="xs:string" />
-  </xs:complexType>
-  <xs:simpleType name="FundsTransferEventType">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="Queued" />
-      <xs:enumeration value="Failed" />
-      <xs:enumeration value="Submitted" />
-      <xs:enumeration value="Accepted" />
-      <xs:enumeration value="Succeeded" />
-    </xs:restriction>
-  </xs:simpleType>
+	<xs:element name="FundsResponseBatch" nillable="true" type="tns:FundsResponseBatch" />
+	<xs:simpleType name="guid">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="FundsResponseBatch">
+		<xs:sequence>
+			<xs:element minOccurs="1" maxOccurs="1" name="BatchID" type="tns:guid" />
+			<xs:element minOccurs="1" maxOccurs="1" name="CollationID" type="tns:guid" />
+			<xs:element minOccurs="0" maxOccurs="1" name="Items" type="tns:ArrayOfFundsResponseBatchItem" />
+		</xs:sequence>
+		<xs:attribute name="CreditSystemCodeName" type="xs:string" />
+		<xs:attribute name="Date" type="xs:dateTime" use="required" />
+	</xs:complexType>
+	<xs:complexType name="ArrayOfFundsResponseBatchItem">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="FundsResponseBatchItem" nillable="true" type="tns:FundsResponseBatchItem" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FundsResponseBatchItem">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="1" name="ResponseCode" type="xs:string" />
+			<xs:element minOccurs="0" maxOccurs="1" name="TraceCode" type="xs:string" />
+			<xs:element minOccurs="1" maxOccurs="1" name="Type" type="tns:FundsResponseBatchItemType" />
+			<xs:element minOccurs="0" maxOccurs="1" name="Comments" type="xs:string" />
+		</xs:sequence>
+		<xs:attribute name="TransactionID" type="xs:string" />
+	</xs:complexType>
+	<xs:simpleType name="FundsResponseBatchItemType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Succeeded" />
+			<xs:enumeration value="Failed" />
+		</xs:restriction>
+	</xs:simpleType>
 </xs:schema>

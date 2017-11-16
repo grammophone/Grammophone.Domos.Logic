@@ -23,6 +23,10 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 
 		private string creditSystemCodeName;
 
+		private Guid batchID;
+
+		private Guid collationID;
+
 		#endregion
 
 		#region Construction
@@ -40,12 +44,14 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <param name="creditSystemCodeName">The code name of the credit system.</param>
 		/// <param name="date">The date of the batch in UTC.</param>
 		/// <param name="capacity">The initial capacity of items to reserve.</param>
-		/// <param name="batchID">Optional ID of the batch.</param>
+		/// <param name="batchID">The ID of the batch.</param>
+		/// <param name="collationID">The ID of the collation of events in the batch.</param>
 		public FundsResponseBatch(
 			string creditSystemCodeName,
 			DateTime date,
 			int capacity,
-			string batchID = null)
+			Guid batchID,
+			Guid collationID)
 		{
 			if (creditSystemCodeName == null) throw new ArgumentNullException(nameof(creditSystemCodeName));
 			if (date.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(date));
@@ -54,7 +60,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 
 			this.creditSystemCodeName = creditSystemCodeName;
 			this.date = date;
-			this.BatchID = batchID;
+			this.batchID = batchID;
+			this.collationID = collationID;
 		}
 
 		#endregion
@@ -100,11 +107,34 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		}
 
 		/// <summary>
-		/// The optional ID of the batch.
+		/// The ID of the batch.
 		/// </summary>
-		[MaxLength(225)]
-		[XmlAttribute]
-		public string BatchID { get; set; }
+		public Guid BatchID
+		{
+			get
+			{
+				return batchID;
+			}
+			set
+			{
+				batchID = value;
+			}
+		}
+
+		/// <summary>
+		/// The ID of the events collation.
+		/// </summary>
+		public Guid CollationID
+		{
+			get
+			{
+				return collationID;
+			}
+			set
+			{
+				collationID = value;
+			}
+		}
 
 		/// <summary>
 		/// The response items in the batch.
