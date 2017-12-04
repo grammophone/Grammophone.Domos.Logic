@@ -88,6 +88,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>FilesManagerMessages.resx</DependentUpon>
     </Compile>
+    <Compile Include="Models\FundsTransfer\FundsRequestLine.cs" />
+    <Compile Include="Models\FundsTransfer\FundsResponseLine.cs" />
     <Compile Include="WorkflowFundsTransferManager.cs" />
     <Compile Include="FundsTransferManager.cs" />
     <Compile Include="IPublicDomainProvider.cs" />
@@ -97,29 +99,29 @@
     <Compile Include="LogicException.cs" />
     <Compile Include="Manager.cs" />
     <Compile Include="ManagerAccessDeniedException.cs" />
-    <Compile Include="Models\FundsTransfer\FundsRequestBatchItemResources.Designer.cs">
+    <Compile Include="Models\FundsTransfer\FundsRequestFileItemResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>FundsRequestBatchItemResources.resx</DependentUpon>
+      <DependentUpon>FundsRequestFileItemResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Models\FundsTransfer\FundsResponseBatchItemResources.Designer.cs">
+    <Compile Include="Models\FundsTransfer\FundsResponseFileItemResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>FundsResponseBatchItemResources.resx</DependentUpon>
+      <DependentUpon>FundsResponseFileItemResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Models\FundsTransfer\FundsResponseBatchItemType.cs" />
-    <Compile Include="Models\FundsTransfer\FundsResponseBatchItemTypeResources.Designer.cs">
+    <Compile Include="Models\FundsTransfer\FundsResponseFileItemType.cs" />
+    <Compile Include="Models\FundsTransfer\FundsResponseFileItemTypeResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>FundsResponseBatchItemTypeResources.resx</DependentUpon>
+      <DependentUpon>FundsResponseFileItemTypeResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Models\FundsTransfer\FundsResponseResult.cs" />
-    <Compile Include="Models\FundsTransfer\FundsRequestBatch.cs" />
-    <Compile Include="Models\FundsTransfer\FundsRequestBatchItem.cs" />
-    <Compile Include="Models\FundsTransfer\FundsRequestBatchItems.cs" />
-    <Compile Include="Models\FundsTransfer\FundsResponseBatch.cs" />
-    <Compile Include="Models\FundsTransfer\FundsResponseBatchItem.cs" />
-    <Compile Include="Models\FundsTransfer\FundsResponseBatchItems.cs" />
+    <Compile Include="Models\FundsTransfer\FundsRequestFile.cs" />
+    <Compile Include="Models\FundsTransfer\FundsRequestFileItem.cs" />
+    <Compile Include="Models\FundsTransfer\FundsRequestFileItems.cs" />
+    <Compile Include="Models\FundsTransfer\FundsResponseFile.cs" />
+    <Compile Include="Models\FundsTransfer\FundsResponseFileItem.cs" />
+    <Compile Include="Models\FundsTransfer\FundsResponseFileItems.cs" />
     <Compile Include="Models\Workflow\ExecutionResult.cs" />
     <Compile Include="ParameterSpecification.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -209,10 +211,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="Models\FundsTransfer\FundsRequestBatch.xsd">
+    <None Include="Models\FundsTransfer\FundsRequestFile.xsd">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Models\FundsTransfer\FundsResponseBatch.xsd">
+    <None Include="Models\FundsTransfer\FundsResponseFile.xsd">
       <SubType>Designer</SubType>
     </None>
     <None Include="packages.config" />
@@ -228,20 +230,20 @@
       <LastGenOutput>FilesManagerMessages.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="FilesManagerMessages.fr.resx" />
-    <EmbeddedResource Include="Models\FundsTransfer\FundsRequestBatchItemResources.fr.resx" />
-    <EmbeddedResource Include="Models\FundsTransfer\FundsRequestBatchItemResources.resx">
+    <EmbeddedResource Include="Models\FundsTransfer\FundsRequestFileItemResources.fr.resx" />
+    <EmbeddedResource Include="Models\FundsTransfer\FundsRequestFileItemResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>FundsRequestBatchItemResources.Designer.cs</LastGenOutput>
+      <LastGenOutput>FundsRequestFileItemResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseBatchItemResources.fr.resx" />
-    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseBatchItemResources.resx">
+    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseFileItemResources.fr.resx" />
+    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseFileItemResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>FundsResponseBatchItemResources.Designer.cs</LastGenOutput>
+      <LastGenOutput>FundsResponseFileItemResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseBatchItemTypeResources.fr.resx" />
-    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseBatchItemTypeResources.resx">
+    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseFileItemTypeResources.fr.resx" />
+    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseFileItemTypeResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>FundsResponseBatchItemTypeResources.Designer.cs</LastGenOutput>
+      <LastGenOutput>FundsResponseFileItemTypeResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="WorkflowActions\AccountingActionResources.fr.resx" />
     <EmbeddedResource Include="WorkflowActions\AccountingActionResources.resx">

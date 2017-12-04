@@ -9,17 +9,17 @@ using System.Xml.Serialization;
 namespace Grammophone.Domos.Logic.Models.FundsTransfer
 {
 	/// <summary>
-	/// A batch of responses for funds requests.
+	/// A batch of fund requests.
 	/// </summary>
 	[Serializable]
-	[XmlRoot(Namespace = "urn:grammophone-domos/fundstransfer/responsebatch")]
-	public class FundsResponseBatch
+	[XmlRoot(Namespace = "urn:grammophone-domos/fundstransfer/requestfile")]
+	public class FundsRequestFile
 	{
 		#region Private fields
 
-		private DateTime date;
+		private FundsRequestFileItems items;
 
-		private FundsResponseBatchItems items;
+		private DateTime date;
 
 		private string creditSystemCodeName;
 
@@ -34,8 +34,9 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <summary>
 		/// Create.
 		/// </summary>
-		public FundsResponseBatch()
+		public FundsRequestFile()
 		{
+			this.Items = new FundsRequestFileItems();
 		}
 
 		/// <summary>
@@ -44,67 +45,29 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <param name="creditSystemCodeName">The code name of the credit system.</param>
 		/// <param name="date">The date of the batch in UTC.</param>
 		/// <param name="capacity">The initial capacity of items to reserve.</param>
-		/// <param name="batchID">The ID of the batch.</param>
-		/// <param name="collationID">The ID of the collation of events in the batch.</param>
-		public FundsResponseBatch(
+		/// <param name="batchID">Optional ID of the batch. If not set, a new GUID will be assigned.</param>
+		/// <param name="collationID">Optional ID of the collation of events in the batch. If not set, a new GUID will be assigned.</param>
+		public FundsRequestFile(
 			string creditSystemCodeName,
 			DateTime date,
 			int capacity,
-			Guid batchID,
-			Guid collationID)
+			Guid? batchID = null,
+			Guid? collationID = null)
 		{
 			if (creditSystemCodeName == null) throw new ArgumentNullException(nameof(creditSystemCodeName));
 			if (date.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(date));
 
-			this.items = new FundsResponseBatchItems(capacity);
+			this.items = new FundsRequestFileItems(capacity);
 
 			this.creditSystemCodeName = creditSystemCodeName;
 			this.date = date;
-			this.batchID = batchID;
-			this.collationID = collationID;
+			this.batchID = batchID ?? Guid.NewGuid();
+			this.collationID = collationID ?? Guid.NewGuid();
 		}
 
 		#endregion
 
 		#region Public properties
-
-		/// <summary>
-		/// The code name of the credit system.
-		/// </summary>
-		[XmlAttribute]
-		[Required]
-		public string CreditSystemCodeName
-		{
-			get
-			{
-				return creditSystemCodeName;
-			}
-			set
-			{
-				if (value == null) throw new ArgumentNullException(nameof(value));
-
-				creditSystemCodeName = value;
-			}
-		}
-
-		/// <summary>
-		/// The date and time, in UTC.
-		/// </summary>
-		[XmlAttribute]
-		public DateTime Date
-		{
-			get
-			{
-				return date;
-			}
-			set
-			{
-				if (value.Kind != DateTimeKind.Utc)
-					throw new ArgumentException("The value must be UTC.");
-
-				date = value;
-			}
-		}
 
 		/// <summary>
 		/// The ID of the batch.
@@ -137,9 +100,48 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		}
 
 		/// <summary>
-		/// The response items in the batch.
+		/// The date and time, in UTC.
 		/// </summary>
-		public FundsResponseBatchItems Items
+		[XmlAttribute]
+		public DateTime Date
+		{
+			get
+			{
+				return date;
+			}
+			set
+			{
+				if (value.Kind == DateTimeKind.Local)
+					throw new ArgumentException("The value must not be local.");
+
+				date = value;
+			}
+		}
+
+		/// <summary>
+		/// The code name of the credit system where this
+		/// batch request is executed.
+		/// </summary>
+		[Required]
+		[XmlAttribute]
+		public string CreditSystemCodeName
+		{
+			get
+			{
+				return creditSystemCodeName;
+			}
+			set
+			{
+				if (value == null) throw new ArgumentNullException(nameof(value));
+
+				creditSystemCodeName = value;
+			}
+		}
+
+		/// <summary>
+		/// The request items in the batch.
+		/// </summary>
+		public FundsRequestFileItems Items
 		{
 			get
 			{

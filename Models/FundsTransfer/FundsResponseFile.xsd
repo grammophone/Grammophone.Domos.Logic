@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<xs:schema xmlns:tns="urn:grammophone-domos/fundstransfer/responsebatch" elementFormDefault="qualified" targetNamespace="urn:grammophone-domos/fundstransfer/responsebatch" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema xmlns:tns="urn:grammophone-domos/fundstransfer/responsefile" elementFormDefault="qualified" targetNamespace="urn:grammophone-domos/fundstransfer/responsefile" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 	<xs:element name="FundsResponseBatch" nillable="true" type="tns:FundsResponseBatch" />
 	<xs:simpleType name="guid">
 		<xs:restriction base="xs:string">

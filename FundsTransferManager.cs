@@ -131,10 +131,10 @@ namespace Grammophone.Domos.Logic
 		/// <param name="fundsTransferRequests">The funds transfer requests.</param>
 		/// <param name="batchID">The optional ID of the patch.</param>
 		/// <returns>
-		/// Returns a <see cref="FundsRequestBatch"/> containing the requests
+		/// Returns a <see cref="FundsRequestFile"/> containing the requests
 		/// which belong to the given <paramref name="creditSystem"/>.
 		/// </returns>
-		protected async Task<FundsRequestBatch> CreateFundsRequestBatchAsync(
+		protected async Task<FundsRequestFile> CreateFundsRequestBatchAsync(
 			CreditSystem creditSystem,
 			IReadOnlyCollection<FundsTransferRequest> fundsTransferRequests,
 			Guid? batchID = null)
@@ -154,10 +154,10 @@ namespace Grammophone.Domos.Logic
 		/// <param name="fundsTransferRequestsQuery">The set of funds transfer requests.</param>
 		/// <param name="batchID">The optional ID of the patch.</param>
 		/// <returns>
-		/// Returns a <see cref="FundsRequestBatch"/> containing the requests
+		/// Returns a <see cref="FundsRequestFile"/> containing the requests
 		/// which belong to the given <paramref name="creditSystem"/>.
 		/// </returns>
-		protected async Task<FundsRequestBatch> CreateFundsRequestBatchAsync(
+		protected async Task<FundsRequestFile> CreateFundsRequestBatchAsync(
 			CreditSystem creditSystem,
 			IQueryable<FundsTransferRequest> fundsTransferRequestsQuery,
 			Guid? batchID = null)
@@ -176,7 +176,7 @@ namespace Grammophone.Domos.Logic
 
 		#region Private methods
 
-		private async Task<FundsRequestBatch> CreateFundsRequestBatchImplAsync(
+		private async Task<FundsRequestFile> CreateFundsRequestBatchImplAsync(
 			CreditSystem creditSystem,
 			IReadOnlyList<FundsTransferRequest> fundsTransferRequests,
 			Guid? batchID = null)
@@ -184,7 +184,7 @@ namespace Grammophone.Domos.Logic
 			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
 			if (fundsTransferRequests == null) throw new ArgumentNullException(nameof(fundsTransferRequests));
 
-			var batch = new FundsRequestBatch(
+			var batch = new FundsRequestFile(
 				creditSystem.CodeName,
 				DateTime.UtcNow,
 				fundsTransferRequests.Count,
@@ -197,7 +197,7 @@ namespace Grammophone.Domos.Logic
 					if (fundsTransferRequest.BatchID != batchID)
 						fundsTransferRequest.BatchID = batchID;
 
-					var batchItem = new FundsRequestBatchItem
+					var batchItem = new FundsRequestFileItem
 					{
 						Amount = fundsTransferRequest.Amount,
 						TransactionID = fundsTransferRequest.TransactionID,

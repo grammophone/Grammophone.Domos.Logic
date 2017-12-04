@@ -10,10 +10,10 @@ using Grammophone.Domos.Accounting.Models;
 namespace Grammophone.Domos.Logic.Models.FundsTransfer
 {
 	/// <summary>
-	/// A line in a <see cref="FundsRequestBatch"/>.
+	/// A line in a <see cref="FundsRequestFile"/>.
 	/// </summary>
 	[Serializable]
-	public class FundsRequestBatchItem
+	public class FundsRequestFileItem
 	{
 		#region Private fields
 
@@ -33,9 +33,9 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[MaxLength(225)]
 		[XmlAttribute]
 		[Display(
-			Name = nameof(FundsRequestBatchItemResources.TransactionID_Name),
-			ResourceType = typeof(FundsRequestBatchItemResources))]
-		public virtual string TransactionID { get; set; }
+			Name = nameof(FundsRequestFileItemResources.TransactionID_Name),
+			ResourceType = typeof(FundsRequestFileItemResources))]
+		public string TransactionID { get; set; }
 
 		/// <summary>
 		/// If positive, The amount is deposited to the bank account specified
@@ -43,8 +43,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		[XmlAttribute]
 		[Display(
-			Name = nameof(FundsRequestBatchItemResources.Amount_Name),
-			ResourceType = typeof(FundsRequestBatchItemResources))]
+			Name = nameof(FundsRequestFileItemResources.Amount_Name),
+			ResourceType = typeof(FundsRequestFileItemResources))]
 		[DataType(DataType.Currency)]
 		public decimal Amount { get; set; }
 
@@ -53,8 +53,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		[Required]
 		[Display(
-			Name = nameof(FundsRequestBatchItemResources.BankAccountInfo_Name),
-			ResourceType = typeof(FundsRequestBatchItemResources))]
+			Name = nameof(FundsRequestFileItemResources.BankAccountInfo_Name),
+			ResourceType = typeof(FundsRequestFileItemResources))]
 		public BankAccountInfo BankAccountInfo
 		{
 			get

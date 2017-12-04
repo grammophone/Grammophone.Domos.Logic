@@ -10,7 +10,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 {
 	/// <summary>
 	/// Result of the state path executed due to accepting
-	/// a <see cref="FundsResponseBatchItem"/>.
+	/// a <see cref="FundsResponseFileItem"/>.
 	/// </summary>
 	/// <typeparam name="SO">The type of the stateful object.</typeparam>
 	/// <typeparam name="ST">The type of state transition.</typeparam>
@@ -26,6 +26,6 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <summary>
 		/// The batch item being accepted.
 		/// </summary>
-		public FundsResponseBatchItem BatchItem { get; set; }
+		public FundsResponseFileItem BatchItem { get; set; }
 	}
 }

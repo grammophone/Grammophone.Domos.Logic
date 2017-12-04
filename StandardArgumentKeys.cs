@@ -38,7 +38,7 @@ namespace Grammophone.Domos.Logic
 
 		/// <summary>
 		/// Parameter key for 
-		/// a <see cref="Models.FundsTransfer.FundsResponseBatchItem"/>.
+		/// a <see cref="Models.FundsTransfer.FundsResponseFileItem"/>.
 		/// </summary>
 		public const string BillingItem = nameof(BillingItem);
 	}

@@ -19,17 +19,17 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class FundsResponseBatchItemTypeResources {
+    public class FundsResponseFileItemResources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal FundsResponseBatchItemTypeResources() {
+        internal FundsResponseFileItemResources() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Grammophone.Domos.Logic.Models.FundsTransfer.FundsResponseBatchItemTypeResources", typeof(FundsResponseBatchItemTypeResources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Grammophone.Domos.Logic.Models.FundsTransfer.FundsResponseFileItemResources", typeof(FundsResponseFileItemResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,20 +61,47 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed.
+        ///   Looks up a localized string similar to Response Comments.
         /// </summary>
-        public static string Failed_Name {
+        public static string Comments_Name {
             get {
-                return ResourceManager.GetString("Failed_Name", resourceCulture);
+                return ResourceManager.GetString("Comments_Name", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Succeeded.
+        ///   Looks up a localized string similar to Response Code.
         /// </summary>
-        public static string Succeeded_Name {
+        public static string ResponseCode_Name {
             get {
-                return ResourceManager.GetString("Succeeded_Name", resourceCulture);
+                return ResourceManager.GetString("ResponseCode_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Trace Code.
+        /// </summary>
+        public static string TraceCode_Name {
+            get {
+                return ResourceManager.GetString("TraceCode_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transaction ID.
+        /// </summary>
+        public static string TransactionID_Name {
+            get {
+                return ResourceManager.GetString("TransactionID_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Response Type.
+        /// </summary>
+        public static string Type_Name {
+            get {
+                return ResourceManager.GetString("Type_Name", resourceCulture);
             }
         }
     }

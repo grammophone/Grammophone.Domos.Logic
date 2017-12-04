@@ -1,26 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<xs:schema xmlns:tns="urn:grammophone-domos/fundstransfer/requestbatch" elementFormDefault="qualified" targetNamespace="urn:grammophone-domos/fundstransfer/requestbatch" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-	<xs:element name="FundsRequestBatch" nillable="true" type="tns:FundsRequestBatch" />
+<xs:schema xmlns:tns="urn:grammophone-domos/fundstransfer/requestfile" elementFormDefault="qualified" targetNamespace="urn:grammophone-domos/fundstransfer/requestfile" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 	<xs:simpleType name="guid">
 		<xs:restriction base="xs:string">
 			<xs:pattern value="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}" />
 		</xs:restriction>
 	</xs:simpleType>
-	<xs:complexType name="FundsRequestBatch">
+	<xs:element name="FundsRequestFile" nillable="true" type="tns:FundsRequestFile" />
+	<xs:complexType name="FundsRequestFile">
 		<xs:sequence>
 			<xs:element minOccurs="1" maxOccurs="1" name="BatchID" type="tns:guid" />
 			<xs:element minOccurs="1" maxOccurs="1" name="CollationID" type="tns:guid" />
-			<xs:element minOccurs="0" maxOccurs="1" name="Items" type="tns:ArrayOfFundsRequestBatchItem" />
+			<xs:element minOccurs="0" maxOccurs="1" name="Items" type="tns:ArrayOfFundsRequestFileItem" />
 		</xs:sequence>
 		<xs:attribute name="Date" type="xs:dateTime" use="required" />
 		<xs:attribute name="CreditSystemCodeName" type="xs:string" />
 	</xs:complexType>
-	<xs:complexType name="ArrayOfFundsRequestBatchItem">
+	<xs:complexType name="ArrayOfFundsRequestFileItem">
 		<xs:sequence>
-			<xs:element minOccurs="0" maxOccurs="unbounded" name="FundsRequestBatchItem" nillable="true" type="tns:FundsRequestBatchItem" />
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="FundsRequestFileItem" nillable="true" type="tns:FundsRequestFileItem" />
 		</xs:sequence>
 	</xs:complexType>
-	<xs:complexType name="FundsRequestBatchItem">
+	<xs:complexType name="FundsRequestFileItem">
 		<xs:sequence>
 			<xs:element minOccurs="0" maxOccurs="1" name="BankAccountInfo" type="tns:BankAccountInfo" />
 		</xs:sequence>

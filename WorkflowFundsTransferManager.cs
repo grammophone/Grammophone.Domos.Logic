@@ -202,7 +202,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Accepts a funds transfer response batch from a credit system
 		/// and execute the appropriate state paths 
-		/// asp specified by the <see cref="GetNextStatePathCodeName(string, FundsResponseBatchItem)"/> method
+		/// asp specified by the <see cref="GetNextStatePathCodeName(string, FundsResponseFileItem)"/> method
 		/// on the corresponding stateful objects.
 		/// </summary>
 		/// <param name="batch">The response batch to accept.</param>
@@ -213,10 +213,10 @@ namespace Grammophone.Domos.Logic
 		/// <remarks>
 		/// Each action in paths being executed will receive an arguments dictionary
 		/// containing at least a key 'batchItem' with value
-		/// of type <see cref="FundsResponseBatchItem"/>.
+		/// of type <see cref="FundsResponseFileItem"/>.
 		/// </remarks>
 		public async Task<IReadOnlyCollection<FundsResponseResult<SO, ST>>> AcceptFundsTransferResponseBatchAsync(
-			FundsResponseBatch batch)
+			FundsResponseFile batch)
 		{
 			if (batch == null) throw new ArgumentNullException(nameof(batch));
 
@@ -266,14 +266,14 @@ namespace Grammophone.Domos.Logic
 
 		/// <summary>
 		/// Decide the state path to execute on a stateful object
-		/// when a <see cref="FundsResponseBatchItem"/> arrives for it.
+		/// when a <see cref="FundsResponseFileItem"/> arrives for it.
 		/// </summary>
 		/// <param name="stateCodeName">The code name of the current state.</param>
 		/// <param name="fundsResponseBatchItem">The batch line arriving for the stateful object.</param>
 		/// <returns>Returns the code name of the path to execute or null to execute none.</returns>
 		protected abstract string GetNextStatePathCodeName(
 			string stateCodeName,
-			FundsResponseBatchItem fundsResponseBatchItem);
+			FundsResponseFileItem fundsResponseBatchItem);
 
 		#endregion
 
@@ -291,7 +291,7 @@ namespace Grammophone.Domos.Logic
 
 		private async Task<FundsResponseResult<SO, ST>> AcceptFundsTransferResponseItemAsync(
 			Dictionary<string, SO> statefulObjectsByTransactionID,
-			FundsResponseBatchItem item)
+			FundsResponseFileItem item)
 		{
 			if (statefulObjectsByTransactionID == null) throw new ArgumentNullException(nameof(statefulObjectsByTransactionID));
 			if (item == null) throw new ArgumentNullException(nameof(item));

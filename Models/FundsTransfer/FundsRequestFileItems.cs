@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 namespace Grammophone.Domos.Logic.Models.FundsTransfer
 {
 	/// <summary>
-	/// Collection of <see cref="FundsResponseBatchItem"/>s.
+	/// Collectino of <see cref="FundsRequestFileItem"/>s.
 	/// </summary>
 	[Serializable]
-	public class FundsResponseBatchItems : List<FundsResponseBatchItem>
+	public class FundsRequestFileItems : List<FundsRequestFileItem>
 	{
 		/// <summary>
 		/// Create.
 		/// </summary>
-		public FundsResponseBatchItems()
+		public FundsRequestFileItems()
 		{
 		}
 
@@ -23,7 +23,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// Create with initial reserved capacity.
 		/// </summary>
 		/// <param name="capacity">The initial capacity of items to reserve.</param>
-		public FundsResponseBatchItems(int capacity)
+		public FundsRequestFileItems(int capacity) : base(capacity)
 		{
 		}
 	}

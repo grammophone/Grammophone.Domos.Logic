@@ -8,24 +8,24 @@ using System.Threading.Tasks;
 namespace Grammophone.Domos.Logic.Models.FundsTransfer
 {
 	/// <summary>
-	/// Type of a <see cref="FundsResponseBatchItem"/>.
+	/// Type of a <see cref="FundsResponseFileItem"/>.
 	/// </summary>
-	public enum FundsResponseBatchItemType
+	public enum FundsResponseFileItemType
 	{
 		/// <summary>
 		/// The item in the batch marks a successful transfer.
 		/// </summary>
 		[Display(
-			Name = nameof(FundsResponseBatchItemTypeResources.Succeeded_Name),
-			ResourceType = typeof(FundsResponseBatchItemTypeResources))]
+			Name = nameof(FundsResponseFileItemTypeResources.Succeeded_Name),
+			ResourceType = typeof(FundsResponseFileItemTypeResources))]
 		Succeeded,
 
 		/// <summary>
 		/// The item in the batch marks a failed transfer.
 		/// </summary>
 		[Display(
-			Name = nameof(FundsResponseBatchItemTypeResources.Failed_Name),
-			ResourceType = typeof(FundsResponseBatchItemTypeResources))]
+			Name = nameof(FundsResponseFileItemTypeResources.Failed_Name),
+			ResourceType = typeof(FundsResponseFileItemTypeResources))]
 		Failed
 	}
 }
