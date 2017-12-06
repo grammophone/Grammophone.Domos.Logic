@@ -90,6 +90,17 @@
     </Compile>
     <Compile Include="Models\FundsTransfer\FundsRequestLine.cs" />
     <Compile Include="Models\FundsTransfer\FundsResponseLine.cs" />
+    <Compile Include="Models\FundsTransfer\FundsResponseLineResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FundsResponseLineResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Models\FundsTransfer\FundsResponseStatus.cs" />
+    <Compile Include="Models\FundsTransfer\FundsResponseStatusResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FundsResponseStatusResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="WorkflowFundsTransferManager.cs" />
     <Compile Include="FundsTransferManager.cs" />
     <Compile Include="IPublicDomainProvider.cs" />
@@ -244,6 +255,16 @@
     <EmbeddedResource Include="Models\FundsTransfer\FundsResponseFileItemTypeResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>FundsResponseFileItemTypeResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseLineResources.fr.resx" />
+    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseLineResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>FundsResponseLineResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseStatusResources.fr.resx" />
+    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseStatusResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>FundsResponseStatusResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="WorkflowActions\AccountingActionResources.fr.resx" />
     <EmbeddedResource Include="WorkflowActions\AccountingActionResources.resx">

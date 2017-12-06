@@ -24,7 +24,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		#endregion
 
 		#region Public properties
-
+		
 		/// <summary>
 		/// Optional ID of the batch where the funds transfer request belongs.
 		/// </summary>
