@@ -70,10 +70,10 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 			var fundsTransferRequest =
 				await domainContainer.FundsTransferRequests.SingleOrDefaultAsync(
-					r => r.TransactionID == billingItem.TransactionID);
+					r => r.TransactionID == billingItem.TransactionID && r.CreditSystem.CodeName == billingItem.CreditSystemCodeName);
 
 			if (fundsTransferRequest == null)
-				throw new UserException("Invalid credit system.");
+				throw new UserException(FundsTransferResponseActionResources.INVALID_FUNDS_REQUEST);
 
 			FundsTransferEventType eventType;
 

@@ -117,31 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="BatchID_Name" xml:space="preserve">
-    <value>ID de fournée</value>
-  </data>
-  <data name="CollationID_Name" xml:space="preserve">
-    <value>ID de Classement</value>
-  </data>
-  <data name="Comments_Name" xml:space="preserve">
-    <value>Commentaires</value>
-  </data>
-  <data name="CreditSystemCodeName_Name" xml:space="preserve">
-    <value>Code du Système Crédit</value>
-  </data>
-  <data name="Date_Name" xml:space="preserve">
-    <value>Date</value>
-  </data>
-  <data name="ResponseCode_Name" xml:space="preserve">
-    <value>Code de Réponse</value>
-  </data>
-  <data name="Status_Name" xml:space="preserve">
-    <value>État</value>
-  </data>
-  <data name="TraceCode_Name" xml:space="preserve">
-    <value>Code de Trace</value>
-  </data>
-  <data name="TransactionID_Name" xml:space="preserve">
-    <value>ID de Transaction</value>
+  <data name="INVALID_FUNDS_REQUEST" xml:space="preserve">
+    <value>Credit system code name is not valid.</value>
   </data>
 </root>

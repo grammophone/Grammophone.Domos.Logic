@@ -41,6 +41,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			if (file == null) throw new ArgumentNullException(nameof(file));
 			if (fileItem == null) throw new ArgumentNullException(nameof(fileItem));
 
+			this.CreditSystemCodeName = file.CreditSystemCodeName;
 			this.Date = file.Date;
 			this.BatchID = file.BatchID;
 			this.CollationID = file.CollationID;
@@ -54,6 +55,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		#endregion
 
 		#region Public properties
+
+		/// <summary>
+		/// The code name of the credit system involved in the transfer.
+		/// </summary>
+		[Required]
+		[Display(
+			ResourceType = typeof(FundsResponseLineResources),
+			Name = nameof(FundsResponseLineResources.CreditSystemCodeName_Name))]
+		public string CreditSystemCodeName { get; set; }
 
 		/// <summary>
 		/// The date and time, in UTC.

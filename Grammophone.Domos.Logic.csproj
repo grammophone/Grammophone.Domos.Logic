@@ -102,6 +102,11 @@
       <DependentUpon>FundsResponseStatusResources.resx</DependentUpon>
     </Compile>
     <Compile Include="WorkflowActions\FundsTransferResponseAction.cs" />
+    <Compile Include="WorkflowActions\FundsTransferResponseActionResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FundsTransferResponseActionResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="WorkflowFundsTransferManager.cs" />
     <Compile Include="FundsTransferManager.cs" />
     <Compile Include="IPublicDomainProvider.cs" />
@@ -264,6 +269,11 @@
     <EmbeddedResource Include="WorkflowActions\FundsTransferInitiationActionResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>FundsTransferInitiationActionResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="WorkflowActions\FundsTransferResponseActionResources.fr.resx" />
+    <EmbeddedResource Include="WorkflowActions\FundsTransferResponseActionResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>FundsTransferResponseActionResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="WorkflowManagerMessages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
