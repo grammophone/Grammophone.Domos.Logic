@@ -99,8 +99,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			}
 			set
 			{
-				if (value.Kind != DateTimeKind.Utc)
-					throw new ArgumentException("The value must be UTC.");
+				if (value.Kind == DateTimeKind.Local)
+					throw new ArgumentException("The value must not be lcoal.");
 
 				date = value;
 			}

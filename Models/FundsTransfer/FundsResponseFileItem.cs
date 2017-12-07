@@ -5,8 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using Grammophone.DataAccess;
-using Grammophone.Domos.Domain.Accounting;
 
 namespace Grammophone.Domos.Logic.Models.FundsTransfer
 {
@@ -20,7 +18,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// The ID of the external system transaction.
 		/// </summary>
 		[Required]
-		[MaxLength(225)]
+		[MaxLength(Domain.Accounting.FundsTransferRequest.TransactionIdLength)]
 		[XmlAttribute]
 		[Display(
 			Name = nameof(FundsResponseFileItemResources.TransactionID_Name),
@@ -31,7 +29,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// The response code as returned by the Electronic Funds
 		/// Transfer (EFT/ACH) system.
 		/// </summary>
-		[MaxLength(3)]
+		[MaxLength(Domain.Accounting.FundsTransferEvent.ResponseCodeLength)]
 		[Display(
 			Name = nameof(FundsResponseFileItemResources.ResponseCode_Name),
 			ResourceType = typeof(FundsResponseFileItemResources))]
@@ -40,7 +38,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <summary>
 		/// Unique code for event tracing.
 		/// </summary>
-		[MaxLength(36)]
+		[MaxLength(Domain.Accounting.FundsTransferEvent.TraceCodeLength)]
 		[Display(
 			Name = nameof(FundsResponseFileItemResources.TraceCode_Name),
 			ResourceType = typeof(FundsResponseFileItemResources))]
@@ -50,9 +48,9 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// The type of this item.
 		/// </summary>
 		[Display(
-			Name = nameof(FundsResponseFileItemResources.Type_Name),
+			Name = nameof(FundsResponseFileItemResources.Status_Name),
 			ResourceType = typeof(FundsResponseFileItemResources))]
-		public FundsResponseFileItemType Type { get; set; }
+		public FundsResponseStatus Status { get; set; }
 
 		/// <summary>
 		/// Optional comments.
@@ -60,7 +58,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[Display(
 			Name = nameof(FundsResponseFileItemResources.Comments_Name),
 			ResourceType = typeof(FundsResponseFileItemResources))]
-		[MaxLength(256)]
+		[MaxLength(Domain.Accounting.FundsTransferEvent.CommentsLength)]
 		public string Comments { get; set; }
 	}
 }

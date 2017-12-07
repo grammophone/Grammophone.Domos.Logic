@@ -126,6 +126,9 @@
   <data name="Comments_Name" xml:space="preserve">
     <value>Commentaires</value>
   </data>
+  <data name="Date_Name" xml:space="preserve">
+    <value>Date</value>
+  </data>
   <data name="ResponseCode_Name" xml:space="preserve">
     <value>Code de Réponse</value>
   </data>

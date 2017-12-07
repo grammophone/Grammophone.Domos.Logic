@@ -25,6 +25,9 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 	/// <typeparam name="S">The type of session, derived from <see cref="LogicSession{U, D}"/>.</typeparam>
 	/// <typeparam name="ST">The type of state transition, derived from <typeparamref name="BST"/></typeparam>
 	/// <typeparam name="SO">The type of stateful object, derived from <see cref="IStateful{U, ST}"/>.</typeparam>
+	/// <typeparam name="AS">
+	/// The type of accounting session to be used, derived from <see cref="AccountingSession{U, BST, P, R, J, D}"/>.
+	/// </typeparam>
 	/// <typeparam name="B">The type of billing item.</typeparam>
 	/// <remarks>
 	/// This action expects a billing item of type <typeparamref name="B"/> in arguments
@@ -34,7 +37,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 	/// Warning: The <see cref="ExecuteAsync(S, D, SO, ST, IDictionary{string, object})"/> method implementation
 	/// elevates the rights of any existing outer transaction.
 	/// </remarks>
-	public abstract class AccountingAction<U, BST, P, R, J, D, S, ST, SO, B>
+	public abstract class AccountingAction<U, BST, P, R, J, D, S, ST, SO, AS, B>
 		: WorkflowAction<U, D, S, ST, SO>
 		where U : User
 		where BST : StateTransition<U>
@@ -44,6 +47,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		where D : IDomosDomainContainer<U, BST, P, R, J>
 		where S : LogicSession<U, D>
 		where ST : BST
+		where AS : AccountingSession<U, BST, P, R, J, D>
 		where SO : IStateful<U, ST>
 	{
 		#region Public methods
@@ -52,7 +56,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// Consumes the billing item of type <typeparamref name="B"/> in arguments
 		/// key <see cref="StandardArgumentKeys.BillingItem"/> and the <see cref="DateTime"/>
 		/// in key <see cref="StandardArgumentKeys.Date"/> and performs the accounting
-		/// using method <see cref="ExecuteAccountingAsync(D, U, SO, DateTime, B, Guid?)"/>.
+		/// using method <see cref="ExecuteAccountingAsync(AS, SO, B)"/>.
 		/// </summary>
 		public override async Task ExecuteAsync(
 			S session,
@@ -67,35 +71,31 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 			if (stateTransition == null) throw new ArgumentNullException(nameof(stateTransition));
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
 
-			DateTime date = GetDate(actionArguments);
-
 			B billingItem = GetBillingItem(actionArguments);
-
-			Guid? collationID = GetCollationID(actionArguments);
 
 			using (var transaction = domainContainer.BeginTransaction())
 			{
 				ElevateTransactionAccessRights(session, transaction); // Needed because accounting touches private data.
 
-				var result = await ExecuteAccountingAsync(
-					domainContainer,
-					session.User,
-					stateful,
-					date,
-					billingItem,
-					collationID);
-
-				if (result.Journal != null)
+				using (var accountingSession = CreateAccountingSession(domainContainer, session.User))
 				{
-					result.Journal.StateTransition = stateTransition;
-				}
+					var result = await ExecuteAccountingAsync(
+						accountingSession,
+						stateful,
+						billingItem);
 
-				if (result.FundsTransferEvent != null)
-				{
-					stateTransition.FundsTransferEvent = result.FundsTransferEvent;
-				}
+					if (result.Journal != null)
+					{
+						result.Journal.StateTransition = stateTransition;
+					}
 
-				await transaction.CommitAsync();
+					if (result.FundsTransferEvent != null)
+					{
+						stateTransition.FundsTransferEvent = result.FundsTransferEvent;
+					}
+
+					await transaction.CommitAsync();
+				}
 			}
 		}
 
@@ -137,26 +137,25 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 		/// <summary>
 		/// Override to consume the billing item and return an accounting result. 
-		/// This method receives
-		/// a <paramref name="domainContainer"/> with elevated access rights,
-		/// suitable for accounting actions which typically touch private data.
 		/// </summary>
-		/// <param name="domainContainer">The domain container.</param>
-		/// <param name="user">The acting user.</param>
-		/// <param name="stateful">The stateful object.</param>
-		/// <param name="utcDate">The date, in UTC.</param>
+		/// <param name="accountingSession">The accounting session in use.</param>
+		/// <param name="stateful">The stateful object for which the workflow action runs.</param>
 		/// <param name="billingItem">The billing item.</param>
-		/// <param name="collationID">The optional collation ID for the produced funds transfer events.</param>
 		/// <returns>
 		/// Returns the result of the accounting action.
 		/// </returns>
 		protected abstract Task<AccountingSession<U, BST, P, R, J, D>.ActionResult> ExecuteAccountingAsync(
-			D domainContainer,
-			U user,
+			AS accountingSession,
 			SO stateful,
-			DateTime utcDate,
-			B billingItem,
-			Guid? collationID);
+			B billingItem);
+
+		/// <summary>
+		/// Override to provide the construction of the accounting session.
+		/// </summary>
+		/// <param name="domainContainer">The domain container in use.</param>
+		/// <param name="agent">The user running the action, which will be the agent of the accounting.</param>
+		/// <returns>Returns the approptiate accounting session implementation.</returns>
+		protected abstract AS CreateAccountingSession(D domainContainer, U agent);
 
 		/// <summary>
 		/// Get the billing item from the action arguments.
@@ -167,37 +166,6 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// </exception>
 		protected B GetBillingItem(IDictionary<string, object> actionArguments)
 			=> GetParameterValue<B>(actionArguments, StandardArgumentKeys.BillingItem);
-
-		/// <summary>
-		/// Get the collation ID from the action arguments or null if not specified.
-		/// </summary>
-		/// <param name="actionArguments">The action arguments.</param>
-		/// <returns>Returns the collation ID ot null if not given.</returns>
-		protected Guid? GetCollationID(IDictionary<string, object> actionArguments)
-			=> GetOptionalParameterValue<Guid>(actionArguments, StandardArgumentKeys.CollationID);
-
-		/// <summary>
-		/// Get the batch date from action arguments, if it exists, else return the
-		/// current date in UTC.
-		/// </summary>
-		protected DateTime GetDate(IDictionary<string, object> actionArguments)
-		{
-			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
-
-			DateTime? date = GetOptionalParameterValue<DateTime>(actionArguments, StandardArgumentKeys.Date);
-
-			if (date.HasValue)
-			{
-				if (date.Value.Kind != DateTimeKind.Utc)
-					return DateTime.SpecifyKind(date.Value, DateTimeKind.Utc);
-				else
-					return date.Value;
-			}
-			else
-			{
-				return DateTime.UtcNow;
-			}
-		}
 
 		#endregion
 	}

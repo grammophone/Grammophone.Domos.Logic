@@ -72,7 +72,17 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The set of credit systems.
 		/// </summary>
-		public IQueryable<CreditSystem> CreditSystems => this.DomainContainer.CreditSystems;
+		public virtual IQueryable<CreditSystem> CreditSystems => this.DomainContainer.CreditSystems;
+
+		/// <summary>
+		/// The funds transfer request batches in the system.
+		/// </summary>
+		public virtual IQueryable<FundsTransferRequestBatch> FundsTransferRequestBatches => this.DomainContainer.FundsTransferRequestBatches;
+
+		/// <summary>
+		/// The funds transfer event collations in the system.
+		/// </summary>
+		public virtual IQueryable<FundsTransferEventCollation> FundsTransferEventCollations => this.DomainContainer.FundsTransferEventCollations;
 
 		/// <summary>
 		/// The funds transfer requests handled by this manager.

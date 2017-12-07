@@ -79,6 +79,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Status.
+        /// </summary>
+        public static string Status_Name {
+            get {
+                return ResourceManager.GetString("Status_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Trace Code.
         /// </summary>
         public static string TraceCode_Name {
@@ -93,15 +102,6 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         public static string TransactionID_Name {
             get {
                 return ResourceManager.GetString("TransactionID_Name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Response Type.
-        /// </summary>
-        public static string Type_Name {
-            get {
-                return ResourceManager.GetString("Type_Name", resourceCulture);
             }
         }
     }

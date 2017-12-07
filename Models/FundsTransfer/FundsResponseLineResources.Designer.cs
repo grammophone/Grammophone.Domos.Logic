@@ -88,6 +88,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Date.
+        /// </summary>
+        public static string Date_Name {
+            get {
+                return ResourceManager.GetString("Date_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Response Code.
         /// </summary>
         public static string ResponseCode_Name {

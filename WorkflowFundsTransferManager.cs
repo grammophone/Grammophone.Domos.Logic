@@ -252,7 +252,7 @@ namespace Grammophone.Domos.Logic
 			foreach (var item in batch.Items)
 			{
 				var fundsResponseResult = 
-					await AcceptFundsTransferResponseItemAsync(statefulObjectsByTransactionID, item);
+					await AcceptFundsTransferResponseItemAsync(batch, statefulObjectsByTransactionID, item);
 
 				responseResults.Add(fundsResponseResult);
 			}
@@ -290,6 +290,7 @@ namespace Grammophone.Domos.Logic
 			.SingleAsync(sp => sp.CodeName == statePathCodeName);
 
 		private async Task<FundsResponseResult<SO, ST>> AcceptFundsTransferResponseItemAsync(
+			FundsResponseFile file,
 			Dictionary<string, SO> statefulObjectsByTransactionID,
 			FundsResponseFileItem item)
 		{
@@ -321,7 +322,7 @@ namespace Grammophone.Domos.Logic
 					{
 						fundsResponseResult.ExecutionResult.Exception =
 							new LogicException(
-								$"No next path is defined from state '{currentStateCodeName}' when batch item response type is '{item.Type}'.");
+								$"No next path is defined from state '{currentStateCodeName}' when batch item response type is '{item.Status}'.");
 					}
 					else
 					{

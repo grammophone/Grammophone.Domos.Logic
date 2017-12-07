@@ -123,13 +123,13 @@
   <data name="ResponseCode_Name" xml:space="preserve">
     <value>Code de Réponse</value>
   </data>
+  <data name="Status_Name" xml:space="preserve">
+    <value>État</value>
+  </data>
   <data name="TraceCode_Name" xml:space="preserve">
     <value>Code de Trace</value>
   </data>
   <data name="TransactionID_Name" xml:space="preserve">
     <value>ID de Transaction</value>
-  </data>
-  <data name="Type_Name" xml:space="preserve">
-    <value>Type de Réponse</value>
   </data>
 </root>

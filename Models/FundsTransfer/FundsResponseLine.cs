@@ -13,6 +13,69 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 	[Serializable]
 	public class FundsResponseLine
 	{
+		#region Private fields
+
+		/// <summary>
+		/// Backing field for the <see cref="Date"/> property.
+		/// </summary>
+		private DateTime date;
+
+		#endregion
+
+		#region Construction
+
+		/// <summary>
+		/// Create.
+		/// </summary>
+		public FundsResponseLine()
+		{
+		}
+
+		/// <summary>
+		/// Create by flattening a funds response file item.
+		/// </summary>
+		/// <param name="file">The funds transfer response file.</param>
+		/// <param name="fileItem">The line inside the funds transfer <paramref name="file"/>.</param>
+		public FundsResponseLine(FundsResponseFile file, FundsResponseFileItem fileItem)
+		{
+			if (file == null) throw new ArgumentNullException(nameof(file));
+			if (fileItem == null) throw new ArgumentNullException(nameof(fileItem));
+
+			this.Date = file.Date;
+			this.BatchID = file.BatchID;
+			this.CollationID = file.CollationID;
+			this.TransactionID = fileItem.TransactionID;
+			this.Status = fileItem.Status;
+			this.ResponseCode = fileItem.ResponseCode;
+			this.TraceCode = fileItem.TraceCode;
+			this.Comments = fileItem.Comments;
+		}
+
+		#endregion
+
+		#region Public properties
+
+		/// <summary>
+		/// The date and time, in UTC.
+		/// </summary>
+		[Display(
+			ResourceType = typeof(FundsResponseLineResources),
+			Name = nameof(FundsResponseLineResources.Date_Name))]
+		public DateTime Date
+		{
+			get
+			{
+				return date;
+			}
+			set
+			{
+				if (value.Kind == DateTimeKind.Local)
+					throw new ArgumentException("The value must not be lcoal.");
+
+				date = value;
+			}
+		}
+
 		/// <summary>
 		/// Optional ID of the batch where the funds transfer response belongs.
 		/// </summary>
@@ -33,7 +96,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// The ID of the external system transaction.
 		/// </summary>
 		[Required]
-		[MaxLength(225)]
+		[MaxLength(Domain.Accounting.FundsTransferRequest.TransactionIdLength)]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
 			Name = nameof(FundsResponseLineResources.TransactionID_Name))]
@@ -51,7 +114,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// The response code as returned by the Electronic Funds
 		/// Transfer (EFT/ACH) system.
 		/// </summary>
-		[MaxLength(3)]
+		[MaxLength(Domain.Accounting.FundsTransferEvent.ResponseCodeLength)]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
 			Name = nameof(FundsResponseLineResources.ResponseCode_Name))]
@@ -60,7 +123,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <summary>
 		/// Unique code for event tracing.
 		/// </summary>
-		[MaxLength(36)]
+		[MaxLength(Domain.Accounting.FundsTransferEvent.TraceCodeLength)]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
 			Name = nameof(FundsResponseLineResources.TraceCode_Name))]
@@ -69,10 +132,12 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <summary>
 		/// Optional comments.
 		/// </summary>
-		[MaxLength(256)]
+		[MaxLength(Domain.Accounting.FundsTransferEvent.CommentsLength)]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
 			Name = nameof(FundsResponseLineResources.Comments_Name))]
 		public string Comments { get; set; }
+
+		#endregion
 	}
 }
