@@ -215,7 +215,7 @@ namespace Grammophone.Domos.Logic
 		/// containing at least a key 'batchItem' with value
 		/// of type <see cref="FundsResponseFileItem"/>.
 		/// </remarks>
-		public async Task<IReadOnlyCollection<FundsResponseResult<SO, ST>>> AcceptFundsTransferResponseBatchAsync(
+		public async Task<IReadOnlyCollection<FundsResponseResult>> AcceptFundsTransferResponseBatchAsync(
 			FundsResponseFile batch)
 		{
 			if (batch == null) throw new ArgumentNullException(nameof(batch));
@@ -247,7 +247,7 @@ namespace Grammophone.Domos.Logic
 			var statefulObjectsByTransactionID = await statefulObjectsQuery
 				.ToDictionaryAsync(r => r.TransactionID, r => r.StatefulObject);
 
-			var responseResults = new List<FundsResponseResult<SO, ST>>(batch.Items.Count);
+			var responseResults = new List<FundsResponseResult>(batch.Items.Count);
 
 			foreach (var item in batch.Items)
 			{
@@ -289,7 +289,7 @@ namespace Grammophone.Domos.Logic
 			.Include(sp => sp.WorkflowGraph)
 			.SingleAsync(sp => sp.CodeName == statePathCodeName);
 
-		private async Task<FundsResponseResult<SO, ST>> AcceptFundsTransferResponseItemAsync(
+		private async Task<FundsResponseResult> AcceptFundsTransferResponseItemAsync(
 			FundsResponseFile file,
 			Dictionary<string, SO> statefulObjectsByTransactionID,
 			FundsResponseFileItem item)
@@ -297,32 +297,32 @@ namespace Grammophone.Domos.Logic
 			if (statefulObjectsByTransactionID == null) throw new ArgumentNullException(nameof(statefulObjectsByTransactionID));
 			if (item == null) throw new ArgumentNullException(nameof(item));
 
+			var line = new FundsResponseLine(file, item);
+
 			var actionArguments = new Dictionary<string, object>
 			{
-				[StandardArgumentKeys.BillingItem] = item
+				[StandardArgumentKeys.BillingItem] = line
 			};
 
-			var fundsResponseResult = new FundsResponseResult<SO, ST>
+			var fundsResponseResult = new FundsResponseResult
 			{
-				BatchItem = item,
-				ExecutionResult = new ExecutionResult<SO, ST>()
+				BatchItem = item
 			};
+
+			Exception exception = null;
 
 			try
 			{
 				if (statefulObjectsByTransactionID.TryGetValue(item.TransactionID, out SO statefulObject))
 				{
-					fundsResponseResult.ExecutionResult.StatefulObject = statefulObject;
-
 					string currentStateCodeName = statefulObject.State.CodeName;
 
 					string nextStatePathCodeName = GetNextStatePathCodeName(currentStateCodeName, item);
 
 					if (nextStatePathCodeName == null)
 					{
-						fundsResponseResult.ExecutionResult.Exception =
-							new LogicException(
-								$"No next path is defined from state '{currentStateCodeName}' when batch item response type is '{item.Status}'.");
+						exception = new LogicException(
+							$"No next path is defined from state '{currentStateCodeName}' when batch item response type is '{item.Status}'.");
 					}
 					else
 					{
@@ -333,18 +333,37 @@ namespace Grammophone.Domos.Logic
 							statePath,
 							actionArguments);
 
-						fundsResponseResult.ExecutionResult.StateTransition = transition;
+						fundsResponseResult.Event = transition.FundsTransferEvent;
 					}
 				}
 				else
 				{
-					fundsResponseResult.ExecutionResult.Exception =
-						new LogicException($"No stateful object is associated with transaction ID '{item.TransactionID}'");
+					exception =
+						new LogicException($"No stateful object is associated with transaction ID '{item.TransactionID}'.");
 				}
 			}
 			catch (Exception ex)
 			{
-				fundsResponseResult.ExecutionResult.Exception = ex;
+				exception = ex;
+			}
+
+			if (exception != null)
+			{
+				var fundsTransferRequest = await 
+					this.FundsTransferRequests.SingleOrDefaultAsync(r => r.TransactionID == item.TransactionID && r.CreditSystem.CodeName == file.CreditSystemCodeName);
+
+				if (fundsTransferRequest == null)
+					throw new LogicException(
+						$"No funds transfer request is found for credit system '{file.CreditSystemCodeName}' and trnsaction ID '{item.TransactionID}'.");
+
+				var errorActionResult = await this.AccountingSession.AddFundsTransferEventAsync(
+					fundsTransferRequest,
+					file.Date,
+					FundsTransferEventType.WorkflowFailed,
+					collationID: file.CollationID,
+					exception: exception);
+
+				fundsResponseResult.Event = errorActionResult.FundsTransferEvent;
 			}
 
 			return fundsResponseResult;

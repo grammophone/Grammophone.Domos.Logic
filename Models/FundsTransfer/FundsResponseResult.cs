@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using Grammophone.Domos.Domain.Accounting;
 using Grammophone.Domos.Logic.Models.Workflow;
 
 namespace Grammophone.Domos.Logic.Models.FundsTransfer
@@ -12,16 +13,13 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 	/// Result of the state path executed due to accepting
 	/// a <see cref="FundsResponseFileItem"/>.
 	/// </summary>
-	/// <typeparam name="SO">The type of the stateful object.</typeparam>
-	/// <typeparam name="ST">The type of state transition.</typeparam>
 	[Serializable]
-	public class FundsResponseResult<SO, ST>
-		where ST : class
+	public class FundsResponseResult
 	{
 		/// <summary>
-		/// The result of the execution of status path accepting the batch item.
+		/// The resulting funds transfer event.
 		/// </summary>
-		public ExecutionResult<SO, ST> ExecutionResult { get; set; }
+		public FundsTransferEvent Event { get; set; }
 
 		/// <summary>
 		/// The batch item being accepted.
