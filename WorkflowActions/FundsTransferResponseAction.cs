@@ -121,7 +121,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// </summary>
 		/// <param name="domainContainer">The domain container in use.</param>
 		/// <param name="stateful">The stateful object for which the workflow action runs.</param>
-		/// <param name="journal">The journal being created.</param>
+		/// <param name="journal">The journal to append to.</param>
 		/// <param name="fundsResponseLine">The funds response line being consumed.</param>
 		/// <param name="agent">The user agent running the action.</param>
 		protected virtual Task AppendToJournalAsync(D domainContainer, SO stateful, J journal, FundsResponseLine fundsResponseLine, U agent)

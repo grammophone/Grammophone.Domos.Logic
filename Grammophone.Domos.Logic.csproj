@@ -148,12 +148,6 @@
     <Compile Include="UserException.cs" />
     <Compile Include="LogicSession.cs" />
     <Compile Include="UsersPublicDomain.cs" />
-    <Compile Include="WorkflowActions\FundsTransferInitiationAction.cs" />
-    <Compile Include="WorkflowActions\FundsTransferInitiationActionResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>FundsTransferInitiationActionResources.resx</DependentUpon>
-    </Compile>
     <Compile Include="WorkflowActions\WorkflowAction.cs" />
     <Compile Include="WorkflowActions\AccountingAction.cs" />
     <Compile Include="WorkflowActions\AccountingActionResources.Designer.cs">
@@ -275,10 +269,6 @@
     <EmbeddedResource Include="WorkflowActions\AccountingActionResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>AccountingActionResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WorkflowActions\FundsTransferInitiationActionResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>FundsTransferInitiationActionResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="WorkflowActions\FundsTransferResponseActionResources.fr.resx" />
     <EmbeddedResource Include="WorkflowActions\FundsTransferResponseActionResources.resx">
