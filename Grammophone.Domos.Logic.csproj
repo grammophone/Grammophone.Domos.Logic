@@ -88,7 +88,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>FilesManagerMessages.resx</DependentUpon>
     </Compile>
-    <Compile Include="Models\FundsTransfer\FundsRequestLine.cs" />
+    <Compile Include="Models\FundsTransfer\FundsRequestParameters.cs" />
+    <Compile Include="Models\FundsTransfer\FundsRequestParametersResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FundsRequestParametersResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Models\FundsTransfer\FundsResponseLine.cs" />
     <Compile Include="Models\FundsTransfer\FundsResponseLineResources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -245,6 +250,11 @@
     <EmbeddedResource Include="Models\FundsTransfer\FundsRequestFileItemResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>FundsRequestFileItemResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Models\FundsTransfer\FundsRequestParametersResources.fr.resx" />
+    <EmbeddedResource Include="Models\FundsTransfer\FundsRequestParametersResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>FundsRequestParametersResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Models\FundsTransfer\FundsResponseFileItemResources.fr.resx" />
     <EmbeddedResource Include="Models\FundsTransfer\FundsResponseFileItemResources.resx">

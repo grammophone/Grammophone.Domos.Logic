@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Grammophone.Domos.Logic.WorkflowActions {
+namespace Grammophone.Domos.Logic.Models.FundsTransfer {
     using System;
     
     
@@ -22,14 +22,14 @@ namespace Grammophone.Domos.Logic.WorkflowActions {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class FundsTransferResponseActionResources {
+    internal class FundsRequestParametersResources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal FundsTransferResponseActionResources() {
+        internal FundsRequestParametersResources() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Grammophone.Domos.Logic.WorkflowActions.FundsTransferResponseActionResources", typeof(FundsTransferResponseActionResources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Grammophone.Domos.Logic.Models.FundsTransfer.FundsRequestParametersResources", typeof(FundsRequestParametersResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,11 +61,38 @@ namespace Grammophone.Domos.Logic.WorkflowActions {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Credit system code name or transactino ID is not valid..
+        ///   Looks up a localized string similar to Batch ID.
         /// </summary>
-        internal static string INVALID_FUNDS_REQUEST {
+        internal static string BatchID_Name {
             get {
-                return ResourceManager.GetString("INVALID_FUNDS_REQUEST", resourceCulture);
+                return ResourceManager.GetString("BatchID_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collation ID.
+        /// </summary>
+        internal static string CollationID_Name {
+            get {
+                return ResourceManager.GetString("CollationID_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Credit System Code.
+        /// </summary>
+        internal static string CreditSystemCodeName_Name {
+            get {
+                return ResourceManager.GetString("CreditSystemCodeName_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Date.
+        /// </summary>
+        internal static string Date_Name {
+            get {
+                return ResourceManager.GetString("Date_Name", resourceCulture);
             }
         }
     }

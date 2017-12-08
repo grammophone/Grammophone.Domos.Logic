@@ -114,21 +114,6 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 				AccountingActionResources.BILLING_ITEM_CAPTION,
 				AccountingActionResources.BILLING_ITEM_DESCRIPTION,
 				typeof(B));
-
-			yield return new ParameterSpecification(
-				StandardArgumentKeys.CollationID,
-				false,
-				AccountingActionResources.COLLATION_ID_CAPTION,
-				AccountingActionResources.COLLATION_ID_DESCRIPTION,
-				typeof(Guid));
-
-			yield return new ParameterSpecification(
-				StandardArgumentKeys.Date,
-				false,
-				AccountingActionResources.DATE_CAPTION,
-				AccountingActionResources.DATE_DESCRIPTION,
-				typeof(DateTime),
-				new ValidationAttribute[] { new DataTypeAttribute(DataType.DateTime) });
 		}
 
 		#endregion

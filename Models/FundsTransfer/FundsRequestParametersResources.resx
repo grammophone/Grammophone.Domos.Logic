@@ -117,7 +117,16 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="INVALID_FUNDS_REQUEST" xml:space="preserve">
-    <value>Credit system code name or transactino ID is not valid.</value>
+  <data name="BatchID_Name" xml:space="preserve">
+    <value>Batch ID</value>
+  </data>
+  <data name="CollationID_Name" xml:space="preserve">
+    <value>Collation ID</value>
+  </data>
+  <data name="CreditSystemCodeName_Name" xml:space="preserve">
+    <value>Credit System Code</value>
+  </data>
+  <data name="Date_Name" xml:space="preserve">
+    <value>Date</value>
   </data>
 </root>
