@@ -130,9 +130,70 @@ namespace Grammophone.Domos.Logic
 				includeSubmitted);
 		}
 
+		/// <summary>
+		/// Accept a funds response file
+		/// and execute per line any accounting or workflow associated with this manager.
+		/// </summary>
+		/// <param name="file">The file to digest.</param>
+		/// <returns>
+		/// Returns a collection of results describing the execution outcome of the
+		/// contents of the <paramref name="file"/>.
+		/// </returns>
+		public virtual async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseFileAsync(
+			FundsResponseFile file)
+		{
+			if (file == null) throw new ArgumentNullException(nameof(file));
+
+			await ValidateCreditSystemAsync(file);
+
+			var collation = await CreateFundsTransferEventCollationAsync(file);
+
+			if (file.Items.Count == 0) return new FundsResponseResult[0];
+
+			return await DigestResponseFileAsync(file);
+		}
+
 		#endregion
 
 		#region Protected methods
+
+		/// <summary>
+		/// Digest a funds response file.
+		/// The existence of the credit system and
+		/// the collation specified in <paramref name="file"/> is assumed.
+		/// </summary>
+		/// <param name="file">The file to digest.</param>
+		/// <returns>
+		/// Returns a collection of results describing the execution outcome of the
+		/// contents of the <paramref name="file"/>.
+		/// </returns>
+		protected virtual async Task<IReadOnlyCollection<FundsResponseResult>> DigestResponseFileAsync(
+			FundsResponseFile file)
+		{
+			if (file == null) throw new ArgumentNullException(nameof(file));
+
+			string[] transactionIDs = file.Items.Select(i => i.TransactionID).ToArray();
+
+			var results = new List<FundsResponseResult>(file.Items.Count);
+
+			var fundsTransferRequestsQuery = from r in this.FundsTransferRequests
+																			 where transactionIDs.Contains(r.TransactionID) && r.BatchID == file.BatchID
+																			 select r;
+
+			var requestsByTransactionID = await fundsTransferRequestsQuery.ToDictionaryAsync(r => r.TransactionID);
+
+			if (requestsByTransactionID.Count == 0)
+				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
+
+			foreach (var item in file.Items)
+			{
+				FundsResponseResult result = await AcceptResponseItemAsync(file, item, requestsByTransactionID);
+
+				results.Add(result);
+			}
+
+			return results;
+		}
 
 		/// <summary>
 		/// Pack a collection of <see cref="FundsTransferRequest"/>s into a batch.
@@ -185,6 +246,72 @@ namespace Grammophone.Domos.Logic
 		#endregion
 
 		#region Private methods
+
+		/// <summary>
+		/// Create a collation with ID as set in property <see cref="FundsResponseFile.CollationID"/>
+		/// of a <paramref name="file"/>.
+		/// </summary>
+		/// <param name="file">The funds response file specifying the collation ID.</param>
+		/// <returns>Returns the created collation.</returns>
+		/// <exception cref="UserException">
+		/// Thrown when a collation with the same ID as in <see cref="FundsResponseFile.CollationID"/>
+		/// already exists.
+		/// </exception>
+		private async Task<FundsTransferEventCollation> CreateFundsTransferEventCollationAsync(FundsResponseFile file)
+		{
+			if (file == null) throw new ArgumentNullException(nameof(file));
+
+			using (var transaction = this.DomainContainer.BeginTransaction())
+			{
+				bool collationAlreadyExists =
+					await this.DomainContainer.FundsTransferEventCollations.AnyAsync(c => c.ID == file.CollationID);
+
+				if (collationAlreadyExists)
+					throw new UserException(FundsTransferManagerMessages.COLLATION_ALREADY_EXISTS);
+
+				return await this.AccountingSession.CreateFundsTransferEventCollationAsync(file.CollationID);
+			}
+		}
+
+		/// <summary>
+		/// Validate the credit system implied in a <see cref="FundsResponseFile"/>.
+		/// It must be among the ones defined in property <see cref="CreditSystems"/> of this manager.
+		/// </summary>
+		/// <param name="file"></param>
+		/// <returns>
+		/// Returns the <see cref="CreditSystem"/>.
+		/// </returns>
+		/// <exception cref="ArgumentException">
+		/// Thrown when the <see cref="FundsResponseFile.CreditSystemCodeName"/> property
+		/// of the <paramref name="file"/> is not set.
+		/// </exception>
+		/// <exception cref="UserException">
+		/// Thrown when no credit system exists
+		/// in those defined in <see cref="CreditSystems"/> property
+		/// with <see cref="CreditSystem.CodeName"/>
+		/// equal to the property <see cref="FundsResponseFile.CreditSystemCodeName"/>
+		/// of the <paramref name="file"/>.
+		/// </exception>
+		private async Task ValidateCreditSystemAsync(FundsResponseFile file)
+		{
+			if (file == null) throw new ArgumentNullException(nameof(file));
+
+			if (String.IsNullOrWhiteSpace(file.CreditSystemCodeName))
+				throw new ArgumentException(
+					$"The {nameof(file.CreditSystemCodeName)} property of the batch is not set.",
+					nameof(file));
+
+			if (!await this.CreditSystems.AnyAsync(cs => cs.CodeName == file.CreditSystemCodeName))
+				throw new UserException(FundsTransferManagerMessages.CREDIT_SYSTEM_NOT_AVAILABLE);
+		}
+
+		private Task<FundsResponseResult> AcceptResponseItemAsync(
+			FundsResponseFile file,
+			FundsResponseFileItem item,
+			Dictionary<string, FundsTransferRequest> requestsByTransactionID)
+		{
+			throw new NotImplementedException();
+		}
 
 		private async Task<FundsRequestFile> CreateFundsRequestBatchImplAsync(
 			CreditSystem creditSystem,

@@ -199,38 +199,46 @@ namespace Grammophone.Domos.Logic
 			return this.AccountingSession.FilterPendingFundsTransferRequests(creditSystem, query, includeSubmitted);
 		}
 
+		#endregion
+
+		#region Protected methods
+
 		/// <summary>
-		/// Accepts a funds transfer response batch from a credit system
-		/// and execute the appropriate state paths 
-		/// asp specified by the <see cref="GetNextStatePathCodeName(string, FundsResponseFileItem)"/> method
-		/// on the corresponding stateful objects.
+		/// Decide the state path to execute on a stateful object
+		/// when a <see cref="FundsResponseFileItem"/> arrives for it.
 		/// </summary>
-		/// <param name="batch">The response batch to accept.</param>
+		/// <param name="stateCodeName">The code name of the current state.</param>
+		/// <param name="fundsResponseBatchItem">The batch line arriving for the stateful object.</param>
+		/// <returns>Returns the code name of the path to execute or null to execute none.</returns>
+		protected abstract string GetNextStatePathCodeName(
+			string stateCodeName,
+			FundsResponseFileItem fundsResponseBatchItem);
+
+		/// <summary>
+		/// Digest a funds transfer response file from a credit system
+		/// and execute the appropriate state paths 
+		/// as specified by the <see cref="GetNextStatePathCodeName(string, FundsResponseFileItem)"/> method
+		/// on the corresponding stateful objects.
+		/// The existence of the credit system and
+		/// the collation specified in <paramref name="file"/> is assumed.
+		/// </summary>
+		/// <param name="file">The response batch to accept.</param>
 		/// <returns>
 		/// Returns a collection of results describing the execution outcome of the
-		/// contents of the <paramref name="batch"/>.
+		/// contents of the <paramref name="file"/>.
 		/// </returns>
 		/// <remarks>
 		/// Each action in paths being executed will receive an arguments dictionary
-		/// containing at least a key 'batchItem' with value
-		/// of type <see cref="FundsResponseFileItem"/>.
+		/// containing at least the key <see cref="StandardArgumentKeys.BillingItem"/> set with value
+		/// of type <see cref="FundsResponseLine"/>.
 		/// </remarks>
-		public async Task<IReadOnlyCollection<FundsResponseResult>> AcceptFundsTransferResponseBatchAsync(
-			FundsResponseFile batch)
+		protected override async Task<IReadOnlyCollection<FundsResponseResult>> DigestResponseFileAsync(FundsResponseFile file)
 		{
-			if (batch == null) throw new ArgumentNullException(nameof(batch));
+			if (file == null) throw new ArgumentNullException(nameof(file));
 
-			if (String.IsNullOrWhiteSpace(batch.CreditSystemCodeName))
-				throw new ArgumentException(
-					$"The {nameof(batch.CreditSystemCodeName)} property of the batch is not set.",
-					nameof(batch));
+			var responseResults = new List<FundsResponseResult>(file.Items.Count);
 
-			var creditSystem = 
-				await this.DomainContainer.CreditSystems.SingleAsync(cs => cs.CodeName == batch.CreditSystemCodeName);
-
-			var date = batch.Date;
-
-			string[] transactionIDs = batch.Items.Select(i => i.TransactionID).ToArray();
+			string[] transactionIDs = file.Items.Select(i => i.TransactionID).ToArray();
 
 			var statefulObjectsQuery = from so in this.WorkflowManager.GetManagedStatefulObjects()
 																 from st in so.StateTransitions
@@ -247,33 +255,19 @@ namespace Grammophone.Domos.Logic
 			var statefulObjectsByTransactionID = await statefulObjectsQuery
 				.ToDictionaryAsync(r => r.TransactionID, r => r.StatefulObject);
 
-			var responseResults = new List<FundsResponseResult>(batch.Items.Count);
+			if (statefulObjectsByTransactionID.Count == 0)
+				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
 
-			foreach (var item in batch.Items)
+			foreach (var item in file.Items)
 			{
-				var fundsResponseResult = 
-					await AcceptFundsTransferResponseItemAsync(batch, statefulObjectsByTransactionID, item);
+				var fundsResponseResult =
+					await AcceptResponseItemAsync(file, item, statefulObjectsByTransactionID);
 
 				responseResults.Add(fundsResponseResult);
 			}
 
 			return responseResults;
 		}
-
-		#endregion
-
-		#region Protected methods
-
-		/// <summary>
-		/// Decide the state path to execute on a stateful object
-		/// when a <see cref="FundsResponseFileItem"/> arrives for it.
-		/// </summary>
-		/// <param name="stateCodeName">The code name of the current state.</param>
-		/// <param name="fundsResponseBatchItem">The batch line arriving for the stateful object.</param>
-		/// <returns>Returns the code name of the path to execute or null to execute none.</returns>
-		protected abstract string GetNextStatePathCodeName(
-			string stateCodeName,
-			FundsResponseFileItem fundsResponseBatchItem);
 
 		#endregion
 
@@ -289,10 +283,10 @@ namespace Grammophone.Domos.Logic
 			.Include(sp => sp.WorkflowGraph)
 			.SingleAsync(sp => sp.CodeName == statePathCodeName);
 
-		private async Task<FundsResponseResult> AcceptFundsTransferResponseItemAsync(
+		private async Task<FundsResponseResult> AcceptResponseItemAsync(
 			FundsResponseFile file,
-			Dictionary<string, SO> statefulObjectsByTransactionID,
-			FundsResponseFileItem item)
+			FundsResponseFileItem item,
+			Dictionary<string, SO> statefulObjectsByTransactionID)
 		{
 			if (statefulObjectsByTransactionID == null) throw new ArgumentNullException(nameof(statefulObjectsByTransactionID));
 			if (item == null) throw new ArgumentNullException(nameof(item));
