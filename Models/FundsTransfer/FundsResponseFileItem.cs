@@ -15,15 +15,13 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 	public class FundsResponseFileItem
 	{
 		/// <summary>
-		/// The ID of the external system transaction.
+		/// The ID of the funds transfer request.
 		/// </summary>
-		[Required]
-		[MaxLength(Domain.Accounting.FundsTransferRequest.TransactionIdLength)]
 		[XmlAttribute]
 		[Display(
-			Name = nameof(FundsResponseFileItemResources.TransactionID_Name),
+			Name = nameof(FundsResponseFileItemResources.RequestID_Name),
 			ResourceType = typeof(FundsResponseFileItemResources))]
-		public string TransactionID { get; set; }
+		public long RequestID { get; set; }
 
 		/// <summary>
 		/// The response code as returned by the Electronic Funds

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Grammophone.Domos.Accounting;
@@ -10,6 +11,7 @@ using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Accounting;
 using Grammophone.Domos.Domain.Workflow;
 using Grammophone.Domos.Logic.Models.FundsTransfer;
+using Z.EntityFramework.Plus;
 
 namespace Grammophone.Domos.Logic
 {
@@ -70,19 +72,32 @@ namespace Grammophone.Domos.Logic
 		#region Public properties
 
 		/// <summary>
-		/// The set of credit systems.
+		/// The set of credit systems handled by the manager.
 		/// </summary>
+		/// <remarks>
+		/// The default implementation yields all credit systems in the system.
+		/// </remarks>
 		public virtual IQueryable<CreditSystem> CreditSystems => this.DomainContainer.CreditSystems;
 
 		/// <summary>
-		/// The funds transfer request batches in the system.
+		/// The funds transfer batches handled by this manager.
 		/// </summary>
-		public virtual IQueryable<FundsTransferRequestBatch> FundsTransferRequestBatches => this.DomainContainer.FundsTransferRequestBatches;
+		/// <remarks>
+		/// The default implementation is implied from the <see cref="FundsTransferRequests"/> property.
+		/// </remarks>
+		public virtual IQueryable<FundsTransferBatch> FundsTransferBatches => from b in this.DomainContainer.FundsTransferBatches
+																																					where this.FundsTransferRequests.Any(r => r.BatchID == b.ID)
+																																					select b;
 
 		/// <summary>
-		/// The funds transfer event collations in the system.
+		/// The funds transfer batch messages collations in the system.
 		/// </summary>
-		public virtual IQueryable<FundsTransferEventCollation> FundsTransferEventCollations => this.DomainContainer.FundsTransferEventCollations;
+		/// <remarks>
+		/// The default implementation is implied from the <see cref="FundsTransferBatches"/> property.
+		/// </remarks>
+		public virtual IQueryable<FundsTransferBatchMessage> FundsTransferBatchMessages => from m in this.DomainContainer.FundsTransferBatchMessages
+																																											 where this.FundsTransferBatches.Any(b => m.BatchID == b.ID)
+																																											 select m;
 
 		/// <summary>
 		/// The funds transfer requests handled by this manager.
@@ -90,8 +105,23 @@ namespace Grammophone.Domos.Logic
 		public abstract IQueryable<FundsTransferRequest> FundsTransferRequests { get; }
 
 		/// <summary>
+		/// The funds transfer requests handled by this manager which are not enrolled in a batch.
+		/// </summary>
+		/// <remarks>
+		/// The default implementation is implied from the <see cref="FundsTransferBatches"/> property.
+		/// </remarks>
+		public virtual IQueryable<FundsTransferRequest> UnbatchedFundsTransferRequests => from r in this.FundsTransferRequests
+																																											let latestEvent = r.Events.OrderByDescending(e => e.Time).FirstOrDefault()
+																																											where latestEvent.Type == FundsTransferEventType.Pending && r.Batch == null
+																																											select r;
+
+
+		/// <summary>
 		/// The funds transfer events handled by this manager.
 		/// </summary>
+		/// <remarks>
+		/// The default implementation is implied from the <see cref="FundsTransferRequests"/> property.
+		/// </remarks>
 		public virtual IQueryable<FundsTransferEvent> FundsTransferEvents => from e in this.DomainContainer.FundsTransferEvents
 																																				 where this.FundsTransferRequests.Any(r => r.ID == e.RequestID)
 																																				 select e;
@@ -110,25 +140,38 @@ namespace Grammophone.Domos.Logic
 		#region Public methods
 
 		/// <summary>
-		/// Get the set of <see cref="FundsTransferRequest"/>s which
+		/// From a set of <see cref="FundsTransferRequests"/>, filter those which
 		/// have no response yet.
 		/// </summary>
-		/// <param name="creditSystem">The credit system of the transfer requests.</param>
 		/// <param name="includeSubmitted">
 		/// If true, include the already submitted requests in the results,
 		/// else exclude the submitted requests.
 		/// </param>
-		public IQueryable<FundsTransferRequest> GetPendingFundsTransferRequests(
-			CreditSystem creditSystem,
+		public IQueryable<FundsTransferRequest> GetPendingRequests(
 			bool includeSubmitted = false)
 		{
-			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
-
 			return AccountingSession.FilterPendingFundsTransferRequests(
-				creditSystem,
 				this.FundsTransferRequests,
 				includeSubmitted);
 		}
+
+		/// <summary>
+		/// From the set of <see cref="FundsTransferRequests"/>, filter those whose
+		/// last event matches a predicate.
+		/// </summary>
+		/// <param name="latestEventPredicate">The predicate to apply to the last event of each request.</param>
+		/// <returns>Returns the set of filtered requests.</returns>
+		public IQueryable<FundsTransferRequest> FilterRequests(Expression<Func<FundsTransferEvent, bool>> latestEventPredicate)
+			=> this.AccountingSession.FilterFundsTransferRequestsByLatestEvent(this.FundsTransferRequests, latestEventPredicate);
+
+		/// <summary>
+		/// From the set of <see cref="FundsTransferBatches"/>, filter those whose
+		/// last message matches a predicate.
+		/// </summary>
+		/// <param name="latestMessagePredicate">The predicate to apply to the last message of each batch.</param>
+		/// <returns>Returns the set of filtered batches.</returns>
+		public IQueryable<FundsTransferBatch> FilterBatches(Expression<Func<FundsTransferBatchMessage, bool>> latestMessagePredicate)
+			=> this.AccountingSession.FilterFundsTransferBatchesByLatestMessage(this.FundsTransferBatches, latestMessagePredicate);
 
 		/// <summary>
 		/// Accept a funds response file
@@ -144,13 +187,99 @@ namespace Grammophone.Domos.Logic
 		{
 			if (file == null) throw new ArgumentNullException(nameof(file));
 
-			await ValidateCreditSystemAsync(file);
-
-			var collation = await CreateFundsTransferEventCollationAsync(file);
-
 			if (file.Items.Count == 0) return new FundsResponseResult[0];
 
-			return await DigestResponseFileAsync(file);
+			var firstItem = file.Items.First();
+
+			var batchQuery = from r in this.FundsTransferRequests
+											 where r.ID == firstItem.RequestID
+											 select r.Batch;
+
+			var batch = await batchQuery.Include(b => b.Messages).SingleAsync();
+
+			long[] requestIDs = file.Items.Select(i => i.RequestID).ToArray();
+
+			bool allRequestsAreInTheSameBatch = await
+				this.FundsTransferRequests.Where(r => requestIDs.Contains(r.ID)).AllAsync(r => r.BatchID == batch.ID);
+
+			if (!allRequestsAreInTheSameBatch)
+			{
+				throw new UserException(FundsTransferManagerMessages.REQUESTS_NOT_IN_SAME_BATCH);
+			}
+
+			var responseBatchMessage = await this.AccountingSession.AddFundsTransferBatchMessageAsync(
+				batch,
+				FundsTransferBatchMessageType.Responded,
+				file.Time,
+				file.BatchMessageID);
+
+			return await DigestResponseFileAsync(file, responseBatchMessage);
+		}
+
+		/// <summary>
+		/// Enroll a set of funds transfer requests into a new <see cref="FundsTransferBatch"/>.
+		/// The requests must not be already under an existing batch.
+		/// </summary>
+		/// <param name="creditSystemCodeName">The code name of the one among <see cref="CreditSystems"/> to be assigned to the batch.</param>
+		/// <param name="requests">The set of dunds transfer requests.</param>
+		/// <returns>Returns the pending message of the created batch, where the requests are attached.</returns>
+		/// <exception cref="AccountingException">
+		/// Thrown when at least one request is already assigned to a batch.
+		/// </exception>
+		/// <exception cref="UserException">
+		/// When the <paramref name="creditSystemCodeName"/> does not refer to a credit
+		/// system among <see cref="CreditSystems"/>.
+		/// </exception>
+		public async Task<FundsTransferBatchMessage> EnrollRequestsIntoBatchAsync(string creditSystemCodeName, IQueryable<FundsTransferRequest> requests)
+		{
+			if (creditSystemCodeName == null) throw new ArgumentNullException(nameof(creditSystemCodeName));
+			if (requests == null) throw new ArgumentNullException(nameof(requests));
+
+			var creditSystem = await GetCreditSystemAsync(creditSystemCodeName);
+
+			return await this.AccountingSession.EnrollRequestsIntoBatchAsync(creditSystem, requests);
+		}
+
+		/// <summary>
+		/// Create a funds request file for a batch.
+		/// </summary>
+		/// <param name="pendingBatchMessage">The 'pending' message for the batch.</param>
+		/// <returns>Returns the funds request file.</returns>
+		/// <remarks>
+		/// For best performance, eager fetch the Batch.CreditSystem and Events.Request
+		/// relationships of the <paramref name="pendingBatchMessage"/>.
+		/// </remarks>
+		public FundsRequestFile ExportRequestFile(FundsTransferBatchMessage pendingBatchMessage)
+			=> new FundsRequestFile(pendingBatchMessage);
+
+		/// <summary>
+		/// Create a funds request file for a batch.
+		/// </summary>
+		/// <param name="batchID">The ID of the batch.</param>
+		/// <returns>Returns the funds request file.</returns>
+		public async Task<FundsRequestFile> ExportRequestFile(Guid batchID)
+			=> await FundsRequestFile.CreateAsync(batchID, this.FundsTransferBatchMessages);
+
+		/// <summary>
+		/// Get the one among <see cref="CreditSystems"/>
+		/// having a specified <see cref="CreditSystem.CodeName"/>.
+		/// </summary>
+		/// <param name="creditSystemCodeName">The code name of the credit system.</param>
+		/// <returns>
+		/// Returns the <see cref="CreditSystem"/> found.
+		/// </returns>
+		/// <exception cref="UserException">
+		/// When the <paramref name="creditSystemCodeName"/> does not refer to a credit
+		/// system among <see cref="CreditSystems"/>.
+		/// </exception>
+		public async Task<CreditSystem> GetCreditSystemAsync(string creditSystemCodeName)
+		{
+			var creditSystem = await this.CreditSystems.SingleOrDefaultAsync(cs => cs.CodeName == creditSystemCodeName);
+
+			if (creditSystem == null)
+				throw new UserException(FundsTransferManagerMessages.CREDIT_SYSTEM_NOT_AVAILABLE);
+
+			return creditSystem;
 		}
 
 		#endregion
@@ -163,31 +292,35 @@ namespace Grammophone.Domos.Logic
 		/// the collation specified in <paramref name="file"/> is assumed.
 		/// </summary>
 		/// <param name="file">The file to digest.</param>
+		/// <param name="responseBatchMessage">The batch message where the generated funds transfer events will be assigned.</param>
 		/// <returns>
 		/// Returns a collection of results describing the execution outcome of the
 		/// contents of the <paramref name="file"/>.
 		/// </returns>
 		protected virtual async Task<IReadOnlyCollection<FundsResponseResult>> DigestResponseFileAsync(
-			FundsResponseFile file)
+			FundsResponseFile file,
+			FundsTransferBatchMessage responseBatchMessage)
 		{
 			if (file == null) throw new ArgumentNullException(nameof(file));
+			if (responseBatchMessage == null) throw new ArgumentNullException(nameof(responseBatchMessage));
 
-			string[] transactionIDs = file.Items.Select(i => i.TransactionID).ToArray();
+			long[] requestIDs = file.Items.Select(i => i.RequestID).ToArray();
 
 			var results = new List<FundsResponseResult>(file.Items.Count);
 
-			var fundsTransferRequestsQuery = from r in this.FundsTransferRequests
-																			 where transactionIDs.Contains(r.TransactionID) && r.BatchID == file.BatchID
+			var fundsTransferRequestsQuery = from r in this.FundsTransferRequests.Include(r => r.Batch.CreditSystem)
+																			 where requestIDs.Contains(r.ID)
 																			 select r;
 
-			var requestsByTransactionID = await fundsTransferRequestsQuery.ToDictionaryAsync(r => r.TransactionID);
+			var requestsByID = await fundsTransferRequestsQuery.ToDictionaryAsync(r => r.ID);
 
-			if (requestsByTransactionID.Count == 0)
+			if (requestsByID.Count == 0)
 				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
 
 			foreach (var item in file.Items)
 			{
-				FundsResponseResult result = await AcceptResponseItemAsync(file, item, requestsByTransactionID);
+				FundsResponseResult result =
+					await AcceptResponseItemAsync(file, item, requestsByID[item.RequestID], responseBatchMessage);
 
 				results.Add(result);
 			}
@@ -195,165 +328,44 @@ namespace Grammophone.Domos.Logic
 			return results;
 		}
 
-		/// <summary>
-		/// Pack a collection of <see cref="FundsTransferRequest"/>s into a batch.
-		/// </summary>
-		/// <param name="creditSystem">The credit system filtering the requests.</param>
-		/// <param name="fundsTransferRequests">The funds transfer requests.</param>
-		/// <param name="batchID">The optional ID of the patch.</param>
-		/// <returns>
-		/// Returns a <see cref="FundsRequestFile"/> containing the requests
-		/// which belong to the given <paramref name="creditSystem"/>.
-		/// </returns>
-		protected async Task<FundsRequestFile> CreateFundsRequestBatchAsync(
-			CreditSystem creditSystem,
-			IReadOnlyCollection<FundsTransferRequest> fundsTransferRequests,
-			Guid? batchID = null)
-		{
-			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
-			if (fundsTransferRequests == null) throw new ArgumentNullException(nameof(fundsTransferRequests));
-
-			var filteredRequests = fundsTransferRequests.Where(ftr => ftr.CreditSystemID == creditSystem.ID).ToList();
-
-			return await CreateFundsRequestBatchImplAsync(creditSystem, filteredRequests, batchID);
-		}
-
-		/// <summary>
-		/// Pack a collection of <see cref="FundsTransferRequest"/>s into a batch.
-		/// </summary>
-		/// <param name="creditSystem">The credit system filtering the requests.</param>
-		/// <param name="fundsTransferRequestsQuery">The set of funds transfer requests.</param>
-		/// <param name="batchID">The optional ID of the patch.</param>
-		/// <returns>
-		/// Returns a <see cref="FundsRequestFile"/> containing the requests
-		/// which belong to the given <paramref name="creditSystem"/>.
-		/// </returns>
-		protected async Task<FundsRequestFile> CreateFundsRequestBatchAsync(
-			CreditSystem creditSystem,
-			IQueryable<FundsTransferRequest> fundsTransferRequestsQuery,
-			Guid? batchID = null)
-		{
-			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
-			if (fundsTransferRequestsQuery == null) throw new ArgumentNullException(nameof(fundsTransferRequestsQuery));
-
-			fundsTransferRequestsQuery = fundsTransferRequestsQuery.Where(ftr => ftr.CreditSystemID == creditSystem.ID);
-
-			var fundsTransferRequests = await fundsTransferRequestsQuery.ToListAsync();
-
-			return await CreateFundsRequestBatchImplAsync(creditSystem, fundsTransferRequests, batchID);
-		}
-
 		#endregion
 
 		#region Private methods
 
-		/// <summary>
-		/// Create a collation with ID as set in property <see cref="FundsResponseFile.CollationID"/>
-		/// of a <paramref name="file"/>.
-		/// </summary>
-		/// <param name="file">The funds response file specifying the collation ID.</param>
-		/// <returns>Returns the created collation.</returns>
-		/// <exception cref="UserException">
-		/// Thrown when a collation with the same ID as in <see cref="FundsResponseFile.CollationID"/>
-		/// already exists.
-		/// </exception>
-		private async Task<FundsTransferEventCollation> CreateFundsTransferEventCollationAsync(FundsResponseFile file)
-		{
-			if (file == null) throw new ArgumentNullException(nameof(file));
-
-			using (var transaction = this.DomainContainer.BeginTransaction())
-			{
-				bool collationAlreadyExists =
-					await this.DomainContainer.FundsTransferEventCollations.AnyAsync(c => c.ID == file.CollationID);
-
-				if (collationAlreadyExists)
-					throw new UserException(FundsTransferManagerMessages.COLLATION_ALREADY_EXISTS);
-
-				return await this.AccountingSession.CreateFundsTransferEventCollationAsync(file.CollationID);
-			}
-		}
-
-		/// <summary>
-		/// Validate the credit system implied in a <see cref="FundsResponseFile"/>.
-		/// It must be among the ones defined in property <see cref="CreditSystems"/> of this manager.
-		/// </summary>
-		/// <param name="file"></param>
-		/// <returns>
-		/// Returns the <see cref="CreditSystem"/>.
-		/// </returns>
-		/// <exception cref="ArgumentException">
-		/// Thrown when the <see cref="FundsResponseFile.CreditSystemCodeName"/> property
-		/// of the <paramref name="file"/> is not set.
-		/// </exception>
-		/// <exception cref="UserException">
-		/// Thrown when no credit system exists
-		/// in those defined in <see cref="CreditSystems"/> property
-		/// with <see cref="CreditSystem.CodeName"/>
-		/// equal to the property <see cref="FundsResponseFile.CreditSystemCodeName"/>
-		/// of the <paramref name="file"/>.
-		/// </exception>
-		private async Task ValidateCreditSystemAsync(FundsResponseFile file)
-		{
-			if (file == null) throw new ArgumentNullException(nameof(file));
-
-			if (String.IsNullOrWhiteSpace(file.CreditSystemCodeName))
-				throw new ArgumentException(
-					$"The {nameof(file.CreditSystemCodeName)} property of the batch is not set.",
-					nameof(file));
-
-			if (!await this.CreditSystems.AnyAsync(cs => cs.CodeName == file.CreditSystemCodeName))
-				throw new UserException(FundsTransferManagerMessages.CREDIT_SYSTEM_NOT_AVAILABLE);
-		}
-
-		private Task<FundsResponseResult> AcceptResponseItemAsync(
+		private async Task<FundsResponseResult> AcceptResponseItemAsync(
 			FundsResponseFile file,
 			FundsResponseFileItem item,
-			Dictionary<string, FundsTransferRequest> requestsByTransactionID)
+			FundsTransferRequest request,
+			FundsTransferBatchMessage responseBatchMessage)
 		{
-			throw new NotImplementedException();
-		}
-
-		private async Task<FundsRequestFile> CreateFundsRequestBatchImplAsync(
-			CreditSystem creditSystem,
-			IReadOnlyList<FundsTransferRequest> fundsTransferRequests,
-			Guid? batchID = null)
-		{
-			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
-			if (fundsTransferRequests == null) throw new ArgumentNullException(nameof(fundsTransferRequests));
-
-			var batch = new FundsRequestFile(
-				creditSystem.CodeName,
-				DateTime.UtcNow,
-				fundsTransferRequests.Count,
-				batchID);
+			if (file == null) throw new ArgumentNullException(nameof(file));
+			if (item == null) throw new ArgumentNullException(nameof(item));
+			if (request == null) throw new ArgumentNullException(nameof(request));
+			if (responseBatchMessage == null) throw new ArgumentNullException(nameof(responseBatchMessage));
 
 			using (var transaction = this.DomainContainer.BeginTransaction())
 			{
-				foreach (var fundsTransferRequest in fundsTransferRequests)
-				{
-					if (fundsTransferRequest.BatchID != batchID)
-						fundsTransferRequest.BatchID = batchID;
+				var actionResult = await this.AccountingSession.AddFundsTransferEventAsync(
+					request,
+					DateTime.UtcNow,
+					FundsTransferEventType.Succeeded,
+					batchMessageID: responseBatchMessage.ID,
+					responseCode: item.ResponseCode,
+					comments: item.Comments,
+					traceCode: item.TraceCode);
 
-					var batchItem = new FundsRequestFileItem
-					{
-						Amount = fundsTransferRequest.Amount,
-						TransactionID = fundsTransferRequest.TransactionID,
-						BankAccountInfo = fundsTransferRequest.EncryptedBankAccountInfo.Decrypt()
-					};
+				var transferEvent = actionResult.FundsTransferEvent;
 
-					// Record the submission.
-					await AccountingSession.AddFundsTransferEventAsync(
-						fundsTransferRequest,
-						batch.Date,
-						FundsTransferEventType.Submitted);
-
-					batch.Items.Add(batchItem);
-				}
+				transferEvent.BatchMessage = responseBatchMessage;
 
 				await transaction.CommitAsync();
-			}
 
-			return batch;
+				return new FundsResponseResult
+				{
+					Event = transferEvent,
+					FileItem = item
+				};
+			}
 		}
 
 		#endregion

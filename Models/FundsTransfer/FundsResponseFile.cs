@@ -17,15 +17,11 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 	{
 		#region Private fields
 
-		private DateTime date;
+		private DateTime time;
 
 		private FundsResponseFileItems items;
 
-		private string creditSystemCodeName;
-
-		private Guid batchID;
-
-		private Guid collationID;
+		private Guid batchMessageID;
 
 		#endregion
 
@@ -39,29 +35,45 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		}
 
 		/// <summary>
+		/// Create.
+		/// </summary>
+		/// <param name="time">The date and time of the batch in UTC.</param>
+		public FundsResponseFile(DateTime time)
+		{
+			if (time.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(time));
+
+			this.time = time;
+			this.batchMessageID = Guid.NewGuid();
+		}
+
+		/// <summary>
 		/// Create with initial reserved capacity of <see cref="Items"/>.
 		/// </summary>
-		/// <param name="creditSystemCodeName">The code name of the credit system.</param>
-		/// <param name="date">The date of the batch in UTC.</param>
+		/// <param name="time">The date and time of the batch in UTC.</param>
 		/// <param name="capacity">The initial capacity of items to reserve.</param>
-		/// <param name="batchID">The ID of the batch.</param>
-		/// <param name="collationID">The ID of the collation of events in the batch.</param>
-		public FundsResponseFile(
-			string creditSystemCodeName,
-			DateTime date,
-			int capacity,
-			Guid batchID,
-			Guid collationID)
+		public FundsResponseFile(DateTime time, int capacity)
+			: this(time)
 		{
-			if (creditSystemCodeName == null) throw new ArgumentNullException(nameof(creditSystemCodeName));
-			if (date.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(date));
+			this.items = new FundsResponseFileItems(capacity);
+		}
+
+		/// <summary>
+		/// Create with initial reserved capacity of <see cref="Items"/>.
+		/// </summary>
+		/// <param name="time">The date and time of the batch in UTC.</param>
+		/// <param name="capacity">The initial capacity of items to reserve.</param>
+		/// <param name="batchMessageID">The ID of the batch messgage ID whare the items of the file correspond to.</param>
+		public FundsResponseFile(
+			DateTime time,
+			int capacity,
+			Guid batchMessageID)
+		{
+			if (time.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(time));
 
 			this.items = new FundsResponseFileItems(capacity);
 
-			this.creditSystemCodeName = creditSystemCodeName;
-			this.date = date;
-			this.batchID = batchID;
-			this.collationID = collationID;
+			this.time = time;
+			this.batchMessageID = batchMessageID;
 		}
 
 		#endregion
@@ -69,70 +81,36 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		#region Public properties
 
 		/// <summary>
-		/// The code name of the credit system.
-		/// </summary>
-		[XmlAttribute]
-		[Required]
-		public string CreditSystemCodeName
-		{
-			get
-			{
-				return creditSystemCodeName;
-			}
-			set
-			{
-				if (value == null) throw new ArgumentNullException(nameof(value));
-
-				creditSystemCodeName = value;
-			}
-		}
-
-		/// <summary>
 		/// The date and time, in UTC.
 		/// </summary>
 		[XmlAttribute]
-		public DateTime Date
+		public DateTime Time
 		{
 			get
 			{
-				return date;
+				return time;
 			}
 			set
 			{
 				if (value.Kind == DateTimeKind.Local)
 					throw new ArgumentException("The value must not be lcoal.");
 
-				date = value;
-			}
-		}
-
-		/// <summary>
-		/// The ID of the batch.
-		/// </summary>
-		public Guid BatchID
-		{
-			get
-			{
-				return batchID;
-			}
-			set
-			{
-				batchID = value;
+				time = value;
 			}
 		}
 
 		/// <summary>
 		/// The ID of the events collation.
 		/// </summary>
-		public Guid CollationID
+		public Guid BatchMessageID
 		{
 			get
 			{
-				return collationID;
+				return batchMessageID;
 			}
 			set
 			{
-				collationID = value;
+				batchMessageID = value;
 			}
 		}
 
@@ -143,7 +121,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		{
 			get
 			{
-				return items;
+				return items ?? (items = new FundsResponseFileItems());
 			}
 			set
 			{

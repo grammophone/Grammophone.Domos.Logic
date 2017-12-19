@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using Grammophone.Domos.DataAccess;
+using Grammophone.Domos.Domain.Accounting;
 
 namespace Grammophone.Domos.Logic.Models.FundsTransfer
 {
@@ -19,13 +22,13 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 
 		private FundsRequestFileItems items;
 
-		private DateTime date;
+		private DateTime time;
 
 		private string creditSystemCodeName;
 
 		private Guid batchID;
 
-		private Guid collationID;
+		private Guid batchMessageID;
 
 		#endregion
 
@@ -36,33 +39,79 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		public FundsRequestFile()
 		{
-			this.Items = new FundsRequestFileItems();
 		}
 
 		/// <summary>
-		/// Create with initial reserved capacity of <see cref="Items"/>.
+		/// Create.
 		/// </summary>
-		/// <param name="creditSystemCodeName">The code name of the credit system.</param>
-		/// <param name="date">The date of the batch in UTC.</param>
-		/// <param name="capacity">The initial capacity of items to reserve.</param>
-		/// <param name="batchID">Optional ID of the batch. If not set, a new GUID will be assigned.</param>
-		/// <param name="collationID">Optional ID of the collation of events in the batch. If not set, a new GUID will be assigned.</param>
-		public FundsRequestFile(
-			string creditSystemCodeName,
-			DateTime date,
-			int capacity,
-			Guid? batchID = null,
-			Guid? collationID = null)
+		/// <param name="pendingBatchMessage">
+		/// The batch message. Must be complete with <see cref="FundsTransferBatchMessage.Batch"/>,
+		/// <see cref="FundsTransferBatchMessage.Events"/>
+		/// and have <see cref="FundsTransferBatchMessage.Type"/>
+		/// set to <see cref="FundsTransferBatchMessageType.Pending"/>.
+		/// </param>
+		/// <exception cref="LogicException">
+		/// Thrown when the specified message has <see cref="FundsTransferBatchMessage.Type"/> other
+		/// than <see cref="FundsTransferBatchMessageType.Pending"/> or when
+		/// it has the <see cref="FundsTransferBatchMessage.Batch"/> not properly set up.
+		/// </exception>
+		/// <remarks>
+		/// For best performance, eager fetch the Batch.CreditSystem and Events.Request
+		/// relationships of the <paramref name="pendingBatchMessage"/>.
+		/// </remarks>
+		public FundsRequestFile(FundsTransferBatchMessage pendingBatchMessage)
 		{
-			if (creditSystemCodeName == null) throw new ArgumentNullException(nameof(creditSystemCodeName));
-			if (date.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(date));
+			if (pendingBatchMessage == null) throw new ArgumentNullException(nameof(pendingBatchMessage));
 
-			this.items = new FundsRequestFileItems(capacity);
+			if (pendingBatchMessage.Type != FundsTransferBatchMessageType.Pending)
+				throw new LogicException(
+					$"The given batch message has type '{pendingBatchMessage.Type}' instead of '{FundsTransferBatchMessageType.Pending}'.");
 
-			this.creditSystemCodeName = creditSystemCodeName;
-			this.date = date;
-			this.batchID = batchID ?? Guid.NewGuid();
-			this.collationID = collationID ?? Guid.NewGuid();
+			creditSystemCodeName = pendingBatchMessage?.Batch?.CreditSystem?.CodeName;
+
+			if (creditSystemCodeName == null)
+				throw new LogicException("The Batch of the message is not properly set up.");
+
+			time = pendingBatchMessage.Time;
+			batchID = pendingBatchMessage.BatchID;
+			batchMessageID = pendingBatchMessage.ID;
+
+			items = new FundsRequestFileItems(pendingBatchMessage.Events.Count);
+
+			foreach (var transferEvent in pendingBatchMessage.Events)
+			{
+				items.Add(new FundsRequestFileItem(transferEvent));
+			}
+		}
+
+		/// <summary>
+		/// Load a <see cref="FundsTransferBatchMessage"/> fro the storage and generate the corresponding file.
+		/// </summary>
+		/// <param name="pendingBatchEventID">The ID of the batch message.</param>
+		/// <param name="batchMessagesSet">The set of batch messages to search in for the given <paramref name="pendingBatchEventID"/>.</param>
+		/// <returns>Returns the created file.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when no <see cref="FundsTransferBatchMessage"/> was found in <paramref name="batchMessagesSet"/>
+		/// having ID equal to <paramref name="pendingBatchEventID"/>.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// Thrown when the specified message has <see cref="FundsTransferBatchMessage.Type"/> other
+		/// than <see cref="FundsTransferBatchMessageType.Pending"/> or when
+		/// it has the <see cref="FundsTransferBatchMessage.Batch"/> not properly set up.
+		/// </exception>
+		public static async Task<FundsRequestFile> CreateAsync(Guid pendingBatchEventID, IQueryable<FundsTransferBatchMessage> batchMessagesSet)
+		{
+			if (batchMessagesSet == null) throw new ArgumentNullException(nameof(batchMessagesSet));
+
+			var batchMessage = await batchMessagesSet
+				.Include(m => m.Batch.CreditSystem)
+				.Include(m => m.Events.Select(e => e.Request))
+				.SingleOrDefaultAsync(e => e.ID == pendingBatchEventID);
+
+			if (batchMessage == null)
+				throw new LogicException($"A batch message with ID '{pendingBatchEventID}' was not found in the specified set.");
+
+			return new FundsRequestFile(batchMessage);
 		}
 
 		#endregion
@@ -85,17 +134,17 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		}
 
 		/// <summary>
-		/// The ID of the events collation.
+		/// The ID of the batch message.
 		/// </summary>
-		public Guid CollationID
+		public Guid BatchMessageID
 		{
 			get
 			{
-				return collationID;
+				return batchMessageID;
 			}
 			set
 			{
-				collationID = value;
+				batchMessageID = value;
 			}
 		}
 
@@ -103,18 +152,18 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// The date and time, in UTC.
 		/// </summary>
 		[XmlAttribute]
-		public DateTime Date
+		public DateTime Time
 		{
 			get
 			{
-				return date;
+				return time;
 			}
 			set
 			{
 				if (value.Kind == DateTimeKind.Local)
-					throw new ArgumentException("The value must not be local.");
+					throw new ArgumentException("The time must not be local.");
 
-				date = value;
+				time = value;
 			}
 		}
 
@@ -145,7 +194,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		{
 			get
 			{
-				return items;
+				return items ?? (items = new FundsRequestFileItems());
 			}
 			set
 			{

@@ -86,5 +86,14 @@ namespace Grammophone.Domos.Logic {
                 return ResourceManager.GetString("FILE_NOT_APPLICABLE", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The requests in the file have not been issued under the same batch..
+        /// </summary>
+        internal static string REQUESTS_NOT_IN_SAME_BATCH {
+            get {
+                return ResourceManager.GetString("REQUESTS_NOT_IN_SAME_BATCH", resourceCulture);
+            }
+        }
     }
 }

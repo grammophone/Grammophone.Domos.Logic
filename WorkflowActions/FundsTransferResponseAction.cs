@@ -68,9 +68,10 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 			D domainContainer = accountingSession.DomainContainer;
 
-			var fundsTransferRequest =
-				await domainContainer.FundsTransferRequests.SingleOrDefaultAsync(
-					r => r.TransactionID == billingItem.TransactionID && r.CreditSystem.CodeName == billingItem.CreditSystemCodeName);
+			var fundsTransferRequest = await 
+				domainContainer.FundsTransferRequests
+				.Include(r => r.Batch.Messages)
+				.SingleOrDefaultAsync(r => r.ID == billingItem.RequestID);
 
 			if (fundsTransferRequest == null)
 				throw new UserException(FundsTransferResponseActionResources.INVALID_FUNDS_REQUEST);
@@ -105,10 +106,10 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 			return await accountingSession.AddFundsTransferEventAsync(
 				fundsTransferRequest,
-				billingItem.Date,
+				billingItem.Time,
 				eventType,
 				AppendToJournalFunctionAsync,
-				billingItem.CollationID,
+				billingItem.BatchMessageID,
 				billingItem.ResponseCode,
 				billingItem.TraceCode,
 				billingItem.Comments);

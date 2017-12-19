@@ -117,20 +117,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="BatchID_Name" xml:space="preserve">
-    <value>Batch ID</value>
-  </data>
-  <data name="CollationID_Name" xml:space="preserve">
-    <value>Collation ID</value>
+  <data name="BatchMessageID_Name" xml:space="preserve">
+    <value>Batch Message ID</value>
   </data>
   <data name="Comments_Name" xml:space="preserve">
     <value>Response Comments</value>
   </data>
-  <data name="CreditSystemCodeName_Name" xml:space="preserve">
-    <value>Credit System Code</value>
-  </data>
-  <data name="Date_Name" xml:space="preserve">
-    <value>Date</value>
+  <data name="RequestID_Name" xml:space="preserve">
+    <value>RequestID</value>
   </data>
   <data name="ResponseCode_Name" xml:space="preserve">
     <value>Response Code</value>
@@ -138,10 +132,10 @@
   <data name="Status_Name" xml:space="preserve">
     <value>Status</value>
   </data>
+  <data name="Time_Name" xml:space="preserve">
+    <value>Time</value>
+  </data>
   <data name="TraceCode_Name" xml:space="preserve">
     <value>Trace Code</value>
-  </data>
-  <data name="TransactionID_Name" xml:space="preserve">
-    <value>Transaction ID</value>
   </data>
 </root>

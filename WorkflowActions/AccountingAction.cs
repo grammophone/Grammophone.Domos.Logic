@@ -31,8 +31,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 	/// <typeparam name="B">The type of billing item.</typeparam>
 	/// <remarks>
 	/// This action expects a billing item of type <typeparamref name="B"/> in arguments
-	/// key <see cref="StandardArgumentKeys.BillingItem"/> and an
-	/// optional <see cref="DateTime"/> in key <see cref="StandardArgumentKeys.Date"/>.
+	/// key <see cref="StandardArgumentKeys.BillingItem"/>.
 	/// If the latter is missing, the current UTC time is used.
 	/// Warning: The <see cref="ExecuteAsync(S, D, SO, ST, IDictionary{string, object})"/> method implementation
 	/// elevates the rights of any existing outer transaction.
@@ -54,8 +53,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 		/// <summary>
 		/// Consumes the billing item of type <typeparamref name="B"/> in arguments
-		/// key <see cref="StandardArgumentKeys.BillingItem"/> and the <see cref="DateTime"/>
-		/// in key <see cref="StandardArgumentKeys.Date"/> and performs the accounting
+		/// key <see cref="StandardArgumentKeys.BillingItem"/> and performs the accounting
 		/// using method <see cref="ExecuteAccountingAsync(AS, SO, B)"/>.
 		/// </summary>
 		public override async Task ExecuteAsync(
@@ -102,9 +100,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// <summary>
 		/// Indicate that this action expects a required 
 		/// parameter of type <typeparamref name="B"/> under
-		/// key <see cref="StandardArgumentKeys.BillingItem"/>
-		/// and an optional one of type <see cref="DateTime"/> under 
-		/// key <see cref="StandardArgumentKeys.Date"/>.
+		/// key <see cref="StandardArgumentKeys.BillingItem"/>.
 		/// </summary>
 		public override IEnumerable<ParameterSpecification> GetParameterSpecifications()
 		{

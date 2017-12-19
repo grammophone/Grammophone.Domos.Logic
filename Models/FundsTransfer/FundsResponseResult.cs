@@ -22,8 +22,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		public FundsTransferEvent Event { get; set; }
 
 		/// <summary>
-		/// The batch item being accepted.
+		/// The batch file item being accepted.
 		/// </summary>
-		public FundsResponseFileItem BatchItem { get; set; }
+		public FundsResponseFileItem FileItem { get; set; }
 	}
 }

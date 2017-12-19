@@ -79,11 +79,11 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Transaction ID.
+        ///   Looks up a localized string similar to Request ID.
         /// </summary>
-        public static string TransactionID_Name {
+        public static string RequestID_Name {
             get {
-                return ResourceManager.GetString("TransactionID_Name", resourceCulture);
+                return ResourceManager.GetString("RequestID_Name", resourceCulture);
             }
         }
     }

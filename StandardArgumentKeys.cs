@@ -20,25 +20,15 @@ namespace Grammophone.Domos.Logic
 		public const string BatchID = nameof(BatchID);
 
 		/// <summary>
-		/// Specifies the <see cref="FundsTransferEvent.CollationID"/>
-		/// of <see cref="FundsTransferEvent"/>s.
-		/// </summary>
-		public const string CollationID = nameof(CollationID);
-
-		/// <summary>
-		/// Specifies the <see cref="FundsTransferRequest.TransactionID"/>
-		/// of a <see cref="FundsTransferRequest"/>.
-		/// </summary>
-		public const string TransactionID = nameof(TransactionID);
-
-		/// <summary>
 		/// Specifies a <see cref="DateTime"/> of type <see cref="DateTimeKind.Utc"/>.
 		/// </summary>
-		public const string Date = nameof(Date);
+		public const string Time = nameof(Time);
 
 		/// <summary>
-		/// Parameter key for 
-		/// a <see cref="Models.FundsTransfer.FundsResponseFileItem"/>.
+		/// Parameter key for a generic billing item,
+		/// for example a <see cref="Models.FundsTransfer.FundsResponseLine"/>
+		/// when we have workflow actions of
+		/// type <see cref="WorkflowActions.FundsTransferResponseAction{U, BST, P, R, J, D, S, ST, SO, AS}"/>.
 		/// </summary>
 		public const string BillingItem = nameof(BillingItem);
 	}

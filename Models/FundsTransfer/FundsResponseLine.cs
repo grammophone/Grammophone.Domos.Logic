@@ -16,7 +16,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		#region Private fields
 
 		/// <summary>
-		/// Backing field for the <see cref="Date"/> property.
+		/// Backing field for the <see cref="Time"/> property.
 		/// </summary>
 		private DateTime date;
 
@@ -41,11 +41,9 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			if (file == null) throw new ArgumentNullException(nameof(file));
 			if (fileItem == null) throw new ArgumentNullException(nameof(fileItem));
 
-			this.CreditSystemCodeName = file.CreditSystemCodeName;
-			this.Date = file.Date;
-			this.BatchID = file.BatchID;
-			this.CollationID = file.CollationID;
-			this.TransactionID = fileItem.TransactionID;
+			this.Time = file.Time;
+			this.BatchMessageID = file.BatchMessageID;
+			this.RequestID = fileItem.RequestID;
 			this.Status = fileItem.Status;
 			this.ResponseCode = fileItem.ResponseCode;
 			this.TraceCode = fileItem.TraceCode;
@@ -57,21 +55,12 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		#region Public properties
 
 		/// <summary>
-		/// The code name of the credit system involved in the transfer.
-		/// </summary>
-		[Required]
-		[Display(
-			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.CreditSystemCodeName_Name))]
-		public string CreditSystemCodeName { get; set; }
-
-		/// <summary>
 		/// The date and time, in UTC.
 		/// </summary>
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.Date_Name))]
-		public DateTime Date
+			Name = nameof(FundsResponseLineResources.Time_Name))]
+		public DateTime Time
 		{
 			get
 			{
@@ -87,30 +76,21 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		}
 
 		/// <summary>
-		/// Optional ID of the batch where the funds transfer response belongs.
+		/// Optional ID of the funds transfer batch message associated with the line.
 		/// </summary>
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.BatchID_Name))]
-		public Guid? BatchID { get; set; }
-
-		/// <summary>
-		/// Optional ID of the collation where the funds response belongs.
-		/// </summary>
-		[Display(
-			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.CollationID_Name))]
-		public Guid? CollationID { get; set; }
+			Name = nameof(FundsResponseLineResources.BatchMessageID_Name))]
+		public Guid? BatchMessageID { get; set; }
 
 		/// <summary>
 		/// The ID of the external system transaction.
 		/// </summary>
 		[Required]
-		[MaxLength(Domain.Accounting.FundsTransferRequest.TransactionIdLength)]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.TransactionID_Name))]
-		public string TransactionID { get; set; }
+			Name = nameof(FundsResponseLineResources.RequestID_Name))]
+		public long RequestID { get; set; }
 
 		/// <summary>
 		/// The status of the response.

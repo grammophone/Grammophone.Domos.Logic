@@ -61,20 +61,11 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Batch ID.
+        ///   Looks up a localized string similar to Batch Message ID.
         /// </summary>
-        public static string BatchID_Name {
+        public static string BatchMessageID_Name {
             get {
-                return ResourceManager.GetString("BatchID_Name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Collation ID.
-        /// </summary>
-        public static string CollationID_Name {
-            get {
-                return ResourceManager.GetString("CollationID_Name", resourceCulture);
+                return ResourceManager.GetString("BatchMessageID_Name", resourceCulture);
             }
         }
         
@@ -88,20 +79,11 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Credit System Code.
+        ///   Looks up a localized string similar to RequestID.
         /// </summary>
-        public static string CreditSystemCodeName_Name {
+        public static string RequestID_Name {
             get {
-                return ResourceManager.GetString("CreditSystemCodeName_Name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Date.
-        /// </summary>
-        public static string Date_Name {
-            get {
-                return ResourceManager.GetString("Date_Name", resourceCulture);
+                return ResourceManager.GetString("RequestID_Name", resourceCulture);
             }
         }
         
@@ -124,20 +106,20 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Time.
+        /// </summary>
+        public static string Time_Name {
+            get {
+                return ResourceManager.GetString("Time_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Trace Code.
         /// </summary>
         public static string TraceCode_Name {
             get {
                 return ResourceManager.GetString("TraceCode_Name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Transaction ID.
-        /// </summary>
-        public static string TransactionID_Name {
-            get {
-                return ResourceManager.GetString("TransactionID_Name", resourceCulture);
             }
         }
     }

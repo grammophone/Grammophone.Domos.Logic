@@ -120,6 +120,9 @@
   <data name="Comments_Name" xml:space="preserve">
     <value>Commentaires de Réponse</value>
   </data>
+  <data name="RequestID_Name" xml:space="preserve">
+    <value>ID de Demande</value>
+  </data>
   <data name="ResponseCode_Name" xml:space="preserve">
     <value>Code de Réponse</value>
   </data>
@@ -128,8 +131,5 @@
   </data>
   <data name="TraceCode_Name" xml:space="preserve">
     <value>Code de Trace</value>
-  </data>
-  <data name="TransactionID_Name" xml:space="preserve">
-    <value>ID de Transaction</value>
   </data>
 </root>

@@ -5,7 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using Grammophone.Domos.Accounting;
 using Grammophone.Domos.Accounting.Models;
+using Grammophone.Domos.Domain.Accounting;
 
 namespace Grammophone.Domos.Logic.Models.FundsTransfer
 {
@@ -24,18 +26,54 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 
 		#endregion
 
+		#region Construction
+
+		/// <summary>
+		/// Create.
+		/// </summary>
+		public FundsRequestFileItem()
+		{
+		}
+
+		/// <summary>
+		/// Create from a <see cref="FundsTransferEvent"/>, which must have <see cref="FundsTransferEvent.BatchMessage"/> set
+		/// and <see cref="FundsTransferEvent.Type"/> equal to <see cref="FundsTransferEventType.Pending"/>.
+		/// </summary>
+		/// <param name="transferEvent">The funds transfer event.</param>
+		/// <exception cref="ArgumentException">
+		/// The event is not assigned in a batch message.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// The event has <see cref="FundsTransferEvent.Type"/> other
+		/// than <see cref="FundsTransferEventType.Pending"/>.
+		/// </exception>
+		public FundsRequestFileItem(FundsTransferEvent transferEvent)
+		{
+			if (transferEvent == null) throw new ArgumentNullException(nameof(transferEvent));
+
+			if (transferEvent.BatchMessage == null)
+				throw new ArgumentException($"The event is not assigned in a batch message.", nameof(transferEvent));
+
+			if (transferEvent.Type != FundsTransferEventType.Pending)
+				throw new LogicException($"The event has type '{transferEvent.Type}' instead of '{FundsTransferEventType.Pending}'.");
+
+			this.RequestID = transferEvent.RequestID;
+			this.Amount = transferEvent.Request.Amount;
+			this.BankAccountInfo = transferEvent.Request.EncryptedBankAccountInfo.Decrypt();
+		}
+
+		#endregion
+
 		#region Public properties
 
 		/// <summary>
 		/// The ID of the external system transaction.
 		/// </summary>
-		[Required]
-		[MaxLength(225)]
 		[XmlAttribute]
 		[Display(
-			Name = nameof(FundsRequestFileItemResources.TransactionID_Name),
+			Name = nameof(FundsRequestFileItemResources.RequestID_Name),
 			ResourceType = typeof(FundsRequestFileItemResources))]
-		public string TransactionID { get; set; }
+		public long RequestID { get; set; }
 
 		/// <summary>
 		/// If positive, The amount is deposited to the bank account specified

@@ -146,7 +146,6 @@ namespace Grammophone.Domos.Logic
 		/// Get the set of <see cref="FundsTransferRequest"/>s which
 		/// have no response yet.
 		/// </summary>
-		/// <param name="creditSystem">The credit system of the transfer requests.</param>
 		/// <param name="stateCodeName">
 		/// The state code name of the stateful objects corresponding to the requests.
 		/// </param>
@@ -155,15 +154,12 @@ namespace Grammophone.Domos.Logic
 		/// else exclude the submitted requests.
 		/// </param>
 		public IQueryable<FundsTransferRequest> GetPendingFundsTransferRequests(
-			CreditSystem creditSystem,
 			string stateCodeName,
 			bool includeSubmitted = false)
 		{
-			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
 			if (stateCodeName == null) throw new ArgumentNullException(nameof(stateCodeName));
 
 			return GetPendingFundsTransferRequests(
-				creditSystem,
 				so => so.State.CodeName == stateCodeName,
 				includeSubmitted);
 		}
@@ -172,7 +168,6 @@ namespace Grammophone.Domos.Logic
 		/// Get the set of <see cref="FundsTransferRequest"/>s which
 		/// have no response yet.
 		/// </summary>
-		/// <param name="creditSystem">The credit system of the transfer requests.</param>
 		/// <param name="statefulObjectPredicate">
 		/// Criterion for selecting the related stateful objects involved in the funds transfers.
 		/// </param>
@@ -181,11 +176,9 @@ namespace Grammophone.Domos.Logic
 		/// else exclude the submitted requests.
 		/// </param>
 		public IQueryable<FundsTransferRequest> GetPendingFundsTransferRequests(
-			CreditSystem creditSystem,
 			Expression<Func<SO, bool>> statefulObjectPredicate,
 			bool includeSubmitted = false)
 		{
-			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
 			if (statefulObjectPredicate == null) throw new ArgumentNullException(nameof(statefulObjectPredicate));
 
 			var query = from so in this.WorkflowManager.GetManagedStatefulObjects().Where(statefulObjectPredicate)
@@ -196,7 +189,7 @@ namespace Grammophone.Domos.Logic
 									where e != null
 									select e.Request;
 
-			return this.AccountingSession.FilterPendingFundsTransferRequests(creditSystem, query, includeSubmitted);
+			return this.AccountingSession.FilterPendingFundsTransferRequests(query, includeSubmitted);
 		}
 
 		#endregion
@@ -222,7 +215,8 @@ namespace Grammophone.Domos.Logic
 		/// The existence of the credit system and
 		/// the collation specified in <paramref name="file"/> is assumed.
 		/// </summary>
-		/// <param name="file">The response batch to accept.</param>
+		/// <param name="file">The file to digest.</param>
+		/// <param name="responseBatchMessage">The batch message where the generated funds transfer events will be assigned.</param>
 		/// <returns>
 		/// Returns a collection of results describing the execution outcome of the
 		/// contents of the <paramref name="file"/>.
@@ -232,36 +226,38 @@ namespace Grammophone.Domos.Logic
 		/// containing at least the key <see cref="StandardArgumentKeys.BillingItem"/> set with value
 		/// of type <see cref="FundsResponseLine"/>.
 		/// </remarks>
-		protected override async Task<IReadOnlyCollection<FundsResponseResult>> DigestResponseFileAsync(FundsResponseFile file)
+		protected override async Task<IReadOnlyCollection<FundsResponseResult>> DigestResponseFileAsync(
+			FundsResponseFile file,
+			FundsTransferBatchMessage responseBatchMessage)
 		{
 			if (file == null) throw new ArgumentNullException(nameof(file));
 
 			var responseResults = new List<FundsResponseResult>(file.Items.Count);
 
-			string[] transactionIDs = file.Items.Select(i => i.TransactionID).ToArray();
+			long[] requestIDs = file.Items.Select(i => i.RequestID).ToArray();
 
 			var statefulObjectsQuery = from so in this.WorkflowManager.GetManagedStatefulObjects()
 																 from st in so.StateTransitions
 																 where st.FundsTransferEvent != null
 																 let ftr = st.FundsTransferEvent.Request
-																 where transactionIDs.Contains(ftr.TransactionID)
+																 where requestIDs.Contains(ftr.ID)
 																 select new
 																 {
 																	 StatefulObject = so,
-																	 State = so.State, // Force including the State property.
-																	 TransactionID = ftr.TransactionID
+																	 so.State, // Force including the State property.
+																	 RequestID = ftr.ID
 																 };
 
-			var statefulObjectsByTransactionID = await statefulObjectsQuery
-				.ToDictionaryAsync(r => r.TransactionID, r => r.StatefulObject);
+			var statefulObjectsByRequestID = await statefulObjectsQuery
+				.ToDictionaryAsync(r => r.RequestID, r => r.StatefulObject);
 
-			if (statefulObjectsByTransactionID.Count == 0)
+			if (statefulObjectsByRequestID.Count == 0)
 				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
 
 			foreach (var item in file.Items)
 			{
 				var fundsResponseResult =
-					await AcceptResponseItemAsync(file, item, statefulObjectsByTransactionID);
+					await AcceptResponseItemAsync(file, item, statefulObjectsByRequestID);
 
 				responseResults.Add(fundsResponseResult);
 			}
@@ -286,9 +282,9 @@ namespace Grammophone.Domos.Logic
 		private async Task<FundsResponseResult> AcceptResponseItemAsync(
 			FundsResponseFile file,
 			FundsResponseFileItem item,
-			Dictionary<string, SO> statefulObjectsByTransactionID)
+			Dictionary<long, SO> statefulObjectsByRequestID)
 		{
-			if (statefulObjectsByTransactionID == null) throw new ArgumentNullException(nameof(statefulObjectsByTransactionID));
+			if (statefulObjectsByRequestID == null) throw new ArgumentNullException(nameof(statefulObjectsByRequestID));
 			if (item == null) throw new ArgumentNullException(nameof(item));
 
 			var line = new FundsResponseLine(file, item);
@@ -300,14 +296,14 @@ namespace Grammophone.Domos.Logic
 
 			var fundsResponseResult = new FundsResponseResult
 			{
-				BatchItem = item
+				FileItem = item
 			};
 
 			Exception exception = null;
 
 			try
 			{
-				if (statefulObjectsByTransactionID.TryGetValue(item.TransactionID, out SO statefulObject))
+				if (statefulObjectsByRequestID.TryGetValue(item.RequestID, out SO statefulObject))
 				{
 					string currentStateCodeName = statefulObject.State.CodeName;
 
@@ -333,7 +329,7 @@ namespace Grammophone.Domos.Logic
 				else
 				{
 					exception =
-						new LogicException($"No stateful object is associated with transaction ID '{item.TransactionID}'.");
+						new LogicException($"No stateful object is associated with request ID '{item.RequestID}'.");
 				}
 			}
 			catch (Exception ex)
@@ -344,17 +340,16 @@ namespace Grammophone.Domos.Logic
 			if (exception != null)
 			{
 				var fundsTransferRequest = await 
-					this.FundsTransferRequests.SingleOrDefaultAsync(r => r.TransactionID == item.TransactionID && r.CreditSystem.CodeName == file.CreditSystemCodeName);
+					this.FundsTransferRequests.SingleOrDefaultAsync(r => r.ID == item.RequestID);
 
 				if (fundsTransferRequest == null)
-					throw new LogicException(
-						$"No funds transfer request is found for credit system '{file.CreditSystemCodeName}' and trnsaction ID '{item.TransactionID}'.");
+					throw new LogicException($"No funds transfer request is found having ID '{item.RequestID}'.");
 
 				var errorActionResult = await this.AccountingSession.AddFundsTransferEventAsync(
 					fundsTransferRequest,
-					file.Date,
+					file.Time,
 					FundsTransferEventType.WorkflowFailed,
-					collationID: file.CollationID,
+					batchMessageID: file.BatchMessageID,
 					exception: exception);
 
 				fundsResponseResult.Event = errorActionResult.FundsTransferEvent;
