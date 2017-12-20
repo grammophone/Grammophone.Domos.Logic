@@ -11,7 +11,6 @@ using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Accounting;
 using Grammophone.Domos.Domain.Workflow;
 using Grammophone.Domos.Logic.Models.FundsTransfer;
-using Z.EntityFramework.Plus;
 
 namespace Grammophone.Domos.Logic
 {
