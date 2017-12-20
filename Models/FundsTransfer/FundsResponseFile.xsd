@@ -1,19 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xs:schema xmlns:tns="urn:grammophone-domos/fundstransfer/responsefile" elementFormDefault="qualified" targetNamespace="urn:grammophone-domos/fundstransfer/responsefile" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-	<xs:element name="FundsResponseFile" nillable="true" type="tns:FundsResponseFile" />
 	<xs:simpleType name="guid">
 		<xs:restriction base="xs:string">
 			<xs:pattern value="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}" />
 		</xs:restriction>
 	</xs:simpleType>
+	<xs:element name="FundsResponseFile" nillable="true" type="tns:FundsResponseFile" />
 	<xs:complexType name="FundsResponseFile">
 		<xs:sequence>
-			<xs:element minOccurs="1" maxOccurs="1" name="BatchID" type="tns:guid" />
-			<xs:element minOccurs="1" maxOccurs="1" name="CollationID" type="tns:guid" />
+			<xs:element minOccurs="1" maxOccurs="1" name="BatchMessageID" type="tns:guid" />
 			<xs:element minOccurs="0" maxOccurs="1" name="Items" type="tns:ArrayOfFundsResponseFileItem" />
 		</xs:sequence>
-		<xs:attribute name="CreditSystemCodeName" type="xs:string" />
-		<xs:attribute name="Date" type="xs:dateTime" use="required" />
+		<xs:attribute name="Time" type="xs:dateTime" use="required" />
 	</xs:complexType>
 	<xs:complexType name="ArrayOfFundsResponseFileItem">
 		<xs:sequence>
@@ -27,7 +25,7 @@
 			<xs:element minOccurs="1" maxOccurs="1" name="Status" type="tns:FundsResponseStatus" />
 			<xs:element minOccurs="0" maxOccurs="1" name="Comments" type="xs:string" />
 		</xs:sequence>
-		<xs:attribute name="TransactionID" type="xs:string" />
+		<xs:attribute name="RequestID" type="xs:long" use="required" />
 	</xs:complexType>
 	<xs:simpleType name="FundsResponseStatus">
 		<xs:restriction base="xs:string">

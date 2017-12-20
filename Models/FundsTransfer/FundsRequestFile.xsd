@@ -9,10 +9,10 @@
 	<xs:complexType name="FundsRequestFile">
 		<xs:sequence>
 			<xs:element minOccurs="1" maxOccurs="1" name="BatchID" type="tns:guid" />
-			<xs:element minOccurs="1" maxOccurs="1" name="CollationID" type="tns:guid" />
+			<xs:element minOccurs="1" maxOccurs="1" name="BatchMessageID" type="tns:guid" />
 			<xs:element minOccurs="0" maxOccurs="1" name="Items" type="tns:ArrayOfFundsRequestFileItem" />
 		</xs:sequence>
-		<xs:attribute name="Date" type="xs:dateTime" use="required" />
+		<xs:attribute name="Time" type="xs:dateTime" use="required" />
 		<xs:attribute name="CreditSystemCodeName" type="xs:string" />
 	</xs:complexType>
 	<xs:complexType name="ArrayOfFundsRequestFileItem">
@@ -24,7 +24,7 @@
 		<xs:sequence>
 			<xs:element minOccurs="0" maxOccurs="1" name="BankAccountInfo" type="tns:BankAccountInfo" />
 		</xs:sequence>
-		<xs:attribute name="TransactionID" type="xs:string" />
+		<xs:attribute name="RequestID" type="xs:long" use="required" />
 		<xs:attribute name="Amount" type="xs:decimal" use="required" />
 	</xs:complexType>
 	<xs:complexType name="BankAccountInfo">
