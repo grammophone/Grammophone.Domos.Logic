@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Grammophone.Domos.Domain.Accounting;
 
 namespace Grammophone.Domos.Logic.Models.FundsTransfer
 {
@@ -45,9 +46,21 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			this.BatchMessageID = file.BatchMessageID;
 			this.RequestID = fileItem.RequestID;
 			this.Status = fileItem.Status;
-			this.ResponseCode = fileItem.ResponseCode;
-			this.TraceCode = fileItem.TraceCode;
-			this.Comments = fileItem.Comments;
+
+			if (fileItem.ResponseCode.Length <= FundsTransferEvent.ResponseCodeLength)
+				this.ResponseCode = fileItem.ResponseCode;
+			else
+				this.ResponseCode = $"{fileItem.ResponseCode.Substring(0, FundsTransferEvent.ResponseCodeLength - 1)}…";
+
+			if (fileItem.TraceCode.Length <= FundsTransferEvent.TraceCodeLength)
+				this.TraceCode = fileItem.TraceCode;
+			else
+				this.TraceCode = $"{fileItem.TraceCode.Substring(0, FundsTransferEvent.TraceCodeLength - 1)}…";
+
+			if (fileItem.Comments.Length <= FundsTransferEvent.CommentsLength)
+				this.Comments = fileItem.Comments;
+			else
+				this.Comments = $"{fileItem.Comments.Substring(0, FundsTransferEvent.CommentsLength - 1)}…";
 		}
 
 		#endregion
@@ -104,7 +117,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// The response code as returned by the Electronic Funds
 		/// Transfer (EFT/ACH) system.
 		/// </summary>
-		[MaxLength(Domain.Accounting.FundsTransferEvent.ResponseCodeLength)]
+		[MaxLength(FundsTransferEvent.ResponseCodeLength)]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
 			Name = nameof(FundsResponseLineResources.ResponseCode_Name))]
@@ -113,7 +126,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <summary>
 		/// Unique code for event tracing.
 		/// </summary>
-		[MaxLength(Domain.Accounting.FundsTransferEvent.TraceCodeLength)]
+		[MaxLength(FundsTransferEvent.TraceCodeLength)]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
 			Name = nameof(FundsResponseLineResources.TraceCode_Name))]
@@ -122,7 +135,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <summary>
 		/// Optional comments.
 		/// </summary>
-		[MaxLength(Domain.Accounting.FundsTransferEvent.CommentsLength)]
+		[MaxLength(FundsTransferEvent.CommentsLength)]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
 			Name = nameof(FundsResponseLineResources.Comments_Name))]

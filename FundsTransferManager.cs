@@ -344,10 +344,30 @@ namespace Grammophone.Domos.Logic
 
 			using (var transaction = this.DomainContainer.BeginTransaction())
 			{
+				FundsTransferEventType eventType;
+
+				switch (item.Status)
+				{
+					case FundsResponseStatus.Failed:
+						eventType = FundsTransferEventType.Failed;
+						break;
+
+					case FundsResponseStatus.Accepted:
+						eventType = FundsTransferEventType.Accepted;
+						break;
+
+					case FundsResponseStatus.Succeeded:
+						eventType = FundsTransferEventType.Accepted;
+						break;
+
+					default:
+						throw new LogicException($"Unexpected item status '{item.Status}' for request with ID {item.RequestID}.");
+				}
+
 				var actionResult = await this.AccountingSession.AddFundsTransferEventAsync(
 					request,
 					DateTime.UtcNow,
-					FundsTransferEventType.Succeeded,
+					eventType,
 					batchMessageID: responseBatchMessage.ID,
 					responseCode: item.ResponseCode,
 					comments: item.Comments,
