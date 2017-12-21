@@ -327,6 +327,41 @@ namespace Grammophone.Domos.Logic
 			return results;
 		}
 
+		/// <summary>
+		/// Translate the <see cref="FundsResponseFileItem.Status"/> of a file item onti a <see cref="FundsTransferEventType"/>.
+		/// </summary>
+		/// <param name="fileItem">The funds transfer file item.</param>
+		/// <returns>Returns the corresponding <see cref="FundsTransferEventType"/>.</returns>
+		/// <exception cref="LogicException">
+		/// Thrown when the conversion is not possible.
+		/// </exception>
+		protected static FundsTransferEventType GetEventTypeFromResponseFileItem(FundsResponseFileItem fileItem)
+		{
+			if (fileItem == null) throw new ArgumentNullException(nameof(fileItem));
+
+			FundsTransferEventType eventType;
+
+			switch (fileItem.Status)
+			{
+				case FundsResponseStatus.Failed:
+					eventType = FundsTransferEventType.Failed;
+					break;
+
+				case FundsResponseStatus.Accepted:
+					eventType = FundsTransferEventType.Accepted;
+					break;
+
+				case FundsResponseStatus.Succeeded:
+					eventType = FundsTransferEventType.Succeeded;
+					break;
+
+				default:
+					throw new LogicException($"Unexpected item status '{fileItem.Status}' for request with ID {fileItem.RequestID}.");
+			}
+
+			return eventType;
+		}
+
 		#endregion
 
 		#region Private methods
@@ -344,25 +379,7 @@ namespace Grammophone.Domos.Logic
 
 			using (var transaction = this.DomainContainer.BeginTransaction())
 			{
-				FundsTransferEventType eventType;
-
-				switch (item.Status)
-				{
-					case FundsResponseStatus.Failed:
-						eventType = FundsTransferEventType.Failed;
-						break;
-
-					case FundsResponseStatus.Accepted:
-						eventType = FundsTransferEventType.Accepted;
-						break;
-
-					case FundsResponseStatus.Succeeded:
-						eventType = FundsTransferEventType.Accepted;
-						break;
-
-					default:
-						throw new LogicException($"Unexpected item status '{item.Status}' for request with ID {item.RequestID}.");
-				}
+				FundsTransferEventType eventType = GetEventTypeFromResponseFileItem(item);
 
 				var actionResult = await this.AccountingSession.AddFundsTransferEventAsync(
 					request,

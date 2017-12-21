@@ -197,20 +197,27 @@ namespace Grammophone.Domos.Logic
 		#region Protected methods
 
 		/// <summary>
-		/// Decide the state path to execute on a stateful object
-		/// when a <see cref="FundsResponseFileItem"/> arrives for it.
+		/// Decides the state path to execute on a stateful object
+		/// when a <see cref="FundsResponseLine"/> arrives for it.
+		/// Returns null to indicate that no path should be executed and the that the line should
+		/// be consumed directly. Throws an exception to abort normal digestion of the line
+		/// and to record a tranfer event of type <see cref="FundsTransferEventType.Failed"/> instead.
 		/// </summary>
 		/// <param name="stateCodeName">The code name of the current state.</param>
-		/// <param name="fundsResponseBatchItem">The batch line arriving for the stateful object.</param>
+		/// <param name="fundsResponseLine">The batch line arriving for the stateful object.</param>
 		/// <returns>Returns the code name of the path to execute or null to execute none.</returns>
-		protected abstract string GetNextStatePathCodeName(
+		/// <exception cref="Exception">
+		/// Thrown to record a funds transfer event with type <see cref="FundsTransferEventType.Failed"/>
+		/// containing the thrown exception.
+		/// </exception>
+		protected abstract string TryGetNextStatePathCodeName(
 			string stateCodeName,
-			FundsResponseFileItem fundsResponseBatchItem);
+			FundsResponseLine fundsResponseLine);
 
 		/// <summary>
 		/// Digest a funds transfer response file from a credit system
-		/// and execute the appropriate state paths 
-		/// as specified by the <see cref="GetNextStatePathCodeName(string, FundsResponseFileItem)"/> method
+		/// and execute the appropriate state paths
+		/// as specified by the <see cref="TryGetNextStatePathCodeName(string, FundsResponseLine)"/> method
 		/// on the corresponding stateful objects.
 		/// The existence of the credit system and
 		/// the collation specified in <paramref name="file"/> is assumed.
@@ -301,22 +308,23 @@ namespace Grammophone.Domos.Logic
 
 			Exception exception = null;
 
+			var failureEventType = FundsTransferEventType.Failed;
+
 			try
 			{
 				if (statefulObjectsByRequestID.TryGetValue(item.RequestID, out SO statefulObject))
 				{
 					string currentStateCodeName = statefulObject.State.CodeName;
 
-					string nextStatePathCodeName = GetNextStatePathCodeName(currentStateCodeName, item);
+					// Attempt to get the next path to be executed. Any exception will be recorded in a failure funds transfer event.
+					string nextStatePathCodeName = TryGetNextStatePathCodeName(currentStateCodeName, line);
 
-					if (nextStatePathCodeName == null)
-					{
-						exception = new LogicException(
-							$"No next path is defined from state '{currentStateCodeName}' when batch item response type is '{item.Status}'.");
-					}
-					else
+					if (nextStatePathCodeName != null) // A path should be executed?
 					{
 						var statePath = await statePathsByCodeNameCache.Get(nextStatePathCodeName);
+
+						// If we get this far, any failure event will be recorded as of type 'WorkflowFailed', not just 'Failed'.
+						failureEventType = FundsTransferEventType.WorkflowFailed;
 
 						var transition = await WorkflowManager.ExecuteStatePathAsync(
 							statefulObject,
@@ -324,6 +332,20 @@ namespace Grammophone.Domos.Logic
 							actionArguments);
 
 						fundsResponseResult.Event = transition.FundsTransferEvent;
+					}
+					else // If no path is specified, record the event directly.
+					{
+						var directActionResult = await this.AccountingSession.AddFundsTransferEventAsync(
+							line.RequestID,
+							line.Time,
+							GetEventTypeFromResponseFileItem(item),
+							null,
+							line.BatchMessageID,
+							line.ResponseCode,
+							line.TraceCode,
+							line.Comments);
+
+						fundsResponseResult.Event = directActionResult.FundsTransferEvent;
 					}
 				}
 				else
@@ -339,17 +361,15 @@ namespace Grammophone.Domos.Logic
 
 			if (exception != null)
 			{
-				var fundsTransferRequest = await 
-					this.FundsTransferRequests.SingleOrDefaultAsync(r => r.ID == item.RequestID);
-
-				if (fundsTransferRequest == null)
-					throw new LogicException($"No funds transfer request is found having ID '{item.RequestID}'.");
-
 				var errorActionResult = await this.AccountingSession.AddFundsTransferEventAsync(
-					fundsTransferRequest,
+					item.RequestID,
 					file.Time,
-					FundsTransferEventType.WorkflowFailed,
-					batchMessageID: file.BatchMessageID,
+					failureEventType,
+					null,
+					file.BatchMessageID,
+					item.ResponseCode,
+					item.TraceCode,
+					item.Comments,
 					exception: exception);
 
 				fundsResponseResult.Event = errorActionResult.FundsTransferEvent;
