@@ -240,6 +240,29 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Enroll a set of funds transfer requests into a new <see cref="FundsTransferBatch"/>.
+		/// The requests must not be already under an existing batch.
+		/// </summary>
+		/// <param name="creditSystemID">The ID of the one among <see cref="CreditSystems"/> to be assigned to the batch.</param>
+		/// <param name="requests">The set of dunds transfer requests.</param>
+		/// <returns>Returns the pending message of the created batch, where the requests are attached.</returns>
+		/// <exception cref="AccountingException">
+		/// Thrown when at least one request is already assigned to a batch.
+		/// </exception>
+		/// <exception cref="UserException">
+		/// When the <paramref name="creditSystemID"/> does not refer to a credit
+		/// system among <see cref="CreditSystems"/>.
+		/// </exception>
+		public async Task<FundsTransferBatchMessage> EnrollRequestsIntoBatchAsync(long creditSystemID, IQueryable<FundsTransferRequest> requests)
+		{
+			if (requests == null) throw new ArgumentNullException(nameof(requests));
+
+			var creditSystem = await GetCreditSystemAsync(creditSystemID);
+
+			return await this.AccountingSession.EnrollRequestsIntoBatchAsync(creditSystem, requests);
+		}
+
+		/// <summary>
 		/// Create a funds request file for a batch.
 		/// </summary>
 		/// <param name="pendingBatchMessage">The 'pending' message for the batch.</param>
@@ -274,6 +297,28 @@ namespace Grammophone.Domos.Logic
 		public async Task<CreditSystem> GetCreditSystemAsync(string creditSystemCodeName)
 		{
 			var creditSystem = await this.CreditSystems.SingleOrDefaultAsync(cs => cs.CodeName == creditSystemCodeName);
+
+			if (creditSystem == null)
+				throw new UserException(FundsTransferManagerMessages.CREDIT_SYSTEM_NOT_AVAILABLE);
+
+			return creditSystem;
+		}
+
+		/// <summary>
+		/// Get the one among <see cref="CreditSystems"/>
+		/// having a specified <see cref="CreditSystem.CodeName"/>.
+		/// </summary>
+		/// <param name="creditSystemID">The ID of the credit system.</param>
+		/// <returns>
+		/// Returns the <see cref="CreditSystem"/> found.
+		/// </returns>
+		/// <exception cref="UserException">
+		/// When the <paramref name="creditSystemID"/> does not refer to a credit
+		/// system among <see cref="CreditSystems"/>.
+		/// </exception>
+		public async Task<CreditSystem> GetCreditSystemAsync(long creditSystemID)
+		{
+			var creditSystem = await this.CreditSystems.SingleOrDefaultAsync(cs => cs.ID == creditSystemID);
 
 			if (creditSystem == null)
 				throw new UserException(FundsTransferManagerMessages.CREDIT_SYSTEM_NOT_AVAILABLE);
