@@ -139,6 +139,26 @@ namespace Grammophone.Domos.Logic
 		#region Public methods
 
 		/// <summary>
+		/// Get the total statistics of funds transfers.
+		/// </summary>
+		public async Task<FundsTransferStatistic> GetTotalStatisticAsync()
+		{
+			var query = from r in this.UnbatchedFundsTransferRequests
+									group r by 1 into g
+									select new FundsTransferStatistic
+									{
+										UnbatchedRequestsCount = g.Count(),
+										PendingBatchesCount = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Pending).Count(),
+										SubmittedBatchesCount = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Submitted).Count(),
+										RejectedBatchesCount = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Rejected).Count(),
+										AcceptedBatchesCount = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Accepted).Count(),
+										RespondedBatchesCount = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Responded).Count()
+									};
+
+			return await query.FirstOrDefaultAsync() ?? new FundsTransferStatistic();
+		}
+
+		/// <summary>
 		/// From a set of <see cref="FundsTransferRequests"/>, filter those which
 		/// have no response yet.
 		/// </summary>

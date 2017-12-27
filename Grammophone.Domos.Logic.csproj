@@ -117,6 +117,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>FundsResponseStatusResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Models\FundsTransfer\FundsTransferStatistic.cs" />
     <Compile Include="WorkflowActions\FundsTransferResponseAction.cs" />
     <Compile Include="WorkflowActions\FundsTransferResponseActionResources.Designer.cs">
       <AutoGen>True</AutoGen>
