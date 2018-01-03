@@ -143,16 +143,22 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		public async Task<FundsTransferStatistic> GetTotalStatisticAsync()
 		{
+			var pendingBatches = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Pending);
+			var submittedBatches = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Submitted);
+			var rejectedBatches = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Rejected);
+			var acceptedBatches = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Accepted);
+			var respondedBatches = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Responded);
+
 			var query = from r in this.UnbatchedFundsTransferRequests
 									group r by 1 into g
 									select new FundsTransferStatistic
 									{
 										UnbatchedRequestsCount = g.Count(),
-										PendingBatchesCount = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Pending).Count(),
-										SubmittedBatchesCount = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Submitted).Count(),
-										RejectedBatchesCount = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Rejected).Count(),
-										AcceptedBatchesCount = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Accepted).Count(),
-										RespondedBatchesCount = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Responded).Count()
+										PendingBatchesCount = pendingBatches.Count(),
+										SubmittedBatchesCount = submittedBatches.Count(),
+										RejectedBatchesCount = rejectedBatches.Count(),
+										AcceptedBatchesCount = acceptedBatches.Count(),
+										RespondedBatchesCount = respondedBatches.Count()
 									};
 
 			return await query.FirstOrDefaultAsync() ?? new FundsTransferStatistic();

@@ -60,9 +60,29 @@ namespace Grammophone.Domos.Logic
 		where S : LogicSession<U, D>
 		where ST : BST, new()
 		where SO : IStateful<U, ST>
-		where WM : IWorkflowManager<U, ST, SO>
 		where AS : AccountingSession<U, BST, P, R, J, D>
+		where WM : IWorkflowManager<U, ST, SO>
 	{
+		#region Auxilliary classes
+
+		/// <summary>
+		/// Association of a funds transfer event to a stateful object.
+		/// </summary>
+		public class FundsTransferEventAssociation
+		{
+			/// <summary>
+			/// The funds transfer event.
+			/// </summary>
+			public FundsTransferEvent Event { get; set; }
+
+			/// <summary>
+			/// The stateful object of type <typeparamref name="SO"/> associated with the <see cref="Event"/>.
+			/// </summary>
+			public SO StatefulObject { get; set; }
+		}
+
+		#endregion
+
 		#region Private fields
 
 		private AsyncSequentialMRUCache<string, StatePath> statePathsByCodeNameCache;
@@ -96,38 +116,10 @@ namespace Grammophone.Domos.Logic
 		#region Public properties
 
 		/// <summary>
-		/// The funds transfer requests handled by this manager.
+		/// The set of associations of managed funds transfer events with stateful objects
+		/// of type <typeparamref name="SO"/>.
 		/// </summary>
-		/// <remarks>
-		/// These are implied by the state transitions of the objects returned
-		/// by <see cref="IWorkflowManager{U, ST, SO}.GetManagedStatefulObjects"/>.
-		/// </remarks>
-		public override IQueryable<FundsTransferRequest> FundsTransferRequests
-		{
-			get
-			{
-				var requestIDs = from so in this.WorkflowManager.GetManagedStatefulObjects()
-												 from st in so.StateTransitions
-												 where st.FundsTransferEvent != null
-												 select st.FundsTransferEvent.RequestID;
-
-				return from r in this.DomainContainer.FundsTransferRequests
-							 where requestIDs.Contains(r.ID)
-							 select r;
-			}
-		}
-
-		/// <summary>
-		/// The funds transfer events handled by this manager.
-		/// </summary>
-		/// <remarks>
-		/// These are implied by the state transitions of the objects returned
-		/// by <see cref="IWorkflowManager{U, ST, SO}.GetManagedStatefulObjects"/>.
-		/// </remarks>
-		public override IQueryable<FundsTransferEvent> FundsTransferEvents => from so in this.WorkflowManager.GetManagedStatefulObjects()
-																																					from st in so.StateTransitions
-																																					where st.FundsTransferEvent != null
-																																					select st.FundsTransferEvent;
+		public abstract IQueryable<FundsTransferEventAssociation> FundsTransferEventAssociations { get; }
 
 		#endregion
 
@@ -140,60 +132,6 @@ namespace Grammophone.Domos.Logic
 
 		#endregion
 
-		#region Public methods
-
-		/// <summary>
-		/// Get the set of <see cref="FundsTransferRequest"/>s which
-		/// have no response yet.
-		/// </summary>
-		/// <param name="stateCodeName">
-		/// The state code name of the stateful objects corresponding to the requests.
-		/// </param>
-		/// <param name="includeSubmitted">
-		/// If true, include the already submitted requests in the results,
-		/// else exclude the submitted requests.
-		/// </param>
-		public IQueryable<FundsTransferRequest> GetPendingFundsTransferRequests(
-			string stateCodeName,
-			bool includeSubmitted = false)
-		{
-			if (stateCodeName == null) throw new ArgumentNullException(nameof(stateCodeName));
-
-			return GetPendingFundsTransferRequests(
-				so => so.State.CodeName == stateCodeName,
-				includeSubmitted);
-		}
-
-		/// <summary>
-		/// Get the set of <see cref="FundsTransferRequest"/>s which
-		/// have no response yet.
-		/// </summary>
-		/// <param name="statefulObjectPredicate">
-		/// Criterion for selecting the related stateful objects involved in the funds transfers.
-		/// </param>
-		/// <param name="includeSubmitted">
-		/// If true, include the already submitted requests in the results,
-		/// else exclude the submitted requests.
-		/// </param>
-		public IQueryable<FundsTransferRequest> GetPendingFundsTransferRequests(
-			Expression<Func<SO, bool>> statefulObjectPredicate,
-			bool includeSubmitted = false)
-		{
-			if (statefulObjectPredicate == null) throw new ArgumentNullException(nameof(statefulObjectPredicate));
-
-			var query = from so in this.WorkflowManager.GetManagedStatefulObjects().Where(statefulObjectPredicate)
-									let lastTransition = so.StateTransitions.OrderByDescending(st => st.CreationDate).FirstOrDefault()
-									where lastTransition != null //&& lastTransition.Path.NextState.CodeName == stateCodeName
-																							 // Only needed for double-checking.
-									let e = lastTransition.FundsTransferEvent
-									where e != null
-									select e.Request;
-
-			return this.AccountingSession.FilterPendingFundsTransferRequests(query, includeSubmitted);
-		}
-
-		#endregion
-
 		#region Protected methods
 
 		/// <summary>
@@ -201,7 +139,7 @@ namespace Grammophone.Domos.Logic
 		/// when a <see cref="FundsResponseLine"/> arrives for it.
 		/// Returns null to indicate that no path should be executed and the that the line should
 		/// be consumed directly. Throws an exception to abort normal digestion of the line
-		/// and to record a tranfer event of type <see cref="FundsTransferEventType.Failed"/> instead.
+		/// and to record a transfer event of type <see cref="FundsTransferEventType.Failed"/> instead.
 		/// </summary>
 		/// <param name="stateCodeName">The code name of the current state.</param>
 		/// <param name="fundsResponseLine">The batch line arriving for the stateful object.</param>
@@ -243,15 +181,13 @@ namespace Grammophone.Domos.Logic
 
 			long[] requestIDs = file.Items.Select(i => i.RequestID).ToArray();
 
-			var statefulObjectsQuery = from so in this.WorkflowManager.GetManagedStatefulObjects()
-																 from st in so.StateTransitions
-																 where st.FundsTransferEvent != null
-																 let ftr = st.FundsTransferEvent.Request
+			var statefulObjectsQuery = from a in this.FundsTransferEventAssociations
+																 let ftr = a.Event.Request
 																 where requestIDs.Contains(ftr.ID)
 																 select new
 																 {
-																	 StatefulObject = so,
-																	 so.State, // Force including the State property.
+																	 a.StatefulObject,
+																	 a.StatefulObject.State, // Force including the State property.
 																	 RequestID = ftr.ID
 																 };
 
