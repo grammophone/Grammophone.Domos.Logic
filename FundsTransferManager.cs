@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 using Grammophone.Domos.Accounting;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
@@ -65,6 +67,32 @@ namespace Grammophone.Domos.Logic
 
 			this.AccountingSession = accountingSession;
 		}
+
+		/// <summary>
+		/// Static initialization.
+		/// </summary>
+		static FundsTransferManager()
+		{
+			lazyResponseSchemaSet = new Lazy<XmlSchemaSet>(CreateResponseSchemaSet);
+
+			lazyRequestSchemaSet = new Lazy<XmlSchemaSet>(CreateRequestSchemaSet);
+
+			lazyResponseFileSerializer = new Lazy<XmlSerializer>(() => new XmlSerializer(typeof(FundsResponseFile)));
+
+			lazyRequestFileSerializer = new Lazy<XmlSerializer>(() => new XmlSerializer(typeof(FundsRequestFile)));
+		}
+
+		#endregion
+
+		#region Private fields
+
+		private static Lazy<XmlSchemaSet> lazyResponseSchemaSet;
+
+		private static Lazy<XmlSchemaSet> lazyRequestSchemaSet;
+
+		private static Lazy<XmlSerializer> lazyResponseFileSerializer;
+
+		private static Lazy<XmlSerializer> lazyRequestFileSerializer;
 
 		#endregion
 
@@ -242,6 +270,47 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Accept a <see cref="FundsResponseFile"/> in XML format
+		/// and execute per line any accounting or workflow associated with this manager.
+		/// </summary>
+		/// <param name="stream">The stream containing the XML represenation of the file to digest.</param>
+		/// <returns>
+		/// Returns a collection of results describing the execution outcome of the
+		/// contents of the file.
+		/// </returns>
+		public async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseFileAsync(System.IO.Stream stream)
+			=> await AcceptResponseFileAsync(ReadResponseFile(stream));
+
+		/// <summary>
+		/// Rread a <see cref="FundsResponseFile"/> from a stream containing its XML representation.
+		/// </summary>
+		/// <param name="stream">The input stream.</param>
+		/// <returns>Returns the response file.</returns>
+		/// <exception cref="XmlSchemaValidationException">
+		/// Thrown when the XML contents are not according the the schema
+		/// for a <see cref="FundsResponseFile"/>.
+		/// </exception>
+		public FundsResponseFile ReadResponseFile(System.IO.Stream stream)
+		{
+			if (stream == null) throw new ArgumentNullException(nameof(stream));
+
+			var responseSchemaSet = GetResponseSchemaSet();
+
+			var xmlReaderSettings = new XmlReaderSettings
+			{
+				Schemas = responseSchemaSet,
+				ValidationType = ValidationType.Schema,
+			};
+
+			using (var xmlReader = XmlReader.Create(stream, xmlReaderSettings))
+			{
+				var serializer = GetResponseFileSerializer();
+
+				return (FundsResponseFile)serializer.Deserialize(xmlReader);
+			}
+		}
+
+		/// <summary>
 		/// Enroll a set of funds transfer requests into a new <see cref="FundsTransferBatch"/>.
 		/// The requests must not be already under an existing batch.
 		/// </summary>
@@ -307,6 +376,56 @@ namespace Grammophone.Domos.Logic
 		/// <returns>Returns the funds request file.</returns>
 		public async Task<FundsRequestFile> ExportRequestFile(Guid batchID)
 			=> await FundsRequestFile.CreateAsync(batchID, this.FundsTransferBatchMessages);
+
+		/// <summary>
+		/// Get the XML document representing a <see cref="FundsRequestFile"/>.
+		/// </summary>
+		/// <param name="requestFile">The request file object.</param>
+		/// <returns>Returns the XML document.</returns>
+		public XmlDocument GetRequestFileXML(FundsRequestFile requestFile)
+		{
+			if (requestFile == null) throw new ArgumentNullException(nameof(requestFile));
+
+			XmlDocument document = new XmlDocument();
+
+			using (var xmlWriter = document.CreateNavigator().AppendChild())
+			{
+				WriteRequestFile(xmlWriter, requestFile);
+			}
+
+			return document;
+		}
+
+		/// <summary>
+		/// Writes a <see cref="FundsRequestFile"/> into a stream as XML.
+		/// </summary>
+		/// <param name="stream">The stream to write to.</param>
+		/// <param name="requestFile">The request file to write.</param>
+		public void WriteRequestFile(System.IO.Stream stream, FundsRequestFile requestFile)
+		{
+			if (stream == null) throw new ArgumentNullException(nameof(stream));
+			if (requestFile == null) throw new ArgumentNullException(nameof(requestFile));
+
+			using (var xmlWriter = XmlWriter.Create(stream))
+			{
+				WriteRequestFile(xmlWriter, requestFile);
+			}
+		}
+
+		/// <summary>
+		/// Write a <see cref="FundsRequestFile"/> into an XML writer.
+		/// </summary>
+		/// <param name="xmlWriter">Thee XML writer.</param>
+		/// <param name="requestFile">The request file to write.</param>
+		public void WriteRequestFile(XmlWriter xmlWriter, FundsRequestFile requestFile)
+		{
+			if (xmlWriter == null) throw new ArgumentNullException(nameof(xmlWriter));
+			if (requestFile == null) throw new ArgumentNullException(nameof(requestFile));
+
+			var serializer = GetRequestFileSerializer();
+
+			serializer.Serialize(xmlWriter, requestFile);
+		}
 
 		/// <summary>
 		/// Get the one among <see cref="CreditSystems"/>
@@ -436,6 +555,46 @@ namespace Grammophone.Domos.Logic
 		#endregion
 
 		#region Private methods
+
+		private static XmlSerializer GetResponseFileSerializer()
+			=> lazyResponseFileSerializer.Value;
+
+		private static XmlSerializer GetRequestFileSerializer()
+			=> lazyRequestFileSerializer.Value;
+
+		private XmlSchemaSet GetResponseSchemaSet()
+			=> lazyResponseSchemaSet.Value;
+
+		private XmlSchemaSet GetRequestSchemaSet()
+			=> lazyRequestSchemaSet.Value;
+
+		private static XmlSchemaSet CreateResponseSchemaSet()
+			=> CreateSchemaSet("Grammophone.Domos.Logic.Models.Fundsransfer.FundsRequestFile.xsd");
+
+		private static XmlSchemaSet CreateRequestSchemaSet()
+			=> CreateSchemaSet("Grammophone.Domos.Logic.Models.Fundsransfer.FundsResponseFile.xsd");
+
+		private static XmlSchemaSet CreateSchemaSet(string xsdResourceName)
+		{
+			if (xsdResourceName == null) throw new ArgumentNullException(nameof(xsdResourceName));
+
+			var schemaSet = new XmlSchemaSet();
+
+			var currentAssembly = System.Reflection.Assembly.GetExecutingAssembly();
+
+			using (var stream = currentAssembly.GetManifestResourceStream(xsdResourceName))
+			{
+				var schema = XmlSchema.Read(stream, (_, validationArgs) =>
+				{
+					if (validationArgs.Severity == XmlSeverityType.Error)
+						throw new XmlSchemaException(validationArgs.Message);
+				});
+
+				schemaSet.Add(schema);
+			}
+
+			return schemaSet;
+		}
 
 		private async Task<FundsResponseResult> AcceptResponseItemAsync(
 			FundsResponseFile file,

@@ -233,12 +233,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="Models\FundsTransfer\FundsRequestFile.xsd">
+    <EmbeddedResource Include="Models\FundsTransfer\FundsRequestFile.xsd">
       <SubType>Designer</SubType>
-    </None>
-    <None Include="Models\FundsTransfer\FundsResponseFile.xsd">
+    </EmbeddedResource>
+    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseFile.xsd">
       <SubType>Designer</SubType>
-    </None>
+    </EmbeddedResource>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
