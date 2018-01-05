@@ -264,7 +264,7 @@ namespace Grammophone.Domos.Logic
 				batch,
 				FundsTransferBatchMessageType.Responded,
 				file.Time,
-				file.BatchMessageID);
+				messageID: file.BatchMessageID);
 
 			return await DigestResponseFileAsync(file, responseBatchMessage);
 		}
@@ -428,6 +428,49 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Add a rejection message to a batch.
+		/// </summary>
+		/// <param name="batchID">The ID of the batch.</param>
+		/// <param name="comments">Optional comments to record in the message. Maximum length is <see cref="FundsTransferBatchMessage.CommentsLength"/>.</param>
+		/// <param name="messageCode">Optional code to record inthe message. Maximum length is <see cref="FundsTransferBatchMessage.MessageCodeLength"/>.</param>
+		/// <param name="utcTime">Optional time in UTC, else the current time is implied.</param>
+		/// <returns>returns the created message.</returns>
+		/// <exception cref="AccountingException">
+		/// Thrown when a more recent message than <paramref name="utcTime"/> exists.
+		/// </exception>
+		public async Task<FundsTransferBatchMessage> AddBatchRejectedMessageAsync(Guid batchID,
+			String comments = null,
+			String messageCode = null,
+			DateTime? utcTime = null)
+			=> await AddBatchMessageAsync(batchID, FundsTransferBatchMessageType.Rejected, comments, messageCode, utcTime);
+
+		/// <summary>
+		/// Attempt to set the batch as submitted, if is not already set, else do nothing.
+		/// </summary>
+		/// <param name="batchID">The ID of the batch.</param>
+		/// <param name="utcTime">Optional time in UTC, else the current time is implied.</param>
+		/// <returns>If the batch was not already submitted, returns the submission event, else null.</returns>
+		/// <exception cref="AccountingException">
+		/// Thrown when the batch is not already set as submitted
+		/// and a more recent message than <paramref name="utcTime"/> exists.
+		/// </exception>
+		public async Task<FundsTransferBatchMessage> TrySetBatchAsSubmittedAsync(Guid batchID, DateTime? utcTime = null)
+			=> await TryAddBatchMessageAsync(batchID, FundsTransferBatchMessageType.Submitted, utcTime);
+
+		/// <summary>
+		/// Attempt to set the batch as accepted, if is not already set, else do nothing.
+		/// </summary>
+		/// <param name="batchID">The ID of the batch.</param>
+		/// <param name="utcTime">Optional time in UTC, else the current time is implied.</param>
+		/// <returns>If the batch was not already submitted, returns the submission event, else null.</returns>
+		/// <exception cref="AccountingException">
+		/// Thrown when the batch is not already set as accepted
+		/// and a more recent message than <paramref name="utcTime"/> exists.
+		/// </exception>
+		public async Task<FundsTransferBatchMessage> TrySetBatchAsAcceptedAsync(Guid batchID, DateTime? utcTime = null)
+			=> await TryAddBatchMessageAsync(batchID, FundsTransferBatchMessageType.Accepted, utcTime);
+
+		/// <summary>
 		/// Get the one among <see cref="CreditSystems"/>
 		/// having a specified <see cref="CreditSystem.CodeName"/>.
 		/// </summary>
@@ -555,6 +598,79 @@ namespace Grammophone.Domos.Logic
 		#endregion
 
 		#region Private methods
+
+		/// <summary>
+		/// Add a message to a batch.
+		/// </summary>
+		/// <param name="batchID">The ID of the batch.</param>
+		/// <param name="messageType">The type of the message.</param>
+		/// <param name="comments">Optional comments to record in the message. Maximum length is <see cref="FundsTransferBatchMessage.CommentsLength"/>.</param>
+		/// <param name="messageCode">Optional code to record inthe message. Maximum length is <see cref="FundsTransferBatchMessage.MessageCodeLength"/>.</param>
+		/// <param name="utcTime">Optional time in UTC, else the current time is implied.</param>
+		/// <returns>returns the created message.</returns>
+		/// <exception cref="AccountingException">
+		/// Thrown when <paramref name="messageType"/> is <see cref="FundsTransferBatchMessageType.Pending"/>
+		/// or <see cref="FundsTransferBatchMessageType.Responded"/> and
+		/// there already exists a message with the same type,
+		/// or when a more recent message than <paramref name="utcTime"/> exists.
+		/// </exception>
+		private async Task<FundsTransferBatchMessage> AddBatchMessageAsync(
+			Guid batchID,
+			FundsTransferBatchMessageType messageType,
+			String comments = null,
+			String messageCode = null,
+			DateTime? utcTime = null)
+		{
+			using (var transaction = this.DomainContainer.BeginTransaction())
+			{
+				var batch = await this.FundsTransferBatches.Include(b => b.Messages).SingleAsync(b => b.ID == batchID);
+
+				utcTime = utcTime ?? DateTime.UtcNow;
+
+				var message = await this.AccountingSession.AddFundsTransferBatchMessageAsync(
+					batch,
+					messageType,
+					utcTime.Value,
+					comments,
+					messageCode);
+
+				await transaction.CommitAsync();
+
+				return message;
+			}
+		}
+
+		/// <summary>
+		/// Attempt to add a message to a batch, if its type is not already existing, else do nothing and return null.
+		/// </summary>
+		/// <param name="batchID">The ID of the batch.</param>
+		/// <param name="messageType">The type of the message.</param>
+		/// <param name="utcTime">Optional time in UTC, else the current time is implied.</param>
+		/// <returns>If a message of the specified type did not preexist, returns the added message, else null.</returns>
+		/// <exception cref="AccountingException">
+		/// Thrown when there des not exist a message with the same type
+		/// and a more recent message than <paramref name="utcTime"/> exists.
+		/// </exception>
+		private async Task<FundsTransferBatchMessage> TryAddBatchMessageAsync(
+			Guid batchID,
+			FundsTransferBatchMessageType messageType,
+			DateTime? utcTime = null)
+		{
+			using (var transaction = this.DomainContainer.BeginTransaction())
+			{
+				var batch = await this.FundsTransferBatches.Include(b => b.Messages).SingleAsync(b => b.ID == batchID);
+
+				if (batch.Messages.Any(m => m.Type == messageType)) return null;
+
+				utcTime = utcTime ?? DateTime.UtcNow;
+
+				var message = await this.AccountingSession.AddFundsTransferBatchMessageAsync(batch, messageType, utcTime.Value);
+
+				await transaction.CommitAsync();
+
+				return message;
+			}
+		}
 
 		private static XmlSerializer GetResponseFileSerializer()
 			=> lazyResponseFileSerializer.Value;
