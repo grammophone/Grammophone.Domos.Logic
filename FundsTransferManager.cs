@@ -54,18 +54,33 @@ namespace Grammophone.Domos.Logic
 		where S : LogicSession<U, D>
 		where AS : AccountingSession<U, BST, P, R, J, D>
 	{
+		#region Private fields
+
+		private static Lazy<XmlSchemaSet> lazyResponseSchemaSet;
+
+		private static Lazy<XmlSchemaSet> lazyRequestSchemaSet;
+
+		private static Lazy<XmlSerializer> lazyResponseFileSerializer;
+
+		private static Lazy<XmlSerializer> lazyRequestFileSerializer;
+
+		private Func<D, U, AS> accountingSessionFactory;
+
+		#endregion
+
 		#region Construction
 
 		/// <summary>
 		/// Create.
 		/// </summary>
 		/// <param name="session">The logic session.</param>
-		/// <param name="accountingSession">The accounting session.</param>
-		protected FundsTransferManager(S session, AS accountingSession) : base(session)
+		/// <param name="accountingSessionFactory">A factory for creating an accounting session.</param>
+		protected FundsTransferManager(S session, Func<D, U, AS> accountingSessionFactory)
+			: base(session)
 		{
-			if (accountingSession == null) throw new ArgumentNullException(nameof(accountingSession));
+			if (accountingSessionFactory == null) throw new ArgumentNullException(nameof(accountingSessionFactory));
 
-			this.AccountingSession = accountingSession;
+			this.accountingSessionFactory = accountingSessionFactory;
 		}
 
 		/// <summary>
@@ -81,18 +96,6 @@ namespace Grammophone.Domos.Logic
 
 			lazyRequestFileSerializer = new Lazy<XmlSerializer>(() => new XmlSerializer(typeof(FundsRequestFile)));
 		}
-
-		#endregion
-
-		#region Private fields
-
-		private static Lazy<XmlSchemaSet> lazyResponseSchemaSet;
-
-		private static Lazy<XmlSchemaSet> lazyRequestSchemaSet;
-
-		private static Lazy<XmlSerializer> lazyResponseFileSerializer;
-
-		private static Lazy<XmlSerializer> lazyRequestFileSerializer;
 
 		#endregion
 
@@ -155,15 +158,6 @@ namespace Grammophone.Domos.Logic
 
 		#endregion
 
-		#region Protected properties
-
-		/// <summary>
-		/// The accounting session being used.
-		/// </summary>
-		protected AS AccountingSession { get; }
-
-		#endregion
-
 		#region Public methods
 
 		/// <summary>
@@ -171,11 +165,11 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		public async Task<FundsTransferStatistic> GetTotalStatisticAsync()
 		{
-			var pendingBatches = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Pending);
-			var submittedBatches = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Submitted);
-			var rejectedBatches = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Rejected);
-			var acceptedBatches = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Accepted);
-			var respondedBatches = FilterBatches(m => m.Type == FundsTransferBatchMessageType.Responded);
+			var pendingBatches = FilterBatchesByLatestMesage(m => m.Type == FundsTransferBatchMessageType.Pending);
+			var submittedBatches = FilterBatchesByLatestMesage(m => m.Type == FundsTransferBatchMessageType.Submitted);
+			var rejectedBatches = FilterBatchesByLatestMesage(m => m.Type == FundsTransferBatchMessageType.Rejected);
+			var acceptedBatches = FilterBatchesByLatestMesage(m => m.Type == FundsTransferBatchMessageType.Accepted);
+			var respondedBatches = FilterBatchesByLatestMesage(m => m.Type == FundsTransferBatchMessageType.Responded);
 
 			var query = from r in this.UnbatchedFundsTransferRequests
 									group r by 1 into g
@@ -203,9 +197,16 @@ namespace Grammophone.Domos.Logic
 		public IQueryable<FundsTransferRequest> GetPendingRequests(
 			bool includeSubmitted = false)
 		{
-			return AccountingSession.FilterPendingFundsTransferRequests(
-				this.FundsTransferRequests,
-				includeSubmitted);
+			if (includeSubmitted)
+			{
+				return FilterRequestsByLatestEvent(
+					e => e.Type == FundsTransferEventType.Pending || e.Type == FundsTransferEventType.Submitted);
+			}
+			else
+			{
+				return FilterRequestsByLatestEvent(
+					e => e.Type == FundsTransferEventType.Pending);
+			}
 		}
 
 		/// <summary>
@@ -214,8 +215,15 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="latestEventPredicate">The predicate to apply to the last event of each request.</param>
 		/// <returns>Returns the set of filtered requests.</returns>
-		public IQueryable<FundsTransferRequest> FilterRequests(Expression<Func<FundsTransferEvent, bool>> latestEventPredicate)
-			=> this.AccountingSession.FilterFundsTransferRequestsByLatestEvent(this.FundsTransferRequests, latestEventPredicate);
+		public IQueryable<FundsTransferRequest> FilterRequestsByLatestEvent(Expression<Func<FundsTransferEvent, bool>> latestEventPredicate)
+		{
+			if (latestEventPredicate == null) throw new ArgumentNullException(nameof(latestEventPredicate));
+
+			return this.FundsTransferRequests
+				.Select(r => r.Events.OrderByDescending(e => e.Time).FirstOrDefault())
+				.Where(latestEventPredicate)
+				.Select(e => e.Request);
+		}
 
 		/// <summary>
 		/// From the set of <see cref="FundsTransferBatches"/>, filter those whose
@@ -223,8 +231,15 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="latestMessagePredicate">The predicate to apply to the last message of each batch.</param>
 		/// <returns>Returns the set of filtered batches.</returns>
-		public IQueryable<FundsTransferBatch> FilterBatches(Expression<Func<FundsTransferBatchMessage, bool>> latestMessagePredicate)
-			=> this.AccountingSession.FilterFundsTransferBatchesByLatestMessage(this.FundsTransferBatches, latestMessagePredicate);
+		public IQueryable<FundsTransferBatch> FilterBatchesByLatestMesage(Expression<Func<FundsTransferBatchMessage, bool>> latestMessagePredicate)
+		{
+			if (latestMessagePredicate == null) throw new ArgumentNullException(nameof(latestMessagePredicate));
+
+			return this.FundsTransferBatches
+				.Select(b => b.Messages.OrderByDescending(m => m.Time).FirstOrDefault())
+				.Where(latestMessagePredicate)
+				.Select(m => m.Batch);
+		}
 
 		/// <summary>
 		/// Accept a funds response file
@@ -260,13 +275,17 @@ namespace Grammophone.Domos.Logic
 				throw new UserException(FundsTransferManagerMessages.REQUESTS_NOT_IN_SAME_BATCH);
 			}
 
-			var responseBatchMessage = await this.AccountingSession.AddFundsTransferBatchMessageAsync(
-				batch,
-				FundsTransferBatchMessageType.Responded,
-				file.Time,
-				messageID: file.BatchMessageID);
+			using (var accountingSession = CreateAccountingSession())
+			using (GetElevatedAccessScope())
+			{
+				var responseBatchMessage = await accountingSession.AddFundsTransferBatchMessageAsync(
+					batch,
+					FundsTransferBatchMessageType.Responded,
+					file.Time,
+					messageID: file.BatchMessageID);
 
-			return await DigestResponseFileAsync(file, responseBatchMessage);
+				return await DigestResponseFileAsync(file, responseBatchMessage);
+			}
 		}
 
 		/// <summary>
@@ -331,7 +350,11 @@ namespace Grammophone.Domos.Logic
 
 			var creditSystem = await GetCreditSystemAsync(creditSystemCodeName);
 
-			return await this.AccountingSession.EnrollRequestsIntoBatchAsync(creditSystem, requests);
+			using (var accountingSession = CreateAccountingSession())
+			using (GetElevatedAccessScope())
+			{
+				return await accountingSession.EnrollRequestsIntoBatchAsync(creditSystem, requests);
+			}
 		}
 
 		/// <summary>
@@ -354,7 +377,11 @@ namespace Grammophone.Domos.Logic
 
 			var creditSystem = await GetCreditSystemAsync(creditSystemID);
 
-			return await this.AccountingSession.EnrollRequestsIntoBatchAsync(creditSystem, requests);
+			using (var accountingSession = CreateAccountingSession())
+			using (GetElevatedAccessScope())
+			{
+				return await accountingSession.EnrollRequestsIntoBatchAsync(creditSystem, requests);
+			}
 		}
 
 		/// <summary>
@@ -519,6 +546,12 @@ namespace Grammophone.Domos.Logic
 		#region Protected methods
 
 		/// <summary>
+		/// Create an accounting session. The caller is responsible for disposing it.
+		/// </summary>
+		protected AS CreateAccountingSession()
+			=> accountingSessionFactory(this.DomainContainer, this.Session.User);
+
+		/// <summary>
 		/// Digest a funds response file.
 		/// The existence of the credit system and
 		/// the collation specified in <paramref name="file"/> is assumed.
@@ -622,12 +655,14 @@ namespace Grammophone.Domos.Logic
 			DateTime? utcTime = null)
 		{
 			using (var transaction = this.DomainContainer.BeginTransaction())
+			using (var accountingSession = CreateAccountingSession())
+			using (GetElevatedAccessScope())
 			{
 				var batch = await this.FundsTransferBatches.Include(b => b.Messages).SingleAsync(b => b.ID == batchID);
 
 				utcTime = utcTime ?? DateTime.UtcNow;
 
-				var message = await this.AccountingSession.AddFundsTransferBatchMessageAsync(
+				var message = await accountingSession.AddFundsTransferBatchMessageAsync(
 					batch,
 					messageType,
 					utcTime.Value,
@@ -657,6 +692,8 @@ namespace Grammophone.Domos.Logic
 			DateTime? utcTime = null)
 		{
 			using (var transaction = this.DomainContainer.BeginTransaction())
+			using (var accountingSession = CreateAccountingSession())
+			using (GetElevatedAccessScope())
 			{
 				var batch = await this.FundsTransferBatches.Include(b => b.Messages).SingleAsync(b => b.ID == batchID);
 
@@ -664,7 +701,10 @@ namespace Grammophone.Domos.Logic
 
 				utcTime = utcTime ?? DateTime.UtcNow;
 
-				var message = await this.AccountingSession.AddFundsTransferBatchMessageAsync(batch, messageType, utcTime.Value);
+				var message = await accountingSession.AddFundsTransferBatchMessageAsync(
+					batch,
+					messageType,
+					utcTime.Value);
 
 				await transaction.CommitAsync();
 
@@ -724,10 +764,12 @@ namespace Grammophone.Domos.Logic
 			if (responseBatchMessage == null) throw new ArgumentNullException(nameof(responseBatchMessage));
 
 			using (var transaction = this.DomainContainer.BeginTransaction())
+			using (var accountingSession = CreateAccountingSession())
+			using (GetElevatedAccessScope())
 			{
 				FundsTransferEventType eventType = GetEventTypeFromResponseFileItem(item);
 
-				var actionResult = await this.AccountingSession.AddFundsTransferEventAsync(
+				var actionResult = await accountingSession.AddFundsTransferEventAsync(
 					request,
 					DateTime.UtcNow,
 					eventType,

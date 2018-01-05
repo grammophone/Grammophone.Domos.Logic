@@ -12,7 +12,6 @@ using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Accounting;
 using Grammophone.Domos.Domain.Workflow;
 using Grammophone.Domos.Logic.Models.FundsTransfer;
-using Grammophone.Domos.Logic.Models.Workflow;
 
 namespace Grammophone.Domos.Logic
 {
@@ -95,13 +94,13 @@ namespace Grammophone.Domos.Logic
 		/// Create.
 		/// </summary>
 		/// <param name="session">The logic session.</param>
-		/// <param name="accountingSession">The associated accounting session.</param>
+		/// <param name="accountingSessionFactory">A factory for creating an accounting session.</param>
 		/// <param name="workflowManager">The associated workflow manager.</param>
 		protected WorkflowFundsTransferManager(
 			S session,
-			AS accountingSession,
+			Func<D, U, AS> accountingSessionFactory,
 			WM workflowManager)
-			: base(session, accountingSession)
+			: base(session, accountingSessionFactory)
 		{
 			if (workflowManager == null) throw new ArgumentNullException(nameof(workflowManager));
 
@@ -271,17 +270,22 @@ namespace Grammophone.Domos.Logic
 					}
 					else // If no path is specified, record the event directly.
 					{
-						var directActionResult = await this.AccountingSession.AddFundsTransferEventAsync(
-							line.RequestID,
-							line.Time,
-							GetEventTypeFromResponseFileItem(item),
-							null,
-							line.BatchMessageID,
-							line.ResponseCode,
-							line.TraceCode,
-							line.Comments);
+						using (var accountingSession = CreateAccountingSession())
+						using (GetElevatedAccessScope())
+						{
+							var directActionResult = await accountingSession.AddFundsTransferEventAsync(
+								line.RequestID,
+								line.Time,
+								GetEventTypeFromResponseFileItem(item),
+								null,
+								line.BatchMessageID,
+								line.ResponseCode,
+								line.TraceCode,
+								line.Comments);
 
-						fundsResponseResult.Event = directActionResult.FundsTransferEvent;
+
+							fundsResponseResult.Event = directActionResult.FundsTransferEvent;
+						}
 					}
 				}
 				else
@@ -297,18 +301,22 @@ namespace Grammophone.Domos.Logic
 
 			if (exception != null)
 			{
-				var errorActionResult = await this.AccountingSession.AddFundsTransferEventAsync(
-					item.RequestID,
-					file.Time,
-					failureEventType,
-					null,
-					file.BatchMessageID,
-					item.ResponseCode,
-					item.TraceCode,
-					item.Comments,
-					exception: exception);
+				using (var accountingSession = CreateAccountingSession())
+				using (GetElevatedAccessScope())
+				{
+					var errorActionResult = await accountingSession.AddFundsTransferEventAsync(
+						item.RequestID,
+						file.Time,
+						failureEventType,
+						null,
+						file.BatchMessageID,
+						item.ResponseCode,
+						item.TraceCode,
+						item.Comments,
+						exception: exception);
 
-				fundsResponseResult.Event = errorActionResult.FundsTransferEvent;
+					fundsResponseResult.Event = errorActionResult.FundsTransferEvent;
+				}
 			}
 
 			return fundsResponseResult;
