@@ -109,7 +109,7 @@ namespace Grammophone.Domos.Logic
 		#region Public methods
 
 		/// <summary>
-		/// Get the default value of the parameter.
+		/// Get the default value of the parameter, if there is one, else null.
 		/// </summary>
 		/// <returns>
 		/// If specified in the constructor, it uses the given default value function,
@@ -119,33 +119,61 @@ namespace Grammophone.Domos.Logic
 		{
 			if (defaultValueFunction != null) 
 			{
-				object defaultVlaue = defaultValueFunction();
+				object defaultValue = defaultValueFunction();
 
-				if (defaultVlaue == null)
+				if (defaultValue != null)
 				{
-					if (this.Type.IsValueType)
-					{
-						throw new LogicException("The default value cannot be null because the parameter's type is value-type.");
-					}
-				}
-				else
-				{
-					if (!this.Type.IsAssignableFrom(defaultVlaue.GetType()))
+					if (!this.Type.IsAssignableFrom(defaultValue.GetType()))
 					{
 						throw new LogicException("The default value is incompatible to the parameter's type.");
 					}
 				}
+				else
+				{
+					if (this.IsRequired)
+					{
+						throw new LogicException("The default value should not be null when the parameter is required.");
+					}
+				}
 
-				return defaultVlaue;
+				return defaultValue;
 			}
 
-			if (this.Type.IsValueType)
+			if (this.Type.IsValueType || IsComplexType(this.Type))
 			{
 				return Activator.CreateInstance(this.Type);
 			}
+
+			return null;
+		}
+
+		#endregion
+
+		#region Private methods
+
+		private bool IsComplexType(Type type)
+		{
+			if (type == typeof(string)
+				|| type == typeof(bool)
+				|| type == typeof(int)
+				|| type == typeof(short)
+				|| type == typeof(long)
+				|| type == typeof(Guid)
+				|| type == typeof(DateTime)
+				|| type == typeof(decimal)
+				|| type == typeof(float)
+				|| type == typeof(double)
+				|| type == typeof(byte)
+				|| type == typeof(uint)
+				|| type == typeof(ushort)
+				|| type == typeof(ulong)
+				|| type == typeof(char))
+			{
+				return false;
+			}
 			else
 			{
-				return null;
+				return true;
 			}
 		}
 
