@@ -19,7 +19,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <summary>
 		/// Backing field for the <see cref="Time"/> property.
 		/// </summary>
-		private DateTime date;
+		private DateTime time;
 
 		#endregion
 
@@ -30,6 +30,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		public FundsResponseLine()
 		{
+			time = DateTime.UtcNow;
 		}
 
 		/// <summary>
@@ -77,14 +78,14 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		{
 			get
 			{
-				return date;
+				return time;
 			}
 			set
 			{
 				if (value.Kind == DateTimeKind.Local)
 					throw new ArgumentException("The value must not be lcoal.");
 
-				date = value;
+				time = value;
 			}
 		}
 
