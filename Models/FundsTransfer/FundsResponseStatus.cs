@@ -33,7 +33,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		[Display(
 			ResourceType = typeof(FundsResponseStatusResources),
-			Name = nameof(FundsResponseStatusResources.Accepted_Name))]
+			Name = nameof(FundsResponseStatusResources.Succeeded_Name))]
 		Succeeded = 2
 	}
 }

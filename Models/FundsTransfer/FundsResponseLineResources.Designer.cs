@@ -70,7 +70,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Response Comments.
+        ///   Looks up a localized string similar to Comments.
         /// </summary>
         public static string Comments_Name {
             get {
@@ -79,7 +79,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to RequestID.
+        ///   Looks up a localized string similar to Request ID.
         /// </summary>
         public static string RequestID_Name {
             get {
