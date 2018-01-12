@@ -178,7 +178,18 @@ namespace Grammophone.Domos.Logic
 										UnbatchedRequestsCount = this.UnbatchedFundsTransferRequests.Count()
 									};
 
-			return await query.FirstOrDefaultAsync() ?? new FundsTransferStatistic();
+			var statistic = await query.FirstOrDefaultAsync();
+
+			if (statistic == null) // Statistic will be null when there are no batches due to batch grouping.
+			{
+				// OK, all batch counts are zero except possibly the unbatched requests count.
+				statistic = new FundsTransferStatistic
+				{
+					UnbatchedRequestsCount = this.UnbatchedFundsTransferRequests.Count()
+				};
+			}
+
+			return statistic;
 		}
 
 		/// <summary>
