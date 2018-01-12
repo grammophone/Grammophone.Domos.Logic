@@ -165,22 +165,17 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		public async Task<FundsTransferStatistic> GetTotalStatisticAsync()
 		{
-			var pendingBatches = FilterBatchesByLatestMesage(m => m.Type == FundsTransferBatchMessageType.Pending);
-			var submittedBatches = FilterBatchesByLatestMesage(m => m.Type == FundsTransferBatchMessageType.Submitted);
-			var rejectedBatches = FilterBatchesByLatestMesage(m => m.Type == FundsTransferBatchMessageType.Rejected);
-			var acceptedBatches = FilterBatchesByLatestMesage(m => m.Type == FundsTransferBatchMessageType.Accepted);
-			var respondedBatches = FilterBatchesByLatestMesage(m => m.Type == FundsTransferBatchMessageType.Responded);
-
-			var query = from r in this.UnbatchedFundsTransferRequests
-									group r by 1 into g
+			var query = from b in this.FundsTransferBatches
+									let lm = b.Messages.OrderByDescending(m => m.Time).FirstOrDefault() // The last message of the batch
+									group lm by 1 into g
 									select new FundsTransferStatistic
 									{
-										UnbatchedRequestsCount = g.Count(),
-										PendingBatchesCount = pendingBatches.Count(),
-										SubmittedBatchesCount = submittedBatches.Count(),
-										RejectedBatchesCount = rejectedBatches.Count(),
-										AcceptedBatchesCount = acceptedBatches.Count(),
-										RespondedBatchesCount = respondedBatches.Count()
+										PendingBatchesCount = g.Count(m => m.Type == FundsTransferBatchMessageType.Pending),
+										SubmittedBatchesCount = g.Count(m => m.Type == FundsTransferBatchMessageType.Submitted),
+										RejectedBatchesCount = g.Count(m => m.Type == FundsTransferBatchMessageType.Rejected),
+										AcceptedBatchesCount = g.Count(m => m.Type == FundsTransferBatchMessageType.Accepted),
+										RespondedBatchesCount = g.Count(m => m.Type == FundsTransferBatchMessageType.Responded),
+										UnbatchedRequestsCount = this.UnbatchedFundsTransferRequests.Count()
 									};
 
 			return await query.FirstOrDefaultAsync() ?? new FundsTransferStatistic();
