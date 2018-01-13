@@ -53,6 +53,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <summary>
 		/// Optional comments.
 		/// </summary>
+		[DataType(DataType.MultilineText)]
 		[Display(
 			Name = nameof(FundsResponseFileItemResources.Comments_Name),
 			ResourceType = typeof(FundsResponseFileItemResources))]

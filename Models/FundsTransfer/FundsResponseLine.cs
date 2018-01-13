@@ -137,6 +137,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// Optional comments.
 		/// </summary>
 		[MaxLength(FundsTransferEvent.CommentsLength)]
+		[DataType(DataType.MultilineText)]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
 			Name = nameof(FundsResponseLineResources.Comments_Name))]
