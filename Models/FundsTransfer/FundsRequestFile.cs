@@ -85,31 +85,31 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		}
 
 		/// <summary>
-		/// Load a <see cref="FundsTransferBatchMessage"/> fro the storage and generate the corresponding file.
+		/// Load a <see cref="FundsTransferBatch"/> from the storage and generate the corresponding file.
 		/// </summary>
-		/// <param name="pendingBatchEventID">The ID of the batch message.</param>
-		/// <param name="batchMessagesSet">The set of batch messages to search in for the given <paramref name="pendingBatchEventID"/>.</param>
+		/// <param name="pendingBatchID">The ID of the batch.</param>
+		/// <param name="batchMessagesSet">The set of batch messages to search in for the given <paramref name="pendingBatchID"/>.</param>
 		/// <returns>Returns the created file.</returns>
 		/// <exception cref="InvalidOperationException">
 		/// Thrown when no <see cref="FundsTransferBatchMessage"/> was found in <paramref name="batchMessagesSet"/>
-		/// having ID equal to <paramref name="pendingBatchEventID"/>.
+		/// having ID equal to <paramref name="pendingBatchID"/>.
 		/// </exception>
 		/// <exception cref="LogicException">
 		/// Thrown when the specified message has <see cref="FundsTransferBatchMessage.Type"/> other
 		/// than <see cref="FundsTransferBatchMessageType.Pending"/> or when
 		/// it has the <see cref="FundsTransferBatchMessage.Batch"/> not properly set up.
 		/// </exception>
-		public static async Task<FundsRequestFile> CreateAsync(Guid pendingBatchEventID, IQueryable<FundsTransferBatchMessage> batchMessagesSet)
+		public static async Task<FundsRequestFile> CreateAsync(Guid pendingBatchID, IQueryable<FundsTransferBatchMessage> batchMessagesSet)
 		{
 			if (batchMessagesSet == null) throw new ArgumentNullException(nameof(batchMessagesSet));
 
 			var batchMessage = await batchMessagesSet
 				.Include(m => m.Batch.CreditSystem)
 				.Include(m => m.Events.Select(e => e.Request))
-				.SingleOrDefaultAsync(e => e.ID == pendingBatchEventID);
+				.SingleOrDefaultAsync(e => e.BatchID == pendingBatchID && e.Type == FundsTransferBatchMessageType.Pending);
 
 			if (batchMessage == null)
-				throw new LogicException($"A batch message with ID '{pendingBatchEventID}' was not found in the specified set.");
+				throw new LogicException($"A message with batch ID '{pendingBatchID}' was not found in the specified set.");
 
 			return new FundsRequestFile(batchMessage);
 		}
