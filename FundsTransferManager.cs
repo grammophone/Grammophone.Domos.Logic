@@ -773,31 +773,42 @@ namespace Grammophone.Domos.Logic
 			if (request == null) throw new ArgumentNullException(nameof(request));
 			if (responseBatchMessage == null) throw new ArgumentNullException(nameof(responseBatchMessage));
 
-			using (var transaction = this.DomainContainer.BeginTransaction())
-			using (var accountingSession = CreateAccountingSession())
-			using (GetElevatedAccessScope())
+			try
 			{
-				FundsTransferEventType eventType = GetEventTypeFromResponseFileItem(item);
+				using (var transaction = this.DomainContainer.BeginTransaction())
+				using (var accountingSession = CreateAccountingSession())
+				using (GetElevatedAccessScope())
+				{
+					FundsTransferEventType eventType = GetEventTypeFromResponseFileItem(item);
 
-				var actionResult = await accountingSession.AddFundsTransferEventAsync(
-					request,
-					DateTime.UtcNow,
-					eventType,
-					batchMessageID: responseBatchMessage.ID,
-					responseCode: item.ResponseCode,
-					comments: item.Comments,
-					traceCode: item.TraceCode);
+					var actionResult = await accountingSession.AddFundsTransferEventAsync(
+						request,
+						DateTime.UtcNow,
+						eventType,
+						batchMessageID: responseBatchMessage.ID,
+						responseCode: item.ResponseCode,
+						comments: item.Comments,
+						traceCode: item.TraceCode);
 
-				var transferEvent = actionResult.FundsTransferEvent;
+					var transferEvent = actionResult.FundsTransferEvent;
 
-				transferEvent.BatchMessage = responseBatchMessage;
+					transferEvent.BatchMessage = responseBatchMessage;
 
-				await transaction.CommitAsync();
+					await transaction.CommitAsync();
 
+					return new FundsResponseResult
+					{
+						Event = transferEvent,
+						FileItem = item
+					};
+				}
+			}
+			catch (Exception ex)
+			{
 				return new FundsResponseResult
 				{
-					Event = transferEvent,
-					FileItem = item
+					FileItem = item,
+					Exception = ex
 				};
 			}
 		}

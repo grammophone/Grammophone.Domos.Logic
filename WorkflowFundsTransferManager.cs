@@ -319,6 +319,8 @@ namespace Grammophone.Domos.Logic
 				}
 			}
 
+			fundsResponseResult.Exception = exception;
+
 			return fundsResponseResult;
 		}
 

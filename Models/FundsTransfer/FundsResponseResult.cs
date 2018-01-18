@@ -17,7 +17,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 	public class FundsResponseResult
 	{
 		/// <summary>
-		/// The resulting funds transfer event.
+		/// The resulting funds transfer event, if generated sauccessfully, else null.
 		/// </summary>
 		public FundsTransferEvent Event { get; set; }
 
@@ -25,5 +25,10 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// The batch file item being accepted.
 		/// </summary>
 		public FundsResponseFileItem FileItem { get; set; }
+
+		/// <summary>
+		/// If not null, the exception thrown during processing of the <see cref="FileItem"/>.
+		/// </summary>
+		public Exception Exception { get; set; }
 	}
 }
