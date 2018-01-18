@@ -303,6 +303,10 @@ namespace Grammophone.Domos.Logic
 		/// Returns a collection of results describing the execution outcome of the
 		/// contents of the file.
 		/// </returns>
+		/// <exception cref="XmlSchemaValidationException">
+		/// Thrown when the XML contents are not according the the schema
+		/// for a <see cref="FundsResponseFile"/>.
+		/// </exception>
 		public async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseFileAsync(System.IO.Stream stream)
 			=> await AcceptResponseFileAsync(ReadResponseFile(stream));
 
