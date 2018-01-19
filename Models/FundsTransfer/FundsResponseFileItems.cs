@@ -24,6 +24,16 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		/// <param name="capacity">The initial capacity of items to reserve.</param>
 		public FundsResponseFileItems(int capacity)
+			: base(capacity)
+		{
+		}
+
+		/// <summary>
+		/// Create with initial items.
+		/// </summary>
+		/// <param name="source">The items.</param>
+		public FundsResponseFileItems(IEnumerable<FundsResponseFileItem> source)
+			: base(source)
 		{
 		}
 	}
