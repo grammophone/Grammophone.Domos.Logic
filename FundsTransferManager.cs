@@ -311,7 +311,7 @@ namespace Grammophone.Domos.Logic
 			=> await AcceptResponseFileAsync(ReadResponseFile(stream));
 
 		/// <summary>
-		/// Rread a <see cref="FundsResponseFile"/> from a stream containing its XML representation.
+		/// Read a <see cref="FundsResponseFile"/> from a stream containing its XML representation.
 		/// </summary>
 		/// <param name="stream">The input stream.</param>
 		/// <returns>Returns the response file.</returns>
@@ -336,6 +336,35 @@ namespace Grammophone.Domos.Logic
 				var serializer = GetResponseFileSerializer();
 
 				return (FundsResponseFile)serializer.Deserialize(xmlReader);
+			}
+		}
+
+		/// <summary>
+		/// Read a <see cref="FundsRequestFile"/> from a stream containing its XML representation.
+		/// </summary>
+		/// <param name="stream">The input stream.</param>
+		/// <returns>Returns the request file.</returns>
+		/// <exception cref="XmlSchemaValidationException">
+		/// Thrown when the XML contents are not according the the schema
+		/// for a <see cref="FundsRequestFile"/>.
+		/// </exception>
+		public FundsRequestFile ReadRequestFile(System.IO.Stream stream)
+		{
+			if (stream == null) throw new ArgumentNullException(nameof(stream));
+
+			var responseSchemaSet = GetResponseSchemaSet();
+
+			var xmlReaderSettings = new XmlReaderSettings
+			{
+				Schemas = responseSchemaSet,
+				ValidationType = ValidationType.Schema,
+			};
+
+			using (var xmlReader = XmlReader.Create(stream, xmlReaderSettings))
+			{
+				var serializer = GetRequestFileSerializer();
+
+				return (FundsRequestFile)serializer.Deserialize(xmlReader);
 			}
 		}
 
