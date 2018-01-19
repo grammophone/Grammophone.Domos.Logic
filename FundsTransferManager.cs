@@ -463,6 +463,25 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Get the XML document representing a <see cref="FundsResponseFile"/>.
+		/// </summary>
+		/// <param name="responseFile">The response file object.</param>
+		/// <returns>Returns the XML document.</returns>
+		public XmlDocument GetResponseFileXML(FundsResponseFile responseFile)
+		{
+			if (responseFile == null) throw new ArgumentNullException(nameof(responseFile));
+
+			XmlDocument document = new XmlDocument();
+
+			using (var xmlWriter = document.CreateNavigator().AppendChild())
+			{
+				WriteResponseFile(xmlWriter, responseFile);
+			}
+
+			return document;
+		}
+
+		/// <summary>
 		/// Writes a <see cref="FundsRequestFile"/> into a stream as XML.
 		/// </summary>
 		/// <param name="stream">The stream to write to.</param>
@@ -491,6 +510,21 @@ namespace Grammophone.Domos.Logic
 			var serializer = GetRequestFileSerializer();
 
 			serializer.Serialize(xmlWriter, requestFile);
+		}
+
+		/// <summary>
+		/// Write a <see cref="FundsResponseFile"/> into an XML writer.
+		/// </summary>
+		/// <param name="xmlWriter">Thee XML writer.</param>
+		/// <param name="reqsponseFile">The response file to write.</param>
+		public void WriteResponseFile(XmlWriter xmlWriter, FundsResponseFile reqsponseFile)
+		{
+			if (xmlWriter == null) throw new ArgumentNullException(nameof(xmlWriter));
+			if (reqsponseFile == null) throw new ArgumentNullException(nameof(reqsponseFile));
+
+			var serializer = GetResponseFileSerializer();
+
+			serializer.Serialize(xmlWriter, reqsponseFile);
 		}
 
 		/// <summary>
