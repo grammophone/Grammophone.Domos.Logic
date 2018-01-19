@@ -303,7 +303,7 @@ namespace Grammophone.Domos.Logic
 		/// Returns a collection of results describing the execution outcome of the
 		/// contents of the file.
 		/// </returns>
-		/// <exception cref="XmlSchemaValidationException">
+		/// <exception cref="FundsFileSchemaException">
 		/// Thrown when the XML contents are not according the the schema
 		/// for a <see cref="FundsResponseFile"/>.
 		/// </exception>
@@ -315,7 +315,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="stream">The input stream.</param>
 		/// <returns>Returns the response file.</returns>
-		/// <exception cref="XmlSchemaValidationException">
+		/// <exception cref="FundsFileSchemaException">
 		/// Thrown when the XML contents are not according the the schema
 		/// for a <see cref="FundsResponseFile"/>.
 		/// </exception>
@@ -335,7 +335,14 @@ namespace Grammophone.Domos.Logic
 			{
 				var serializer = GetResponseFileSerializer();
 
-				return (FundsResponseFile)serializer.Deserialize(xmlReader);
+				try
+				{
+					return (FundsResponseFile)serializer.Deserialize(xmlReader);
+				}
+				catch (InvalidOperationException ex)
+				{
+					throw TranslateToFundsFileSchemaException(ex);
+				}
 			}
 		}
 
@@ -344,7 +351,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="stream">The input stream.</param>
 		/// <returns>Returns the request file.</returns>
-		/// <exception cref="XmlSchemaValidationException">
+		/// <exception cref="FundsFileSchemaException">
 		/// Thrown when the XML contents are not according the the schema
 		/// for a <see cref="FundsRequestFile"/>.
 		/// </exception>
@@ -352,11 +359,11 @@ namespace Grammophone.Domos.Logic
 		{
 			if (stream == null) throw new ArgumentNullException(nameof(stream));
 
-			var responseSchemaSet = GetResponseSchemaSet();
+			var requestSchemaSet = GetRequestSchemaSet();
 
 			var xmlReaderSettings = new XmlReaderSettings
 			{
-				Schemas = responseSchemaSet,
+				Schemas = requestSchemaSet,
 				ValidationType = ValidationType.Schema,
 			};
 
@@ -364,7 +371,14 @@ namespace Grammophone.Domos.Logic
 			{
 				var serializer = GetRequestFileSerializer();
 
-				return (FundsRequestFile)serializer.Deserialize(xmlReader);
+				try
+				{
+					return (FundsRequestFile)serializer.Deserialize(xmlReader);
+				}
+				catch (InvalidOperationException ex)
+				{
+					throw TranslateToFundsFileSchemaException(ex);
+				}
 			}
 		}
 
@@ -798,10 +812,10 @@ namespace Grammophone.Domos.Logic
 			=> lazyRequestSchemaSet.Value;
 
 		private static XmlSchemaSet CreateResponseSchemaSet()
-			=> CreateSchemaSet("Grammophone.Domos.Logic.Models.Fundsransfer.FundsRequestFile.xsd");
+			=> CreateSchemaSet("Grammophone.Domos.Logic.Models.FundsTransfer.FundsResponseFile.xsd");
 
 		private static XmlSchemaSet CreateRequestSchemaSet()
-			=> CreateSchemaSet("Grammophone.Domos.Logic.Models.Fundsransfer.FundsResponseFile.xsd");
+			=> CreateSchemaSet("Grammophone.Domos.Logic.Models.FundsTransfer.FundsRequestFile.xsd");
 
 		private static XmlSchemaSet CreateSchemaSet(string xsdResourceName)
 		{
@@ -874,6 +888,22 @@ namespace Grammophone.Domos.Logic
 					Exception = ex
 				};
 			}
+		}
+
+		private FundsFileSchemaException TranslateToFundsFileSchemaException(InvalidOperationException invalidOperationException)
+		{
+			string message;
+
+			if (invalidOperationException.InnerException != null)
+			{
+				message = $"{invalidOperationException.Message} - {invalidOperationException.InnerException.Message}";
+			}
+			else
+			{
+				message = invalidOperationException.Message;
+			}
+
+			return new FundsFileSchemaException(message, invalidOperationException);
 		}
 
 		#endregion
