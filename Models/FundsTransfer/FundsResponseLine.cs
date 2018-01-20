@@ -48,20 +48,41 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			this.RequestID = fileItem.RequestID;
 			this.Status = fileItem.Status;
 
-			if (fileItem.ResponseCode.Length <= FundsTransferEvent.ResponseCodeLength)
-				this.ResponseCode = fileItem.ResponseCode;
-			else
-				this.ResponseCode = $"{fileItem.ResponseCode.Substring(0, FundsTransferEvent.ResponseCodeLength - 1)}…";
+			if (fileItem.ResponseCode != null)
+			{
+				if (fileItem.ResponseCode.Length <= FundsTransferEvent.ResponseCodeLength)
+				{
+					this.ResponseCode = fileItem.ResponseCode;
+				}
+				else
+				{
+					this.ResponseCode = $"{fileItem.ResponseCode.Substring(0, FundsTransferEvent.ResponseCodeLength - 1)}…";
+				}
+			}
 
-			if (fileItem.TraceCode.Length <= FundsTransferEvent.TraceCodeLength)
-				this.TraceCode = fileItem.TraceCode;
-			else
-				this.TraceCode = $"{fileItem.TraceCode.Substring(0, FundsTransferEvent.TraceCodeLength - 1)}…";
+			if (fileItem.TraceCode != null)
+			{
+				if (fileItem.TraceCode.Length <= FundsTransferEvent.TraceCodeLength)
+				{
+					this.TraceCode = fileItem.TraceCode;
+				}
+				else
+				{
+					this.TraceCode = $"{fileItem.TraceCode.Substring(0, FundsTransferEvent.TraceCodeLength - 1)}…";
+				}
+			}
 
-			if (fileItem.Comments.Length <= FundsTransferEvent.CommentsLength)
-				this.Comments = fileItem.Comments;
-			else
-				this.Comments = $"{fileItem.Comments.Substring(0, FundsTransferEvent.CommentsLength - 1)}…";
+			if (fileItem.Comments != null)
+			{
+				if (fileItem.Comments.Length <= FundsTransferEvent.CommentsLength)
+				{
+					this.Comments = fileItem.Comments;
+				}
+				else
+				{
+					this.Comments = $"{fileItem.Comments.Substring(0, FundsTransferEvent.CommentsLength - 1)}…";
+				}
+			}
 		}
 
 		#endregion

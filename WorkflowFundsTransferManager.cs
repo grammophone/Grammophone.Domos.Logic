@@ -78,6 +78,11 @@ namespace Grammophone.Domos.Logic
 			/// The stateful object of type <typeparamref name="SO"/> associated with the <see cref="Event"/>.
 			/// </summary>
 			public SO StatefulObject { get; set; }
+
+			/// <summary>
+			/// The state of the <see cref="StatefulObject"/>.
+			/// </summary>
+			public State State { get; set; }
 		}
 
 		#endregion
@@ -186,7 +191,7 @@ namespace Grammophone.Domos.Logic
 																 select new
 																 {
 																	 a.StatefulObject,
-																	 a.StatefulObject.State, // Force including the State property.
+																	 a.State, // Force including the State property.
 																	 RequestID = ftr.ID
 																 };
 
