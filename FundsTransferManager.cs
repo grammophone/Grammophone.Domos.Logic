@@ -156,6 +156,22 @@ namespace Grammophone.Domos.Logic
 																																				 where this.FundsTransferRequests.Any(r => r.ID == e.RequestID)
 																																				 select e;
 
+		/// <summary>
+		/// The set of remittances associated with the <see cref="FundsTransferEvents"/>
+		/// handled by this manager.
+		/// </summary>
+		public virtual IQueryable<R> Remittances => from r in this.DomainContainer.Remittances
+																								where this.FundsTransferEvents.Any(e => e.ID == r.FundsTransferEventID)
+																								select r;
+
+		/// <summary>
+		/// The set of journals associated with the <see cref="FundsTransferEvents"/>
+		/// handled by this manager.
+		/// </summary>
+		public virtual IQueryable<J> Journals => from j in this.DomainContainer.Journals
+																						 where this.FundsTransferEvents.Any(e => e.ID == j.FundsTransferEventID)
+																						 select j;
+
 		#endregion
 
 		#region Public methods
