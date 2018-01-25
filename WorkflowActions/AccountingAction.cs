@@ -54,7 +54,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// <summary>
 		/// Consumes the billing item of type <typeparamref name="B"/> in arguments
 		/// key <see cref="StandardArgumentKeys.BillingItem"/> and performs the accounting
-		/// using method <see cref="ExecuteAccountingAsync(AS, SO, B)"/>.
+		/// using method <see cref="ExecuteAccountingAsync(AS, SO, ST, B)"/>.
 		/// </summary>
 		public override async Task ExecuteAsync(
 			S session,
@@ -80,6 +80,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 					var result = await ExecuteAccountingAsync(
 						accountingSession,
 						stateful,
+						stateTransition,
 						billingItem);
 
 					if (result.Journal != null)
@@ -121,6 +122,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// </summary>
 		/// <param name="accountingSession">The accounting session in use.</param>
 		/// <param name="stateful">The stateful object for which the workflow action runs.</param>
+		/// <param name="stateTransition">The state transition being produced.</param>
 		/// <param name="billingItem">The billing item.</param>
 		/// <returns>
 		/// Returns the result of the accounting action.
@@ -128,6 +130,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		protected abstract Task<AccountingSession<U, BST, P, R, J, D>.ActionResult> ExecuteAccountingAsync(
 			AS accountingSession,
 			SO stateful,
+			ST stateTransition,
 			B billingItem);
 
 		/// <summary>

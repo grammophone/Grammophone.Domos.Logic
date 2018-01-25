@@ -55,11 +55,13 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// via <see cref="AccountingAction{U, BST, P, R, J, D, S, ST, SO, AS, B}.CreateAccountingSession(D, U)"/>.
 		/// </param>
 		/// <param name="stateful">The stateful object for which the workflow action runs.</param>
+		/// <param name="stateTransition">The state transition being produced.</param>
 		/// <param name="billingItem">The <see cref="FundsResponseLine"/>.</param>
 		/// <returns></returns>
 		protected override async Task<AccountingSession<U, BST, P, R, J, D>.ActionResult> ExecuteAccountingAsync(
 			AS accountingSession,
 			SO stateful,
+			ST stateTransition,
 			FundsResponseLine billingItem)
 		{
 			if (accountingSession == null) throw new ArgumentNullException(nameof(accountingSession));
