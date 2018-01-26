@@ -120,4 +120,7 @@
   <data name="BatchID_Name" xml:space="preserve">
     <value>Batch ID</value>
   </data>
+  <data name="Comments_Name" xml:space="preserve">
+    <value>Comments</value>
+  </data>
 </root>

@@ -68,5 +68,14 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
                 return ResourceManager.GetString("BatchID_Name", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Comments.
+        /// </summary>
+        public static string Comments_Name {
+            get {
+                return ResourceManager.GetString("Comments_Name", resourceCulture);
+            }
+        }
     }
 }

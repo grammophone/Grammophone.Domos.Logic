@@ -14,11 +14,25 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 	public class FundsRequestLine
 	{
 		/// <summary>
+		/// Maximum length for the <see cref="Comments"/> property.
+		/// </summary>
+		public const int CommentsLength = 512;
+
+		/// <summary>
 		/// Optional ID of the batch to enroll the new funds transfer under.
 		/// </summary>
 		[Display(
 			ResourceType = typeof(FundsRequestLineResources),
 			Name = nameof(FundsRequestLineResources.BatchID_Name))]
 		public Guid? BatchID { get; set; }
+
+		/// <summary>
+		/// Optional comments to be recorded.
+		/// </summary>
+		[MaxLength(CommentsLength)]
+		[Display(
+			ResourceType = typeof(FundsRequestLineResources),
+			Name = nameof(FundsRequestLineResources.Comments_Name))]
+		public string Comments { get; set; }
 	}
 }
