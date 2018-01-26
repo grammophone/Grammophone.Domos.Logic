@@ -30,6 +30,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// Optional comments to be recorded.
 		/// </summary>
 		[MaxLength(CommentsLength)]
+		[DataType(DataType.MultilineText)]
 		[Display(
 			ResourceType = typeof(FundsRequestLineResources),
 			Name = nameof(FundsRequestLineResources.Comments_Name))]
