@@ -727,11 +727,6 @@ namespace Grammophone.Domos.Logic
 			if (statePath == null) throw new ArgumentNullException(nameof(statePath));
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
 
-			if (!actionArguments.ContainsKey("batchID"))
-			{
-				actionArguments["batchID"] = Guid.NewGuid().ToString("N");
-			}
-
 			var executionResults = new List<ExecutionResult<SO, ST>>(statefulObjects.Count);
 
 			foreach (var statefulObject in statefulObjects)
