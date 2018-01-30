@@ -70,24 +70,24 @@ namespace Grammophone.Domos.Logic
 		#region Public properties
 
 		/// <summary>
-		/// The states in the system.
+		/// The states handled by the manager. The default implementation yields all states.
 		/// </summary>
-		public IQueryable<State> States => this.DomainContainer.States;
+		public virtual IQueryable<State> States => this.DomainContainer.States;
 
 		/// <summary>
-		/// The state groups in the system.
+		/// The state groups handled by the manager. The default implementation yields all state groups.
 		/// </summary>
-		public IQueryable<StateGroup> StateGroups => this.DomainContainer.StateGroups;
+		public virtual IQueryable<StateGroup> StateGroups => this.DomainContainer.StateGroups;
 
 		/// <summary>
-		/// The workflow graphs in the system.
+		/// The workflow graphs handled by the manager. The default implementation yields all graphs.
 		/// </summary>
-		public IQueryable<WorkflowGraph> WorkflowGraphs => this.DomainContainer.WorkflowGraphs;
+		public virtual IQueryable<WorkflowGraph> WorkflowGraphs => this.DomainContainer.WorkflowGraphs;
 
 		/// <summary>
-		/// The state paths in the system.
+		/// The state paths handled by the manager. The default implementation yields all state paths.
 		/// </summary>
-		public IQueryable<StatePath> StatePaths => this.DomainContainer.StatePaths;
+		public virtual IQueryable<StatePath> StatePaths => this.DomainContainer.StatePaths;
 
 		/// <summary>
 		/// The state transitions
