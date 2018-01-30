@@ -214,7 +214,7 @@ namespace Grammophone.Domos.Logic
 				throw new LogicException(
 					$"The specified path '{statePath.CodeName}' is not available for the current state of the stateful object.");
 
-			if (!this.AccessResolver.CanExecuteStatePath(this.Session.User, stateful, statePath))
+			if (!this.AccessResolver.CanUserExecuteStatePath(this.Session.User, stateful, statePath))
 				throw new AccessDeniedDomainException(
 					$"The user with ID {this.Session.User.ID} has no rights " +
 					$"to execute path '{statePath.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.",
@@ -464,8 +464,27 @@ namespace Grammophone.Domos.Logic
 		{
 			if (statePaths == null) throw new ArgumentNullException(nameof(statePaths));
 
-			return statePaths
-				.Where(sp => this.AccessResolver.CanExecuteStatePath(this.Session.User, stateful, sp));
+			return statePaths.AsEnumerable()
+				.Where(sp => this.AccessResolver.CanUserExecuteStatePath(this.Session.User, stateful, sp));
+		}
+
+		/// <summary>
+		/// Filter the state paths which can be executed on a
+		/// stateful object by the current session user.
+		/// The user must alse have read and write access rights on the stateful object to be allowed path execution.
+		/// </summary>
+		/// <param name="statePaths">The paths to filter.</param>
+		/// <param name="segregation">Optional segregation where a stateful object may belong.</param>
+		/// <returns>
+		/// Returns the filtered list containing only the paths which can be executed 
+		/// by the current session user.
+		/// </returns>
+		public IEnumerable<StatePath> FilterAllowedStatePaths(IEnumerable<StatePath> statePaths, Segregation<U> segregation = null)
+		{
+			if (statePaths == null) throw new ArgumentNullException(nameof(statePaths));
+
+			return statePaths.AsEnumerable()
+				.Where(sp => this.AccessResolver.CanUserExecuteStatePath(this.Session.User, sp, segregation));
 		}
 
 		/// <summary>
