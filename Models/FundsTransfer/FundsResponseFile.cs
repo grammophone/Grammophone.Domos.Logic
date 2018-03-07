@@ -21,7 +21,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 
 		private FundsResponseFileItems items;
 
-		private Guid batchMessageID;
+		private long batchMessageID;
 
 		#endregion
 
@@ -43,7 +43,6 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			if (time.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(time));
 
 			this.time = time;
-			this.batchMessageID = Guid.NewGuid();
 		}
 
 		/// <summary>
@@ -62,11 +61,11 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		/// <param name="time">The date and time of the batch in UTC.</param>
 		/// <param name="capacity">The initial capacity of items to reserve.</param>
-		/// <param name="batchMessageID">The ID of the batch messgage ID whare the items of the file correspond to.</param>
+		/// <param name="batchMessageID">The ID of the batch messgage ID where the items of the file correspond to.</param>
 		public FundsResponseFile(
 			DateTime time,
 			int capacity,
-			Guid batchMessageID)
+			long batchMessageID)
 		{
 			if (time.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(time));
 
@@ -100,19 +99,10 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		}
 
 		/// <summary>
-		/// The ID of the events collation.
+		/// The ID of the batch.
 		/// </summary>
-		public Guid BatchMessageID
-		{
-			get
-			{
-				return batchMessageID;
-			}
-			set
-			{
-				batchMessageID = value;
-			}
-		}
+		[XmlAttribute]
+		public long BatchID { get; set; }
 
 		/// <summary>
 		/// The response items in the batch.

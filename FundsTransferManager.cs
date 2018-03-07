@@ -282,12 +282,12 @@ namespace Grammophone.Domos.Logic
 			var firstItem = file.Items.First();
 
 			var batchQuery = from r in this.FundsTransferRequests
-											 where r.ID == firstItem.RequestID
+											 where r.ID == firstItem.LineID
 											 select r.Batch;
 
 			var batch = await batchQuery.Include(b => b.Messages).SingleAsync();
 
-			long[] requestIDs = file.Items.Select(i => i.RequestID).ToArray();
+			long[] requestIDs = file.Items.Select(i => i.LineID).ToArray();
 
 			bool allRequestsAreInTheSameBatch = await
 				this.FundsTransferRequests.Where(r => requestIDs.Contains(r.ID)).AllAsync(r => r.BatchID == batch.ID);
@@ -303,8 +303,7 @@ namespace Grammophone.Domos.Logic
 				var responseBatchMessage = await accountingSession.AddFundsTransferBatchMessageAsync(
 					batch,
 					FundsTransferBatchMessageType.Responded,
-					file.Time,
-					messageID: file.BatchMessageID);
+					file.Time);
 
 				return await DigestResponseFileAsync(file, responseBatchMessage);
 			}
@@ -458,20 +457,64 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="pendingBatchMessage">The 'pending' message for the batch.</param>
 		/// <returns>Returns the funds request file.</returns>
+		/// <exception cref="LogicException">
+		/// Thrown when the specified message has <see cref="FundsTransferBatchMessage.Type"/> other
+		/// than <see cref="FundsTransferBatchMessageType.Pending"/> or when
+		/// it has the <see cref="FundsTransferBatchMessage.Batch"/> not properly set up.
+		/// </exception>
 		/// <remarks>
-		/// For best performance, eager fetch the Batch.CreditSystem and Events.Request
+		/// For best performance, eager fetch the Batch.CreditSystem and Events.Request.Group
 		/// relationships of the <paramref name="pendingBatchMessage"/>.
 		/// </remarks>
 		public FundsRequestFile ExportRequestFile(FundsTransferBatchMessage pendingBatchMessage)
-			=> new FundsRequestFile(pendingBatchMessage);
+		{
+			if (pendingBatchMessage == null) throw new ArgumentNullException(nameof(pendingBatchMessage));
+
+			if (pendingBatchMessage.Type != FundsTransferBatchMessageType.Pending)
+				throw new LogicException(
+					$"The given batch message has type '{pendingBatchMessage.Type}' instead of '{FundsTransferBatchMessageType.Pending}'.");
+
+			string creditSystemCodeName = pendingBatchMessage?.Batch?.CreditSystem?.CodeName;
+
+			if (creditSystemCodeName == null)
+				throw new LogicException("The Batch of the message is not properly set up.");
+
+			var items = from e in pendingBatchMessage.Events
+									let r = e.Request
+									group r by r.Group into g
+									select new FundsRequestFileItem()
+									{
+										Amount = g.Sum(r => r.Amount),
+										LineID = g.Key.ID,
+										BankAccountInfo = g.Key.EncryptedBankAccountInfo.Decrypt()
+									};
+
+			return new FundsRequestFile
+			{
+				Time = pendingBatchMessage.Time,
+				BatchID = pendingBatchMessage.BatchID,
+				BatchMessageID = pendingBatchMessage.ID,
+				Items = new FundsRequestFileItems(items)
+			};
+		}
 
 		/// <summary>
 		/// Create a funds request file for a batch.
 		/// </summary>
 		/// <param name="batchID">The ID of the batch.</param>
 		/// <returns>Returns the funds request file.</returns>
-		public async Task<FundsRequestFile> ExportRequestFile(Guid batchID)
-			=> await FundsRequestFile.CreateAsync(batchID, this.FundsTransferBatchMessages);
+		public async Task<FundsRequestFile> ExportRequestFileAsync(long batchID)
+		{
+			var pendingBatchMessage = await this.FundsTransferBatchMessages
+				.Include(m => m.Batch.CreditSystem)
+				.Include(m => m.Events.Select(e => e.Request.Group))
+				.SingleOrDefaultAsync(e => e.BatchID == batchID && e.Type == FundsTransferBatchMessageType.Pending);
+
+			if (pendingBatchMessage == null)
+				throw new LogicException($"A message with batch ID '{batchID}' was not found in the specified messages set.");
+
+			return ExportRequestFile(pendingBatchMessage);
+		}
 
 		/// <summary>
 		/// Get the XML document representing a <see cref="FundsRequestFile"/>.
@@ -568,7 +611,8 @@ namespace Grammophone.Domos.Logic
 		/// <exception cref="AccountingException">
 		/// Thrown when a more recent message than <paramref name="utcTime"/> exists.
 		/// </exception>
-		public async Task<FundsTransferBatchMessage> AddBatchRejectedMessageAsync(Guid batchID,
+		public async Task<FundsTransferBatchMessage> AddBatchRejectedMessageAsync(
+			long batchID,
 			String comments = null,
 			String messageCode = null,
 			DateTime? utcTime = null)
@@ -584,7 +628,7 @@ namespace Grammophone.Domos.Logic
 		/// Thrown when the batch is not already set as submitted
 		/// and a more recent message than <paramref name="utcTime"/> exists.
 		/// </exception>
-		public async Task<FundsTransferBatchMessage> TrySetBatchAsSubmittedAsync(Guid batchID, DateTime? utcTime = null)
+		public async Task<FundsTransferBatchMessage> TrySetBatchAsSubmittedAsync(long batchID, DateTime? utcTime = null)
 			=> await TryAddBatchMessageAsync(batchID, FundsTransferBatchMessageType.Submitted, utcTime);
 
 		/// <summary>
@@ -597,7 +641,7 @@ namespace Grammophone.Domos.Logic
 		/// Thrown when the batch is not already set as accepted
 		/// and a more recent message than <paramref name="utcTime"/> exists.
 		/// </exception>
-		public async Task<FundsTransferBatchMessage> TrySetBatchAsAcceptedAsync(Guid batchID, DateTime? utcTime = null)
+		public async Task<FundsTransferBatchMessage> TrySetBatchAsAcceptedAsync(long batchID, DateTime? utcTime = null)
 			=> await TryAddBatchMessageAsync(batchID, FundsTransferBatchMessageType.Accepted, utcTime);
 
 		/// <summary>
@@ -672,23 +716,27 @@ namespace Grammophone.Domos.Logic
 			if (file == null) throw new ArgumentNullException(nameof(file));
 			if (responseBatchMessage == null) throw new ArgumentNullException(nameof(responseBatchMessage));
 
-			long[] requestIDs = file.Items.Select(i => i.RequestID).ToArray();
+			long[] lineIDs = file.Items.Select(i => i.LineID).ToArray();
 
 			var results = new List<FundsResponseResult>(file.Items.Count);
 
-			var fundsTransferRequestsQuery = from r in this.FundsTransferRequests.Include(r => r.Batch.CreditSystem)
-																			 where requestIDs.Contains(r.ID)
+			var fundsTransferRequestsQuery = from r in this.FundsTransferRequests.Include(r => r.Batch.CreditSystem).Include(r => r.Group)
+																			 where r.BatchID == file.BatchID && lineIDs.Contains(r.GroupID)
 																			 select r;
 
-			var requestsByID = await fundsTransferRequestsQuery.ToDictionaryAsync(r => r.ID);
+			var fundsTransferRequests = await fundsTransferRequestsQuery.ToArrayAsync();
 
-			if (requestsByID.Count == 0)
+			if (fundsTransferRequests.Length == 0)
 				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
 
-			foreach (var item in file.Items)
+			var itemsByLineID = file.Items.ToDictionary(i => i.LineID);
+
+			foreach (var fundsTransferRequest in fundsTransferRequests)
 			{
+				var item = itemsByLineID[fundsTransferRequest.GroupID];
+
 				FundsResponseResult result =
-					await AcceptResponseItemAsync(file, item, requestsByID[item.RequestID], responseBatchMessage);
+					await AcceptResponseItemAsync(file, item, fundsTransferRequest, responseBatchMessage);
 
 				results.Add(result);
 			}
@@ -725,11 +773,27 @@ namespace Grammophone.Domos.Logic
 					break;
 
 				default:
-					throw new LogicException($"Unexpected item status '{fileItem.Status}' for request with ID {fileItem.RequestID}.");
+					throw new LogicException($"Unexpected item status '{fileItem.Status}' for request with ID {fileItem.LineID}.");
 			}
 
 			return eventType;
 		}
+
+		/// <summary>
+		/// Override to append the journal during processing of a batch line. The default implementation deoes nothing.
+		/// </summary>
+		/// <param name="journal">The journal to append.</param>
+		/// <param name="file">The batch file being processed.</param>
+		/// <param name="item">The line of the batch file being processed.</param>
+		/// <param name="eventType">The type of funds transfer event which will be recorded.</param>
+		/// <param name="exception">If not null, the exception produced during the processing of the line.</param>
+		protected virtual Task AppendResponseJournalAsync(
+			J journal,
+			FundsResponseFile file,
+			FundsResponseFileItem item,
+			FundsTransferEventType eventType,
+			Exception exception = null)
+			=> Task.FromResult(0);
 
 		#endregion
 
@@ -751,7 +815,7 @@ namespace Grammophone.Domos.Logic
 		/// or when a more recent message than <paramref name="utcTime"/> exists.
 		/// </exception>
 		private async Task<FundsTransferBatchMessage> AddBatchMessageAsync(
-			Guid batchID,
+			long batchID,
 			FundsTransferBatchMessageType messageType,
 			String comments = null,
 			String messageCode = null,
@@ -790,7 +854,7 @@ namespace Grammophone.Domos.Logic
 		/// and a more recent message than <paramref name="utcTime"/> exists.
 		/// </exception>
 		private async Task<FundsTransferBatchMessage> TryAddBatchMessageAsync(
-			Guid batchID,
+			long batchID,
 			FundsTransferBatchMessageType messageType,
 			DateTime? utcTime = null)
 		{
@@ -878,6 +942,7 @@ namespace Grammophone.Domos.Logic
 						request,
 						DateTime.UtcNow,
 						eventType,
+						asyncJournalAppendAction: j => AppendResponseJournalAsync(j, file, item, eventType, null),
 						batchMessageID: responseBatchMessage.ID,
 						responseCode: item.ResponseCode,
 						comments: item.Comments,

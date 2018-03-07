@@ -26,5 +26,13 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		public FundsRequestFileItems(int capacity) : base(capacity)
 		{
 		}
+
+		/// <summary>
+		/// Create and populate with a collection of file items.
+		/// </summary>
+		/// <param name="itemsCollection">The items to add.</param>
+		public FundsRequestFileItems(IEnumerable<FundsRequestFileItem> itemsCollection) : base(itemsCollection)
+		{
+		}
 	}
 }

@@ -44,8 +44,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			if (fileItem == null) throw new ArgumentNullException(nameof(fileItem));
 
 			this.Time = file.Time;
-			this.BatchMessageID = file.BatchMessageID;
-			this.RequestID = fileItem.RequestID;
+			this.LineID = fileItem.LineID;
+			this.BatchID = file.BatchID;
 			this.Status = fileItem.Status;
 
 			if (fileItem.ResponseCode != null)
@@ -90,6 +90,14 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		#region Public properties
 
 		/// <summary>
+		/// Optional ID of the batch message.
+		/// </summary>
+		[Display(
+			ResourceType = typeof(FundsResponseLineResources),
+			Name = nameof(FundsResponseLineResources.BatchMessageID_Name))]
+		public virtual long? BatchMessageID { get; set; }
+
+		/// <summary>
 		/// The date and time, in UTC.
 		/// </summary>
 		[Display(
@@ -111,21 +119,22 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		}
 
 		/// <summary>
-		/// Optional ID of the funds transfer batch message associated with the line.
-		/// </summary>
-		[Display(
-			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.BatchMessageID_Name))]
-		public Guid? BatchMessageID { get; set; }
-
-		/// <summary>
-		/// The ID of the external system transaction.
+		/// The ID of the line within the batch.
 		/// </summary>
 		[Required]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.RequestID_Name))]
-		public long RequestID { get; set; }
+			Name = nameof(FundsResponseLineResources.LineID_Name))]
+		public long LineID { get; set; }
+
+		/// <summary>
+		/// The ID of the batch.
+		/// </summary>
+		[Required]
+		[Display(
+			ResourceType = typeof(FundsResponseLineResources),
+			Name = nameof(FundsResponseLineResources.BatchID_Name))]
+		public long BatchID { get; set; }
 
 		/// <summary>
 		/// The status of the response.

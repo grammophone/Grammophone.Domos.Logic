@@ -15,13 +15,13 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 	public class FundsResponseFileItem
 	{
 		/// <summary>
-		/// The ID of the funds transfer request.
+		/// The ID of the line in the batch.
 		/// </summary>
 		[XmlAttribute]
 		[Display(
-			Name = nameof(FundsResponseFileItemResources.RequestID_Name),
+			Name = nameof(FundsResponseFileItemResources.LineID_Name),
 			ResourceType = typeof(FundsResponseFileItemResources))]
-		public long RequestID { get; set; }
+		public long LineID { get; set; }
 
 		/// <summary>
 		/// The response code as returned by the Electronic Funds

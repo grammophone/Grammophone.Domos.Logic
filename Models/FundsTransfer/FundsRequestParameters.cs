@@ -52,7 +52,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[Display(
 			ResourceType = typeof(FundsRequestParametersResources),
 			Name = nameof(FundsRequestParametersResources.BatchID_Name))]
-		public Guid? BatchID { get; set; }
+		public long? BatchID { get; set; }
 
 		/// <summary>
 		/// Optional ID of the collation where the funds request queueing event belongs.
@@ -60,7 +60,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[Display(
 			ResourceType = typeof(FundsRequestParametersResources),
 			Name = nameof(FundsRequestParametersResources.CollationID_Name))]
-		public Guid? CollationID { get; set; }
+		public long? CollationID { get; set; }
 
 		/// <summary>
 		/// The date and time, in UTC.

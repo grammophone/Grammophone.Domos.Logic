@@ -120,8 +120,8 @@
   <data name="Comments_Name" xml:space="preserve">
     <value>Response Comments</value>
   </data>
-  <data name="RequestID_Name" xml:space="preserve">
-    <value>Request ID</value>
+  <data name="LineID_Name" xml:space="preserve">
+    <value>Line ID</value>
   </data>
   <data name="ResponseCode_Name" xml:space="preserve">
     <value>Response Code</value>

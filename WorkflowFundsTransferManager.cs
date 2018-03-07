@@ -181,30 +181,31 @@ namespace Grammophone.Domos.Logic
 		{
 			if (file == null) throw new ArgumentNullException(nameof(file));
 
-			var responseResults = new List<FundsResponseResult>(file.Items.Count);
+			long[] lineIDs = file.Items.Select(i => i.LineID).ToArray();
 
-			long[] requestIDs = file.Items.Select(i => i.RequestID).ToArray();
+			var associationsQuery = from a in this.FundsTransferEventAssociations
+															let ftr = a.Event.Request
+															where lineIDs.Contains(ftr.GroupID) && ftr.BatchID == file.BatchID
+															select new
+															{
+																a.Event.Request,
+																a.StatefulObject,
+																a.State
+															};
 
-			var statefulObjectsQuery = from a in this.FundsTransferEventAssociations
-																 let ftr = a.Event.Request
-																 where requestIDs.Contains(ftr.ID)
-																 select new
-																 {
-																	 a.StatefulObject,
-																	 a.State, // Force including the State property.
-																	 RequestID = ftr.ID
-																 };
+			var associations = await associationsQuery.ToArrayAsync();
 
-			var statefulObjectsByRequestID = await statefulObjectsQuery
-				.ToDictionaryAsync(r => r.RequestID, r => r.StatefulObject);
-
-			if (statefulObjectsByRequestID.Count == 0)
+			if (associations.Length == 0)
 				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
 
-			foreach (var item in file.Items)
+			var responseResults = new List<FundsResponseResult>(associations.Length);
+
+			var itemsByLineID = file.Items.ToDictionary(i => i.LineID);
+
+			foreach (var association in associations)
 			{
 				var fundsResponseResult =
-					await AcceptResponseItemAsync(file, item, statefulObjectsByRequestID);
+					await AcceptResponseItemAsync(file, itemsByLineID[association.Request.GroupID], association.StatefulObject);
 
 				responseResults.Add(fundsResponseResult);
 			}
@@ -226,12 +227,9 @@ namespace Grammophone.Domos.Logic
 			.Include(sp => sp.WorkflowGraph)
 			.SingleAsync(sp => sp.CodeName == statePathCodeName);
 
-		private async Task<FundsResponseResult> AcceptResponseItemAsync(
-			FundsResponseFile file,
-			FundsResponseFileItem item,
-			Dictionary<long, SO> statefulObjectsByRequestID)
+		private async Task<FundsResponseResult> AcceptResponseItemAsync(FundsResponseFile file, FundsResponseFileItem item, SO statefulObject)
 		{
-			if (statefulObjectsByRequestID == null) throw new ArgumentNullException(nameof(statefulObjectsByRequestID));
+			if (file == null) throw new ArgumentNullException(nameof(file));
 			if (item == null) throw new ArgumentNullException(nameof(item));
 
 			var line = new FundsResponseLine(file, item);
@@ -252,51 +250,45 @@ namespace Grammophone.Domos.Logic
 
 			try
 			{
-				if (statefulObjectsByRequestID.TryGetValue(item.RequestID, out SO statefulObject))
+				string currentStateCodeName = statefulObject.State.CodeName;
+
+				// Attempt to get the next path to be executed. Any exception will be recorded in a failure funds transfer event.
+				string nextStatePathCodeName = TryGetNextStatePathCodeName(currentStateCodeName, line);
+
+				if (nextStatePathCodeName != null) // A path should be executed?
 				{
-					string currentStateCodeName = statefulObject.State.CodeName;
+					var statePath = await statePathsByCodeNameCache.Get(nextStatePathCodeName);
 
-					// Attempt to get the next path to be executed. Any exception will be recorded in a failure funds transfer event.
-					string nextStatePathCodeName = TryGetNextStatePathCodeName(currentStateCodeName, line);
+					// If we get this far, any failure event will be recorded as of type 'WorkflowFailed', not just 'Failed'.
+					failureEventType = FundsTransferEventType.WorkflowFailed;
 
-					if (nextStatePathCodeName != null) // A path should be executed?
-					{
-						var statePath = await statePathsByCodeNameCache.Get(nextStatePathCodeName);
+					var transition = await WorkflowManager.ExecuteStatePathAsync(
+						statefulObject,
+						statePath,
+						actionArguments);
 
-						// If we get this far, any failure event will be recorded as of type 'WorkflowFailed', not just 'Failed'.
-						failureEventType = FundsTransferEventType.WorkflowFailed;
-
-						var transition = await WorkflowManager.ExecuteStatePathAsync(
-							statefulObject,
-							statePath,
-							actionArguments);
-
-						fundsResponseResult.Event = transition.FundsTransferEvent;
-					}
-					else // If no path is specified, record the event directly.
-					{
-						using (var accountingSession = CreateAccountingSession())
-						using (GetElevatedAccessScope())
-						{
-							var directActionResult = await accountingSession.AddFundsTransferEventAsync(
-								line.RequestID,
-								line.Time,
-								GetEventTypeFromResponseFileItem(item),
-								null,
-								line.BatchMessageID,
-								line.ResponseCode,
-								line.TraceCode,
-								line.Comments);
-
-
-							fundsResponseResult.Event = directActionResult.FundsTransferEvent;
-						}
-					}
+					fundsResponseResult.Event = transition.FundsTransferEvent;
 				}
-				else
+				else // If no path is specified, record the event directly.
 				{
-					exception =
-						new LogicException($"No stateful object is associated with request ID '{item.RequestID}'.");
+					using (var accountingSession = CreateAccountingSession())
+					using (GetElevatedAccessScope())
+					{
+						var eventType = GetEventTypeFromResponseFileItem(item);
+
+						var directActionResult = await accountingSession.AddFundsTransferEventAsync(
+							line.LineID,
+							line.Time,
+							eventType,
+							j => AppendResponseJournalAsync(j, file, item, eventType, null),
+							file.BatchID,
+							line.ResponseCode,
+							line.TraceCode,
+							line.Comments);
+
+
+						fundsResponseResult.Event = directActionResult.FundsTransferEvent;
+					}
 				}
 			}
 			catch (Exception ex)
@@ -310,11 +302,11 @@ namespace Grammophone.Domos.Logic
 				using (GetElevatedAccessScope())
 				{
 					var errorActionResult = await accountingSession.AddFundsTransferEventAsync(
-						item.RequestID,
+						item.LineID,
 						file.Time,
 						failureEventType,
-						null,
-						file.BatchMessageID,
+						j => AppendResponseJournalAsync(j, file, item, failureEventType, exception),
+						file.BatchID,
 						item.ResponseCode,
 						item.TraceCode,
 						item.Comments,

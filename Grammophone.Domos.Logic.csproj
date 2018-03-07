@@ -179,10 +179,6 @@
     <Compile Include="AsyncWorkQueue.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\LifeAccount.Domain\LifeAccount.Domain.csproj">
-      <Project>{907EE42D-CD01-43A4-BE36-2AA742E5C7FB}</Project>
-      <Name>LifeAccount.Domain</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Grammophone.Caching\Grammophone.Caching.csproj">
       <Project>{2c834c5b-aa21-43fa-826e-398ab4de25ac}</Project>
       <Name>Grammophone.Caching</Name>

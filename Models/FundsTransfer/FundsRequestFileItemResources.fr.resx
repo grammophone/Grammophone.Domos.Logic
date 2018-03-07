@@ -123,7 +123,7 @@
   <data name="BankAccountInfo_Name" xml:space="preserve">
     <value>Compte Bancaire</value>
   </data>
-  <data name="RequestID_Name" xml:space="preserve">
-    <value>ID de Demande</value>
+  <data name="LineID_Name" xml:space="preserve">
+    <value>ID de Ligne</value>
   </data>
 </root>

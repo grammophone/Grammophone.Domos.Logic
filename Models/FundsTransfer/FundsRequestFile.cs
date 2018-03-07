@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using Grammophone.Domos.Accounting;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain.Accounting;
 
@@ -26,9 +27,9 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 
 		private string creditSystemCodeName;
 
-		private Guid batchID;
+		private long batchID;
 
-		private Guid batchMessageID;
+		private long batchMessageID;
 
 		#endregion
 
@@ -76,12 +77,17 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			batchID = pendingBatchMessage.BatchID;
 			batchMessageID = pendingBatchMessage.ID;
 
-			items = new FundsRequestFileItems(pendingBatchMessage.Events.Count);
+			var items = from e in pendingBatchMessage.Events
+											 let r = e.Request
+											 group r by r.Group into g
+											 select new FundsRequestFileItem()
+											 {
+												 Amount = g.Sum(r => r.Amount),
+												 LineID = g.Key.ID,
+												 BankAccountInfo = g.Key.EncryptedBankAccountInfo.Decrypt()
+											 };
 
-			foreach (var transferEvent in pendingBatchMessage.Events)
-			{
-				items.Add(new FundsRequestFileItem(transferEvent));
-			}
+			items = new FundsRequestFileItems(items);
 		}
 
 		/// <summary>
@@ -99,13 +105,13 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// than <see cref="FundsTransferBatchMessageType.Pending"/> or when
 		/// it has the <see cref="FundsTransferBatchMessage.Batch"/> not properly set up.
 		/// </exception>
-		public static async Task<FundsRequestFile> CreateAsync(Guid pendingBatchID, IQueryable<FundsTransferBatchMessage> batchMessagesSet)
+		public static async Task<FundsRequestFile> CreateAsync(long pendingBatchID, IQueryable<FundsTransferBatchMessage> batchMessagesSet)
 		{
 			if (batchMessagesSet == null) throw new ArgumentNullException(nameof(batchMessagesSet));
 
 			var batchMessage = await batchMessagesSet
 				.Include(m => m.Batch.CreditSystem)
-				.Include(m => m.Events.Select(e => e.Request))
+				.Include(m => m.Events.Select(e => e.Request.Group))
 				.SingleOrDefaultAsync(e => e.BatchID == pendingBatchID && e.Type == FundsTransferBatchMessageType.Pending);
 
 			if (batchMessage == null)
@@ -121,7 +127,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <summary>
 		/// The ID of the batch.
 		/// </summary>
-		public Guid BatchID
+		public long BatchID
 		{
 			get
 			{
@@ -136,7 +142,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <summary>
 		/// The ID of the batch message.
 		/// </summary>
-		public Guid BatchMessageID
+		public long BatchMessageID
 		{
 			get
 			{

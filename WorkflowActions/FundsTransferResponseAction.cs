@@ -46,7 +46,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 		/// <summary>
 		/// Consumes a <see cref="FundsResponseLine"/> as a billing item by calling
-		/// <see cref="AccountingSession{U, BST, P, R, J, D}.AddFundsTransferEventAsync(FundsTransferRequest, DateTime, FundsTransferEventType, Func{J, Task}, Guid?, string, string, string, Exception)"/>
+		/// <see cref="AccountingSession{U, BST, P, R, J, D}.AddFundsTransferEventAsync(FundsTransferRequest, DateTime, FundsTransferEventType, Func{J, Task}, long?, string, string, string, Exception)"/>
 		/// and, when the <see cref="FundsResponseLine.Status"/> is <see cref="FundsResponseStatus.Succeeded"/>,
 		/// appending to the resulting journal by calling <see cref="AppendToJournalAsync(D, SO, J, FundsResponseLine, U)"/>.
 		/// </summary>
@@ -73,7 +73,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 			var fundsTransferRequest = await 
 				domainContainer.FundsTransferRequests
 				.Include(r => r.Batch.Messages)
-				.SingleOrDefaultAsync(r => r.ID == billingItem.RequestID);
+				.SingleOrDefaultAsync(r => r.ID == billingItem.LineID);
 
 			if (fundsTransferRequest == null)
 				throw new UserException(FundsTransferResponseActionResources.INVALID_FUNDS_REQUEST);

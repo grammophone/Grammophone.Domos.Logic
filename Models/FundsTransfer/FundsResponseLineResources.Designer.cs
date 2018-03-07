@@ -61,6 +61,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Batch ID.
+        /// </summary>
+        public static string BatchID_Name {
+            get {
+                return ResourceManager.GetString("BatchID_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Batch Message ID.
         /// </summary>
         public static string BatchMessageID_Name {
@@ -79,11 +88,11 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Request ID.
+        ///   Looks up a localized string similar to Line ID.
         /// </summary>
-        public static string RequestID_Name {
+        public static string LineID_Name {
             get {
-                return ResourceManager.GetString("RequestID_Name", resourceCulture);
+                return ResourceManager.GetString("LineID_Name", resourceCulture);
             }
         }
         

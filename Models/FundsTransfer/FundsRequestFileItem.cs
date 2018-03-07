@@ -35,33 +35,6 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		{
 		}
 
-		/// <summary>
-		/// Create from a <see cref="FundsTransferEvent"/>, which must have <see cref="FundsTransferEvent.BatchMessage"/> set
-		/// and <see cref="FundsTransferEvent.Type"/> equal to <see cref="FundsTransferEventType.Pending"/>.
-		/// </summary>
-		/// <param name="transferEvent">The funds transfer event.</param>
-		/// <exception cref="ArgumentException">
-		/// The event is not assigned in a batch message.
-		/// </exception>
-		/// <exception cref="LogicException">
-		/// The event has <see cref="FundsTransferEvent.Type"/> other
-		/// than <see cref="FundsTransferEventType.Pending"/>.
-		/// </exception>
-		public FundsRequestFileItem(FundsTransferEvent transferEvent)
-		{
-			if (transferEvent == null) throw new ArgumentNullException(nameof(transferEvent));
-
-			if (transferEvent.BatchMessage == null)
-				throw new ArgumentException($"The event is not assigned in a batch message.", nameof(transferEvent));
-
-			if (transferEvent.Type != FundsTransferEventType.Pending)
-				throw new LogicException($"The event has type '{transferEvent.Type}' instead of '{FundsTransferEventType.Pending}'.");
-
-			this.RequestID = transferEvent.RequestID;
-			this.Amount = transferEvent.Request.Amount;
-			this.BankAccountInfo = transferEvent.Request.EncryptedBankAccountInfo.Decrypt();
-		}
-
 		#endregion
 
 		#region Public properties
@@ -71,9 +44,9 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		[XmlAttribute]
 		[Display(
-			Name = nameof(FundsRequestFileItemResources.RequestID_Name),
+			Name = nameof(FundsRequestFileItemResources.LineID_Name),
 			ResourceType = typeof(FundsRequestFileItemResources))]
-		public long RequestID { get; set; }
+		public long LineID { get; set; }
 
 		/// <summary>
 		/// If positive, The amount is deposited to the bank account specified

@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Grammophone.Domos.Domain.Accounting;
-using Grammophone.Domos.Logic.Models.Workflow;
 
 namespace Grammophone.Domos.Logic.Models.FundsTransfer
 {

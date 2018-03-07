@@ -24,7 +24,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[Display(
 			ResourceType = typeof(FundsRequestLineResources),
 			Name = nameof(FundsRequestLineResources.BatchID_Name))]
-		public Guid? BatchID { get; set; }
+		public long? BatchID { get; set; }
 
 		/// <summary>
 		/// Optional comments to be recorded.
