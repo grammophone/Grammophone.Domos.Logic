@@ -78,6 +78,12 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			}
 		}
 
+		/// <summary>
+		/// The name of the account holder.
+		/// </summary>
+		[Required]
+		public string AccountHolderName { get; set; }
+
 		#endregion
 	}
 }

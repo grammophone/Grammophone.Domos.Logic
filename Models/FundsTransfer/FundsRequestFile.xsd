@@ -17,7 +17,8 @@
 	</xs:complexType>
 	<xs:complexType name="FundsRequestFileItem">
 		<xs:sequence>
-			<xs:element minOccurs="0" maxOccurs="1" name="BankAccountInfo" type="tns:BankAccountInfo" />
+			<xs:element minOccurs="1" maxOccurs="1" name="BankAccountInfo" type="tns:BankAccountInfo" />
+			<xs:element minOccurs="1" maxOccurs="1" name="AccountHolderName" type="xs:string" />
 		</xs:sequence>
 		<xs:attribute name="LineID" type="xs:long" use="required" />
 		<xs:attribute name="Amount" type="xs:decimal" use="required" />

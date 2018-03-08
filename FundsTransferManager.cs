@@ -486,7 +486,8 @@ namespace Grammophone.Domos.Logic
 									{
 										Amount = g.Sum(r => r.Amount),
 										LineID = g.Key.ID,
-										BankAccountInfo = g.Key.EncryptedBankAccountInfo.Decrypt()
+										BankAccountInfo = g.Key.EncryptedBankAccountInfo.Decrypt(),
+										AccountHolderName = g.Key.AccountHolderName
 									};
 
 			return new FundsRequestFile
