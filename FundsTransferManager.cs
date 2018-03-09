@@ -281,21 +281,11 @@ namespace Grammophone.Domos.Logic
 
 			var firstItem = file.Items.First();
 
-			var batchQuery = from r in this.FundsTransferRequests
-											 where r.ID == firstItem.LineID
-											 select r.Batch;
+			var batchQuery = from b in this.FundsTransferBatches
+											 where b.ID == file.BatchID
+											 select b;
 
 			var batch = await batchQuery.Include(b => b.Messages).SingleAsync();
-
-			long[] requestIDs = file.Items.Select(i => i.LineID).ToArray();
-
-			bool allRequestsAreInTheSameBatch = await
-				this.FundsTransferRequests.Where(r => requestIDs.Contains(r.ID)).AllAsync(r => r.BatchID == batch.ID);
-
-			if (!allRequestsAreInTheSameBatch)
-			{
-				throw new UserException(FundsTransferManagerMessages.REQUESTS_NOT_IN_SAME_BATCH);
-			}
 
 			using (var accountingSession = CreateAccountingSession())
 			using (GetElevatedAccessScope())
