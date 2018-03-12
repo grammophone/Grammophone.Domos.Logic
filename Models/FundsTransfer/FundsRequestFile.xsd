@@ -3,12 +3,12 @@
 	<xs:element name="FundsRequestFile" nillable="true" type="tns:FundsRequestFile" />
 	<xs:complexType name="FundsRequestFile">
 		<xs:sequence>
-			<xs:element minOccurs="1" maxOccurs="1" name="BatchID" type="xs:long" />
-			<xs:element minOccurs="1" maxOccurs="1" name="BatchMessageID" type="xs:long" />
-			<xs:element minOccurs="0" maxOccurs="1" name="Items" type="tns:ArrayOfFundsRequestFileItem" />
+			<xs:element minOccurs="1" maxOccurs="1" name="CreditSystemCodeName" type="xs:string" />
+			<xs:element minOccurs="1" maxOccurs="1" name="Items" type="tns:ArrayOfFundsRequestFileItem" />
 		</xs:sequence>
+		<xs:attribute name="BatchID" type="xs:long" use="required" />
+		<xs:attribute name="BatchMessageID" type="xs:long" use="required" />
 		<xs:attribute name="Time" type="xs:dateTime" use="required" />
-		<xs:attribute name="CreditSystemCodeName" type="xs:string" />
 	</xs:complexType>
 	<xs:complexType name="ArrayOfFundsRequestFileItem">
 		<xs:sequence>

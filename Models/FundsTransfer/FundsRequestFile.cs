@@ -45,6 +45,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <summary>
 		/// The ID of the batch.
 		/// </summary>
+		[XmlAttribute]
 		public long BatchID
 		{
 			get
@@ -60,6 +61,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// <summary>
 		/// The ID of the batch message.
 		/// </summary>
+		[XmlAttribute]
 		public long BatchMessageID
 		{
 			get
@@ -96,7 +98,6 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// batch request is executed.
 		/// </summary>
 		[Required]
-		[XmlAttribute]
 		public string CreditSystemCodeName
 		{
 			get

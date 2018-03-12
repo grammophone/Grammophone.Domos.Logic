@@ -482,6 +482,7 @@ namespace Grammophone.Domos.Logic
 
 			return new FundsRequestFile
 			{
+				CreditSystemCodeName = creditSystemCodeName,
 				Time = pendingBatchMessage.Time,
 				BatchID = pendingBatchMessage.BatchID,
 				BatchMessageID = pendingBatchMessage.ID,
