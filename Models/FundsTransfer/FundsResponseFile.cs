@@ -21,8 +21,6 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 
 		private FundsResponseFileItems items;
 
-		private long batchMessageID;
-
 		#endregion
 
 		#region Construction
@@ -50,29 +48,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		/// <param name="time">The date and time of the batch in UTC.</param>
 		/// <param name="capacity">The initial capacity of items to reserve.</param>
-		public FundsResponseFile(DateTime time, int capacity)
-			: this(time)
-		{
-			this.items = new FundsResponseFileItems(capacity);
-		}
-
-		/// <summary>
-		/// Create with initial reserved capacity of <see cref="Items"/>.
-		/// </summary>
-		/// <param name="time">The date and time of the batch in UTC.</param>
-		/// <param name="capacity">The initial capacity of items to reserve.</param>
-		/// <param name="batchMessageID">The ID of the batch messgage ID where the items of the file correspond to.</param>
 		public FundsResponseFile(
 			DateTime time,
-			int capacity,
-			long batchMessageID)
+			int capacity)
 		{
 			if (time.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(time));
 
 			this.items = new FundsResponseFileItems(capacity);
 
 			this.time = time;
-			this.batchMessageID = batchMessageID;
 		}
 
 		#endregion
