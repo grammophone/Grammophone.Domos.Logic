@@ -129,6 +129,9 @@
   <data name="LineID_Name" xml:space="preserve">
     <value>ID de Ligne</value>
   </data>
+  <data name="RequestID_Name" xml:space="preserve">
+    <value>ID de Requête</value>
+  </data>
   <data name="ResponseCode_Name" xml:space="preserve">
     <value>Code de Réponse</value>
   </data>

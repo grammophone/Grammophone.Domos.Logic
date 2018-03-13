@@ -73,7 +73,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 			var fundsTransferRequest = await 
 				domainContainer.FundsTransferRequests
 				.Include(r => r.Batch.Messages)
-				.SingleOrDefaultAsync(r => r.ID == billingItem.LineID);
+				.SingleOrDefaultAsync(r => r.ID == billingItem.RequestID);
 
 			if (fundsTransferRequest == null)
 				throw new UserException(FundsTransferResponseActionResources.INVALID_FUNDS_REQUEST);

@@ -205,7 +205,12 @@ namespace Grammophone.Domos.Logic
 			foreach (var association in associations)
 			{
 				var fundsResponseResult =
-					await AcceptResponseItemAsync(file, itemsByLineID[association.Request.GroupID], association.StatefulObject);
+					await AcceptResponseItemAsync(
+						file,
+						itemsByLineID[association.Request.GroupID],
+						association.StatefulObject,
+						association.Request,
+						responseBatchMessage);
 
 				responseResults.Add(fundsResponseResult);
 			}
@@ -227,12 +232,18 @@ namespace Grammophone.Domos.Logic
 			.Include(sp => sp.WorkflowGraph)
 			.SingleAsync(sp => sp.CodeName == statePathCodeName);
 
-		private async Task<FundsResponseResult> AcceptResponseItemAsync(FundsResponseFile file, FundsResponseFileItem item, SO statefulObject)
+		private async Task<FundsResponseResult> AcceptResponseItemAsync(
+			FundsResponseFile file,
+			FundsResponseFileItem item,
+			SO statefulObject,
+			FundsTransferRequest fundsTransferRequest,
+			FundsTransferBatchMessage responseBatchMessage)
 		{
 			if (file == null) throw new ArgumentNullException(nameof(file));
 			if (item == null) throw new ArgumentNullException(nameof(item));
+			if (fundsTransferRequest == null) throw new ArgumentNullException(nameof(fundsTransferRequest));
 
-			var line = new FundsResponseLine(file, item);
+			var line = new FundsResponseLine(file, item, fundsTransferRequest.ID, responseBatchMessage.ID);
 
 			var actionArguments = new Dictionary<string, object>
 			{
@@ -277,7 +288,7 @@ namespace Grammophone.Domos.Logic
 						var eventType = GetEventTypeFromResponseFileItem(item);
 
 						var directActionResult = await accountingSession.AddFundsTransferEventAsync(
-							line.LineID,
+							fundsTransferRequest,
 							line.Time,
 							eventType,
 							j => AppendResponseJournalAsync(j, file, item, eventType, null),
