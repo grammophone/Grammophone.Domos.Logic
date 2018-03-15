@@ -737,20 +737,20 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Translate the <see cref="FundsResponseFileItem.Status"/> of a file item onti a <see cref="FundsTransferEventType"/>.
+		/// Translate the <see cref="FundsResponseLine.Status"/> of a batch line into a <see cref="FundsTransferEventType"/>.
 		/// </summary>
-		/// <param name="fileItem">The funds transfer file item.</param>
+		/// <param name="line">The funds transfer batch line.</param>
 		/// <returns>Returns the corresponding <see cref="FundsTransferEventType"/>.</returns>
 		/// <exception cref="LogicException">
 		/// Thrown when the conversion is not possible.
 		/// </exception>
-		protected static FundsTransferEventType GetEventTypeFromResponseFileItem(FundsResponseFileItem fileItem)
+		protected virtual FundsTransferEventType GetEventTypeFromResponseLine(FundsResponseLine line)
 		{
-			if (fileItem == null) throw new ArgumentNullException(nameof(fileItem));
+			if (line == null) throw new ArgumentNullException(nameof(line));
 
 			FundsTransferEventType eventType;
 
-			switch (fileItem.Status)
+			switch (line.Status)
 			{
 				case FundsResponseStatus.Failed:
 					eventType = FundsTransferEventType.Failed;
@@ -765,7 +765,7 @@ namespace Grammophone.Domos.Logic
 					break;
 
 				default:
-					throw new LogicException($"Unexpected item status '{fileItem.Status}' for request with ID {fileItem.LineID}.");
+					throw new LogicException($"Unexpected item status '{line.Status}' for request with ID {line.LineID}.");
 			}
 
 			return eventType;
@@ -775,14 +775,12 @@ namespace Grammophone.Domos.Logic
 		/// Override to append the journal during processing of a batch line. The default implementation deoes nothing.
 		/// </summary>
 		/// <param name="journal">The journal to append.</param>
-		/// <param name="file">The batch file being processed.</param>
-		/// <param name="item">The line of the batch file being processed.</param>
+		/// <param name="line">The line of the batch file being processed.</param>
 		/// <param name="eventType">The type of funds transfer event which will be recorded.</param>
 		/// <param name="exception">If not null, the exception produced during the processing of the line.</param>
 		protected virtual Task AppendResponseJournalAsync(
 			J journal,
-			FundsResponseFile file,
-			FundsResponseFileItem item,
+			FundsResponseLine line,
 			FundsTransferEventType eventType,
 			Exception exception = null)
 			=> Task.FromResult(0);
@@ -922,34 +920,39 @@ namespace Grammophone.Domos.Logic
 			if (request == null) throw new ArgumentNullException(nameof(request));
 			if (responseBatchMessage == null) throw new ArgumentNullException(nameof(responseBatchMessage));
 
+			var line = new FundsResponseLine(file, item, responseBatchMessage.ID);
+
+			return await AcceptResponseItemAsync(request, line);
+		}
+
+		private async Task<FundsResponseResult> AcceptResponseItemAsync(FundsTransferRequest request, FundsResponseLine line)
+		{
 			try
 			{
 				using (var transaction = this.DomainContainer.BeginTransaction())
 				using (var accountingSession = CreateAccountingSession())
 				using (GetElevatedAccessScope())
 				{
-					FundsTransferEventType eventType = GetEventTypeFromResponseFileItem(item);
+					FundsTransferEventType eventType = GetEventTypeFromResponseLine(line);
 
 					var actionResult = await accountingSession.AddFundsTransferEventAsync(
 						request,
-						DateTime.UtcNow,
+						line.Time,
 						eventType,
-						asyncJournalAppendAction: j => AppendResponseJournalAsync(j, file, item, eventType, null),
-						batchMessageID: responseBatchMessage.ID,
-						responseCode: item.ResponseCode,
-						comments: item.Comments,
-						traceCode: item.TraceCode);
+						asyncJournalAppendAction: j => AppendResponseJournalAsync(j, line, eventType, null),
+						batchMessageID: line.BatchMessageID,
+						responseCode: line.ResponseCode,
+						comments: line.Comments,
+						traceCode: line.TraceCode);
 
 					var transferEvent = actionResult.FundsTransferEvent;
-
-					transferEvent.BatchMessage = responseBatchMessage;
 
 					await transaction.CommitAsync();
 
 					return new FundsResponseResult
 					{
 						Event = transferEvent,
-						FileItem = item
+						Line = line
 					};
 				}
 			}
@@ -957,7 +960,7 @@ namespace Grammophone.Domos.Logic
 			{
 				return new FundsResponseResult
 				{
-					FileItem = item,
+					Line = line,
 					Exception = ex
 				};
 			}

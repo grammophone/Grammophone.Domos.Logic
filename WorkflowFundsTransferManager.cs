@@ -245,6 +245,14 @@ namespace Grammophone.Domos.Logic
 
 			var line = new FundsResponseLine(file, item, responseBatchMessage.ID);
 
+			return await AcceptResponseItemAsync(statefulObject, fundsTransferRequest, line);
+		}
+
+		private async Task<FundsResponseResult> AcceptResponseItemAsync(SO statefulObject, FundsTransferRequest fundsTransferRequest, FundsResponseLine line)
+		{
+			if (fundsTransferRequest == null) throw new ArgumentNullException(nameof(fundsTransferRequest));
+			if (line == null) throw new ArgumentNullException(nameof(line));
+
 			var actionArguments = new Dictionary<string, object>
 			{
 				[StandardArgumentKeys.BillingItem] = line
@@ -252,7 +260,7 @@ namespace Grammophone.Domos.Logic
 
 			var fundsResponseResult = new FundsResponseResult
 			{
-				FileItem = item
+				Line = line
 			};
 
 			Exception exception = null;
@@ -285,14 +293,14 @@ namespace Grammophone.Domos.Logic
 					using (var accountingSession = CreateAccountingSession())
 					using (GetElevatedAccessScope())
 					{
-						var eventType = GetEventTypeFromResponseFileItem(item);
+						var eventType = GetEventTypeFromResponseLine(line);
 
 						var directActionResult = await accountingSession.AddFundsTransferEventAsync(
 							fundsTransferRequest,
 							line.Time,
 							eventType,
-							j => AppendResponseJournalAsync(j, file, item, eventType, null),
-							file.BatchID,
+							j => AppendResponseJournalAsync(j, line, eventType, null),
+							line.BatchID,
 							line.ResponseCode,
 							line.TraceCode,
 							line.Comments);
@@ -313,14 +321,14 @@ namespace Grammophone.Domos.Logic
 				using (GetElevatedAccessScope())
 				{
 					var errorActionResult = await accountingSession.AddFundsTransferEventAsync(
-						item.LineID,
-						file.Time,
+						line.LineID,
+						line.Time,
 						failureEventType,
-						j => AppendResponseJournalAsync(j, file, item, failureEventType, exception),
-						file.BatchID,
-						item.ResponseCode,
-						item.TraceCode,
-						item.Comments,
+						j => AppendResponseJournalAsync(j, line, failureEventType, exception),
+						line.BatchID,
+						line.ResponseCode,
+						line.TraceCode,
+						line.Comments,
 						exception: exception);
 
 					fundsResponseResult.Event = errorActionResult.FundsTransferEvent;

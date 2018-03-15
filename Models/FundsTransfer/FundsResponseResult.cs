@@ -21,12 +21,12 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		public FundsTransferEvent Event { get; set; }
 
 		/// <summary>
-		/// The batch file item being accepted.
+		/// The batch file line item being accepted.
 		/// </summary>
-		public FundsResponseFileItem FileItem { get; set; }
+		public FundsResponseLine Line { get; set; }
 
 		/// <summary>
-		/// If not null, the exception thrown during processing of the <see cref="FileItem"/>.
+		/// If not null, the exception thrown during processing of the <see cref="Line"/>.
 		/// </summary>
 		public Exception Exception { get; set; }
 	}
