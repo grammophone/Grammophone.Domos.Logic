@@ -70,10 +70,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 			D domainContainer = accountingSession.DomainContainer;
 
-			var fundsTransferRequest = await 
-				domainContainer.FundsTransferRequests
-				.Include(r => r.Batch.Messages)
-				.SingleOrDefaultAsync(r => r.ID == billingItem.RequestID);
+			var fundsTransferRequest = await GetFundsTransferRequestAsync(stateful, stateTransition, billingItem);
 
 			if (fundsTransferRequest == null)
 				throw new UserException(FundsTransferResponseActionResources.INVALID_FUNDS_REQUEST);
@@ -129,6 +126,14 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// <param name="agent">The user agent running the action.</param>
 		protected virtual Task AppendToJournalAsync(D domainContainer, SO stateful, J journal, FundsResponseLine fundsResponseLine, U agent)
 			=> Task.FromResult(0);
+
+		/// <summary>
+		/// Get the funds transfer request which corresponds to this workflow action.
+		/// </summary>
+		/// <param name="stateful">The stateful object manipulated during the action.</param>
+		/// <param name="stateTransition">The state transition being produced.</param>
+		/// <param name="fundsResponseLine">The funds response line.</param>
+		protected abstract Task<FundsTransferRequest> GetFundsTransferRequestAsync(SO stateful, ST stateTransition, FundsResponseLine fundsResponseLine);
 
 		#endregion
 	}

@@ -243,7 +243,7 @@ namespace Grammophone.Domos.Logic
 			if (item == null) throw new ArgumentNullException(nameof(item));
 			if (fundsTransferRequest == null) throw new ArgumentNullException(nameof(fundsTransferRequest));
 
-			var line = new FundsResponseLine(file, item, fundsTransferRequest.ID, responseBatchMessage.ID);
+			var line = new FundsResponseLine(file, item, responseBatchMessage.ID);
 
 			var actionArguments = new Dictionary<string, object>
 			{

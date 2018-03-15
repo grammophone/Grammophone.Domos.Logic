@@ -38,16 +38,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		/// <param name="file">The funds transfer response file.</param>
 		/// <param name="fileItem">The line inside the funds transfer <paramref name="file"/>.</param>
-		/// <param name="requestID">The ID of the funds transfer request.</param>
 		/// <param name="batchMessageID">Optional ID of the batch event where the line belongs.</param>
-		public FundsResponseLine(FundsResponseFile file, FundsResponseFileItem fileItem, long requestID, long? batchMessageID)
+		public FundsResponseLine(FundsResponseFile file, FundsResponseFileItem fileItem, long? batchMessageID = null)
 		{
 			if (file == null) throw new ArgumentNullException(nameof(file));
 			if (fileItem == null) throw new ArgumentNullException(nameof(fileItem));
 
 			this.Time = file.Time;
-			this.RequestID = requestID;
 			this.BatchID = file.BatchID;
+			this.LineID = fileItem.LineID;
 			this.Status = fileItem.Status;
 			this.BatchMessageID = batchMessageID;
 
@@ -122,13 +121,14 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		}
 
 		/// <summary>
-		/// The ID of the funds transfer request.
+		/// The ID of the line within the batch. This matches the <see cref="FundsTransferRequest.GroupID"/> property
+		/// of <see cref="FundsTransferRequest"/>.
 		/// </summary>
 		[Required]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.RequestID_Name))]
-		public long RequestID { get; set; }
+			Name = nameof(FundsResponseLineResources.LineID_Name))]
+		public long LineID { get; set; }
 
 		/// <summary>
 		/// The ID of the batch.
