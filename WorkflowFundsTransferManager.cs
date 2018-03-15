@@ -136,6 +136,53 @@ namespace Grammophone.Domos.Logic
 
 		#endregion
 
+		#region Public methods
+
+		/// <summary>
+		/// manual acceptance of a line in a batch.
+		/// </summary>
+		/// <param name="line">The line to accept.</param>
+		/// <returns>
+		/// Returns the collection of the results which correspond to the 
+		/// funds transfer requests grouped in the line.
+		/// </returns>
+		public override async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseLineAsync(FundsResponseLine line)
+		{
+			if (line == null) throw new ArgumentNullException(nameof(line));
+
+			var associationsQuery = from a in this.FundsTransferEventAssociations
+															let ftr = a.Event.Request
+															where ftr.GroupID == line.LineID && ftr.BatchID == line.BatchID
+															select new
+															{
+																a.Event.Request,
+																a.StatefulObject,
+																a.State
+															};
+
+			var associations = await associationsQuery.ToArrayAsync();
+
+			if (associations.Length == 0)
+				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
+
+			var responseResults = new List<FundsResponseResult>(associations.Length);
+
+			foreach (var association in associations)
+			{
+				var fundsResponseResult =
+					await AcceptResponseItemAsync(
+						association.StatefulObject,
+						association.Request,
+						line);
+
+				responseResults.Add(fundsResponseResult);
+			}
+
+			return responseResults;
+		}
+
+		#endregion
+
 		#region Protected methods
 
 		/// <summary>

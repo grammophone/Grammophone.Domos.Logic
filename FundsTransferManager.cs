@@ -300,6 +300,40 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// manual acceptance of a line in a batch.
+		/// </summary>
+		/// <param name="line">The line to accept.</param>
+		/// <returns>
+		/// Returns the collection of the results which correspond to the 
+		/// funds transfer requests grouped in the line.
+		/// </returns>
+		public virtual async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseLineAsync(FundsResponseLine line)
+		{
+			if (line == null) throw new ArgumentNullException(nameof(line));
+
+			var requestsQuery = from r in this.FundsTransferRequests
+													where r.BatchID == line.BatchID && r.GroupID == line.LineID
+													select r;
+
+			var requests = await requestsQuery.Include(r => r.Batch).ToArrayAsync();
+
+			if (requests.Length == 0)
+				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
+
+			var results = new List<FundsResponseResult>(requests.Length);
+
+			foreach (var fundsTransferRequest in requests)
+			{
+				FundsResponseResult result =
+					await AcceptResponseItemAsync(fundsTransferRequest, line);
+
+				results.Add(result);
+			}
+
+			return results;
+		}
+
+		/// <summary>
 		/// Accept a <see cref="FundsResponseFile"/> in XML format
 		/// and execute per line any accounting or workflow associated with this manager.
 		/// </summary>
