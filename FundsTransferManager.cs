@@ -809,11 +809,13 @@ namespace Grammophone.Domos.Logic
 		/// Override to append the journal during processing of a batch line. The default implementation deoes nothing.
 		/// </summary>
 		/// <param name="journal">The journal to append.</param>
+		/// <param name="request">The funds transfer request being processed.</param>
 		/// <param name="line">The line of the batch file being processed.</param>
 		/// <param name="eventType">The type of funds transfer event which will be recorded.</param>
 		/// <param name="exception">If not null, the exception produced during the processing of the line.</param>
 		protected virtual Task AppendResponseJournalAsync(
 			J journal,
+			FundsTransferRequest request,
 			FundsResponseLine line,
 			FundsTransferEventType eventType,
 			Exception exception = null)
@@ -973,7 +975,7 @@ namespace Grammophone.Domos.Logic
 						request,
 						line.Time,
 						eventType,
-						asyncJournalAppendAction: j => AppendResponseJournalAsync(j, line, eventType, null),
+						asyncJournalAppendAction: j => AppendResponseJournalAsync(j, request, line, eventType, null),
 						batchMessageID: line.BatchMessageID,
 						responseCode: line.ResponseCode,
 						comments: line.Comments,
