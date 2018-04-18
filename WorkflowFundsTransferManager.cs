@@ -347,7 +347,7 @@ namespace Grammophone.Domos.Logic
 							line.Time,
 							eventType,
 							j => AppendResponseJournalAsync(j, fundsTransferRequest, line, eventType, null),
-							line.BatchID,
+							line.BatchMessageID,
 							line.ResponseCode,
 							line.TraceCode,
 							line.Comments);
@@ -364,15 +364,17 @@ namespace Grammophone.Domos.Logic
 
 			if (exception != null)
 			{
+				this.DomainContainer.ChangeTracker.UndoChanges(); // Undo attempted entities.
+
 				using (var accountingSession = CreateAccountingSession())
 				using (GetElevatedAccessScope())
 				{
 					var errorActionResult = await accountingSession.AddFundsTransferEventAsync(
-						line.LineID,
+						fundsTransferRequest,
 						line.Time,
 						failureEventType,
 						j => AppendResponseJournalAsync(j, fundsTransferRequest, line, failureEventType, exception),
-						line.BatchID,
+						line.BatchMessageID,
 						line.ResponseCode,
 						line.TraceCode,
 						line.Comments,

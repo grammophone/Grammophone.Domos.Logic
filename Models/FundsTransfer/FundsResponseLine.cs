@@ -97,7 +97,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
 			Name = nameof(FundsResponseLineResources.BatchMessageID_Name))]
-		public virtual long? BatchMessageID { get; set; }
+		public long? BatchMessageID { get; set; }
 
 		/// <summary>
 		/// The date and time, in UTC.

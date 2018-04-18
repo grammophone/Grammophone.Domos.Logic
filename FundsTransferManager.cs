@@ -994,6 +994,8 @@ namespace Grammophone.Domos.Logic
 			}
 			catch (Exception ex)
 			{
+				this.DomainContainer.ChangeTracker.UndoChanges(); // Undo attempted entities.
+
 				return new FundsResponseResult
 				{
 					Line = line,
