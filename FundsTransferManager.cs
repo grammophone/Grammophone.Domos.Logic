@@ -827,18 +827,18 @@ namespace Grammophone.Domos.Logic
 		/// <param name="fundsTransferRequest">The funds transfer request for which to record the event.</param>
 		/// <param name="line">The funds response line.</param>
 		/// <param name="exception">The exception to save.</param>
-		/// <param name="failureEventType">The type of the failure event.</param>
+		/// <param name="eventType">The type of the event which.</param>
 		/// <returns>Returns the line processing result for the error.</returns>
 		/// <remarks>
 		/// If there is a double exception when trying to record the exception,
 		/// the double exception is logged and a response result is returned with the original exception in it
 		/// and without an event.
 		/// </remarks>
-		protected virtual async Task<FundsResponseResult> RecordExceptionEventAsync(
+		protected virtual async Task<FundsResponseResult> RecordDigestionExceptionEventAsync(
 			FundsTransferRequest fundsTransferRequest,
 			FundsResponseLine line,
 			Exception exception,
-			FundsTransferEventType failureEventType = FundsTransferEventType.WorkflowFailed)
+			FundsTransferEventType eventType)
 		{
 			if (fundsTransferRequest == null) throw new ArgumentNullException(nameof(fundsTransferRequest));
 			if (line == null) throw new ArgumentNullException(nameof(line));
@@ -852,8 +852,8 @@ namespace Grammophone.Domos.Logic
 					var errorActionResult = await accountingSession.AddFundsTransferEventAsync(
 						fundsTransferRequest,
 						line.Time,
-						failureEventType,
-						j => AppendResponseJournalAsync(j, fundsTransferRequest, line, failureEventType, exception),
+						eventType,
+						j => AppendResponseJournalAsync(j, fundsTransferRequest, line, eventType, exception),
 						line.BatchMessageID,
 						line.ResponseCode,
 						line.TraceCode,
@@ -1024,14 +1024,14 @@ namespace Grammophone.Domos.Logic
 
 		private async Task<FundsResponseResult> AcceptResponseItemAsync(FundsTransferRequest request, FundsResponseLine line)
 		{
+			FundsTransferEventType eventType = GetEventTypeFromResponseLine(line);
+
 			try
 			{
 				using (var transaction = this.DomainContainer.BeginTransaction())
 				using (var accountingSession = CreateAccountingSession())
 				using (GetElevatedAccessScope())
 				{
-					FundsTransferEventType eventType = GetEventTypeFromResponseLine(line);
-
 					var actionResult = await accountingSession.AddFundsTransferEventAsync(
 						request,
 						line.Time,
@@ -1057,7 +1057,7 @@ namespace Grammophone.Domos.Logic
 			{
 				this.DomainContainer.ChangeTracker.UndoChanges(); // Undo attempted entities.
 
-				return await RecordExceptionEventAsync(request, line, exception);
+				return await RecordDigestionExceptionEventAsync(request, line, exception, eventType);
 			}
 		}
 

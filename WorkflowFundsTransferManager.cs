@@ -345,7 +345,6 @@ namespace Grammophone.Domos.Logic
 							line.TraceCode,
 							line.Comments);
 
-
 						fundsResponseResult.Event = directActionResult.FundsTransferEvent;
 					}
 				}
@@ -356,7 +355,7 @@ namespace Grammophone.Domos.Logic
 			{
 				this.DomainContainer.ChangeTracker.UndoChanges(); // Undo attempted entities.
 
-				return await RecordExceptionEventAsync(fundsTransferRequest, line, exception);
+				return await RecordDigestionExceptionEventAsync(fundsTransferRequest, line, exception, GetEventTypeFromResponseLine(line));
 			}
 		}
 
