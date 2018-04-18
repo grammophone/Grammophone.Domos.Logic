@@ -305,17 +305,13 @@ namespace Grammophone.Domos.Logic
 				[StandardArgumentKeys.BillingItem] = line
 			};
 
-			var fundsResponseResult = new FundsResponseResult
-			{
-				Line = line
-			};
-
-			Exception exception = null;
-
-			var failureEventType = FundsTransferEventType.Failed;
-
 			try
 			{
+				var fundsResponseResult = new FundsResponseResult
+				{
+					Line = line
+				};
+
 				string currentStateCodeName = statefulObject.State.CodeName;
 
 				// Attempt to get the next path to be executed. Any exception will be recorded in a failure funds transfer event.
@@ -324,9 +320,6 @@ namespace Grammophone.Domos.Logic
 				if (nextStatePathCodeName != null) // A path should be executed?
 				{
 					var statePath = await statePathsByCodeNameCache.Get(nextStatePathCodeName);
-
-					// If we get this far, any failure event will be recorded as of type 'WorkflowFailed', not just 'Failed'.
-					failureEventType = FundsTransferEventType.WorkflowFailed;
 
 					var transition = await WorkflowManager.ExecuteStatePathAsync(
 						statefulObject,
@@ -356,37 +349,15 @@ namespace Grammophone.Domos.Logic
 						fundsResponseResult.Event = directActionResult.FundsTransferEvent;
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				exception = ex;
-			}
 
-			if (exception != null)
+				return fundsResponseResult;
+			}
+			catch (Exception exception)
 			{
 				this.DomainContainer.ChangeTracker.UndoChanges(); // Undo attempted entities.
 
-				using (var accountingSession = CreateAccountingSession())
-				using (GetElevatedAccessScope())
-				{
-					var errorActionResult = await accountingSession.AddFundsTransferEventAsync(
-						fundsTransferRequest,
-						line.Time,
-						failureEventType,
-						j => AppendResponseJournalAsync(j, fundsTransferRequest, line, failureEventType, exception),
-						line.BatchMessageID,
-						line.ResponseCode,
-						line.TraceCode,
-						line.Comments,
-						exception: exception);
-
-					fundsResponseResult.Event = errorActionResult.FundsTransferEvent;
-				}
+				return await RecordExceptionEventAsync(fundsTransferRequest, line, exception);
 			}
-
-			fundsResponseResult.Exception = exception;
-
-			return fundsResponseResult;
 		}
 
 		#endregion

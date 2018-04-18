@@ -821,6 +821,67 @@ namespace Grammophone.Domos.Logic
 			Exception exception = null)
 			=> Task.FromResult(0);
 
+		/// <summary>
+		/// Create a failure funds transfer event for an exception as a result of a response line processing.
+		/// </summary>
+		/// <param name="fundsTransferRequest">The funds transfer request for which to record the event.</param>
+		/// <param name="line">The funds response line.</param>
+		/// <param name="exception">The exception to save.</param>
+		/// <param name="failureEventType">The type of the failure event.</param>
+		/// <returns>Returns the line processing result for the error.</returns>
+		/// <remarks>
+		/// If there is a double exception when trying to record the exception,
+		/// the double exception is logged and a response result is returned with the original exception in it
+		/// and without an event.
+		/// </remarks>
+		protected virtual async Task<FundsResponseResult> RecordExceptionEventAsync(
+			FundsTransferRequest fundsTransferRequest,
+			FundsResponseLine line,
+			Exception exception,
+			FundsTransferEventType failureEventType = FundsTransferEventType.WorkflowFailed)
+		{
+			if (fundsTransferRequest == null) throw new ArgumentNullException(nameof(fundsTransferRequest));
+			if (line == null) throw new ArgumentNullException(nameof(line));
+			if (exception == null) throw new ArgumentNullException(nameof(exception));
+
+			try
+			{
+				using (var accountingSession = CreateAccountingSession())
+				using (GetElevatedAccessScope())
+				{
+					var errorActionResult = await accountingSession.AddFundsTransferEventAsync(
+						fundsTransferRequest,
+						line.Time,
+						failureEventType,
+						j => AppendResponseJournalAsync(j, fundsTransferRequest, line, failureEventType, exception),
+						line.BatchMessageID,
+						line.ResponseCode,
+						line.TraceCode,
+						line.Comments,
+						exception: exception);
+
+					return new FundsResponseResult
+					{
+						Event = errorActionResult.FundsTransferEvent,
+						Exception = exception,
+						Line = line
+					};
+				}
+			}
+			catch (Exception doubleException)
+			{
+				this.Logger.Log(NLog.LogLevel.Error, doubleException);
+
+				this.DomainContainer.ChangeTracker.UndoChanges();
+
+				return new FundsResponseResult
+				{
+					Exception = exception,
+					Line = line
+				};
+			}
+		}
+
 		#endregion
 
 		#region Private methods
@@ -992,15 +1053,11 @@ namespace Grammophone.Domos.Logic
 					};
 				}
 			}
-			catch (Exception ex)
+			catch (Exception exception)
 			{
 				this.DomainContainer.ChangeTracker.UndoChanges(); // Undo attempted entities.
 
-				return new FundsResponseResult
-				{
-					Line = line,
-					Exception = ex
-				};
+				return await RecordExceptionEventAsync(request, line, exception);
 			}
 		}
 
