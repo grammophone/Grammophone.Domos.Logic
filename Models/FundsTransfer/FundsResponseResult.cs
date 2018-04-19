@@ -10,7 +10,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 {
 	/// <summary>
 	/// Result of the state path executed due to accepting
-	/// a <see cref="FundsResponseFileItem"/>.
+	/// a <see cref="FundsResponseLine"/> for a funds transfer request.
 	/// </summary>
 	[Serializable]
 	public class FundsResponseResult
@@ -29,5 +29,11 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// If not null, the exception thrown during processing of the <see cref="Line"/>.
 		/// </summary>
 		public Exception Exception { get; set; }
+
+		/// <summary>
+		/// If true, the funds transfer line has already been digested
+		/// for the request, and the <see cref="Event"/> property points to the previous event which digested it.
+		/// </summary>
+		public bool IsAlreadyDigested { get; set; }
 	}
 }

@@ -750,7 +750,7 @@ namespace Grammophone.Domos.Logic
 																			 where r.BatchID == file.BatchID && lineIDs.Contains(r.GroupID)
 																			 select r;
 
-			var fundsTransferRequests = await fundsTransferRequestsQuery.ToArrayAsync();
+			var fundsTransferRequests = await fundsTransferRequestsQuery.Include(r => r.Events).ToArrayAsync();
 
 			if (fundsTransferRequests.Length == 0)
 				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
@@ -1025,6 +1025,20 @@ namespace Grammophone.Domos.Logic
 		private async Task<FundsResponseResult> AcceptResponseItemAsync(FundsTransferRequest request, FundsResponseLine line)
 		{
 			FundsTransferEventType eventType = GetEventTypeFromResponseLine(line);
+
+			// Is there already a successfully digested event for the line?
+
+			var previousEvent = request.Events.FirstOrDefault(e => e.Type == eventType && e.ExceptionData == null);
+
+			if (previousEvent != null)
+			{
+				return new FundsResponseResult
+				{
+					Event = previousEvent,
+					Line = line,
+					IsAlreadyDigested = true
+				};
+			}
 
 			try
 			{

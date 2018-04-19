@@ -155,7 +155,8 @@ namespace Grammophone.Domos.Logic
 															where ftr.GroupID == line.LineID && ftr.BatchID == line.BatchID
 															select new
 															{
-																a.Event.Request,
+																Request = ftr,
+																ftr.Events,
 																a.StatefulObject,
 																a.State
 															};
@@ -233,30 +234,28 @@ namespace Grammophone.Domos.Logic
 			var associationsQuery = from a in this.FundsTransferEventAssociations
 															let ftr = a.Event.Request
 															where lineIDs.Contains(ftr.GroupID) && ftr.BatchID == file.BatchID
-															select new
-															{
-																a.Event.Request,
-																a.StatefulObject,
-																a.State
-															};
+															select a;
 
 			var associations = await associationsQuery.ToArrayAsync();
 
 			if (associations.Length == 0)
 				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
 
+			var uniqueAssociationGroups = from a in associations
+																		group a by new { a.Event.Request, a.StatefulObject };
+
 			var responseResults = new List<FundsResponseResult>(associations.Length);
 
 			var itemsByLineID = file.Items.ToDictionary(i => i.LineID);
 
-			foreach (var association in associations)
+			foreach (var associationGroup in uniqueAssociationGroups)
 			{
 				var fundsResponseResult =
 					await AcceptResponseItemAsync(
 						file,
-						itemsByLineID[association.Request.GroupID],
-						association.StatefulObject,
-						association.Request,
+						itemsByLineID[associationGroup.Key.Request.GroupID],
+						associationGroup.Key.StatefulObject,
+						associationGroup.Key.Request,
 						responseBatchMessage);
 
 				responseResults.Add(fundsResponseResult);
@@ -300,6 +299,20 @@ namespace Grammophone.Domos.Logic
 			if (fundsTransferRequest == null) throw new ArgumentNullException(nameof(fundsTransferRequest));
 			if (line == null) throw new ArgumentNullException(nameof(line));
 
+			var eventType = GetEventTypeFromResponseLine(line);
+
+			var previousEvent = fundsTransferRequest.Events.FirstOrDefault(e => e.Type == eventType && e.ExceptionData == null);
+
+			if (previousEvent != null)
+			{
+				return new FundsResponseResult
+				{
+					Event = previousEvent,
+					Line = line,
+					IsAlreadyDigested = true
+				};
+			}
+
 			var actionArguments = new Dictionary<string, object>
 			{
 				[StandardArgumentKeys.BillingItem] = line
@@ -333,8 +346,6 @@ namespace Grammophone.Domos.Logic
 					using (var accountingSession = CreateAccountingSession())
 					using (GetElevatedAccessScope())
 					{
-						var eventType = GetEventTypeFromResponseLine(line);
-
 						var directActionResult = await accountingSession.AddFundsTransferEventAsync(
 							fundsTransferRequest,
 							line.Time,
