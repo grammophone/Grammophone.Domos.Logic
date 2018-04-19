@@ -139,7 +139,7 @@ namespace Grammophone.Domos.Logic
 		#region Public methods
 
 		/// <summary>
-		/// manual acceptance of a line in a batch.
+		/// Manual acceptance of a line in a batch.
 		/// </summary>
 		/// <param name="line">The line to accept.</param>
 		/// <returns>
@@ -166,14 +166,17 @@ namespace Grammophone.Domos.Logic
 			if (associations.Length == 0)
 				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
 
+			var associationGroups = from a in associations
+															 group a by new { a.Request, a.StatefulObject };
+
 			var responseResults = new List<FundsResponseResult>(associations.Length);
 
-			foreach (var association in associations)
+			foreach (var associationGroup in associationGroups)
 			{
 				var fundsResponseResult =
 					await AcceptResponseItemAsync(
-						association.StatefulObject,
-						association.Request,
+						associationGroup.Key.StatefulObject,
+						associationGroup.Key.Request,
 						line);
 
 				responseResults.Add(fundsResponseResult);
