@@ -79,6 +79,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reject.
+        /// </summary>
+        public static string Reject_Name {
+            get {
+                return ResourceManager.GetString("Reject_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Succeeded.
         /// </summary>
         public static string Succeeded_Name {

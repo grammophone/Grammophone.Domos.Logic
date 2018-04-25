@@ -13,12 +13,12 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 	public enum FundsResponseStatus
 	{
 		/// <summary>
-		/// The transfer request has failed.
+		/// The transfer has been rejected because it was malformed.
 		/// </summary>
 		[Display(
 			ResourceType = typeof(FundsResponseStatusResources),
-			Name = nameof(FundsResponseStatusResources.Failed_Name))]
-		Failed = 0,
+			Name = nameof(FundsResponseStatusResources.Accepted_Name))]
+		Reject,
 
 		/// <summary>
 		/// The request has been validated and accepted, but the response is not ready yet.
@@ -26,7 +26,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[Display(
 			ResourceType = typeof(FundsResponseStatusResources),
 			Name = nameof(FundsResponseStatusResources.Accepted_Name))]
-		Accepted = 1,
+		Accepted,
+
+		/// <summary>
+		/// The transfer request has failed.
+		/// </summary>
+		[Display(
+			ResourceType = typeof(FundsResponseStatusResources),
+			Name = nameof(FundsResponseStatusResources.Failed_Name))]
+		Failed,
 
 		/// <summary>
 		/// The transfer request has succeeded.
@@ -34,6 +42,6 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[Display(
 			ResourceType = typeof(FundsResponseStatusResources),
 			Name = nameof(FundsResponseStatusResources.Succeeded_Name))]
-		Succeeded = 2
+		Succeeded
 	}
 }

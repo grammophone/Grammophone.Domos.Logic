@@ -200,7 +200,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="fundsResponseLine">The batch line arriving for the stateful object.</param>
 		/// <returns>Returns the code name of the path to execute or null to execute none.</returns>
 		/// <exception cref="Exception">
-		/// Thrown to record a funds transfer event with type <see cref="FundsTransferEventType.Failed"/>
+		/// Thrown to record a funds transfer event with its <see cref="FundsTransferEvent.ExceptionData"/>
 		/// containing the thrown exception.
 		/// </exception>
 		protected abstract string TryGetNextStatePathCodeName(
