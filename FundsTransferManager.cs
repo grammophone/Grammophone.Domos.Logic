@@ -176,6 +176,45 @@ namespace Grammophone.Domos.Logic
 
 		#region Public methods
 
+		#region Funds transfer file conversions
+
+		/// <summary>
+		/// Get the funds transfer file converter registered under a name.
+		/// </summary>
+		/// <param name="converterName">The name under which the converter is registered.</param>
+		public IFundsTransferFileConverter GetFundsTransferFileConverter(string converterName)
+		{
+			var converter = this.SessionSettings.Resolve<IFundsTransferFileConverter>(converterName);
+
+			if (converter == null)
+				throw new ArgumentException($"The converter name '{converterName}' does not correspond to a register funds transfer file converter.");
+
+			return converter;
+		}
+
+		/// <summary>
+		/// Get the funds transfer file converter associated with a credit system or null if no converter
+		/// is associated.
+		/// </summary>
+		/// <param name="creditSystem">The credit system.</param>
+		/// <returns>Returns the converter associated with the credit system or null.</returns>
+		public IFundsTransferFileConverter GetFundsTransferFileConverter(CreditSystem creditSystem)
+		{
+			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
+
+			return creditSystem.FundsTransferFileConverterName != null ? 
+				GetFundsTransferFileConverter(creditSystem.FundsTransferFileConverterName) : 
+				null;
+		}
+
+		/// <summary>
+		/// Get all the funds transfer file converters registered in the system.
+		/// </summary>
+		public IEnumerable<IFundsTransferFileConverter> GetFundsTransferFileConverters()
+			=> this.SessionSettings.ResolveAll<IFundsTransferFileConverter>();
+
+		#endregion
+
 		/// <summary>
 		/// Get the total statistics of funds transfers.
 		/// </summary>
