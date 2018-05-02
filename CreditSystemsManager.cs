@@ -73,9 +73,16 @@ namespace Grammophone.Domos.Logic
 		/// Add a <see cref="CreditSystem"/>.
 		/// </summary>
 		/// <param name="creditSystem">The credit system to add.</param>
+		/// <exception cref="ArgumentException">
+		/// Thrown when the <see cref="CreditSystem.FundsTransferFileConverterName"/>
+		/// if the <paramref name="creditSystem"/>
+		/// does not point to a registered <see cref="IFundsTransferFileConverter"/>.
+		/// </exception>
 		public async Task AddCreditSystemAsync(CreditSystem creditSystem)
 		{
 			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
+
+			EnsureCreditSystemIsValid(creditSystem);
 
 			using (GetElevatedAccessScope())
 			{
@@ -94,9 +101,16 @@ namespace Grammophone.Domos.Logic
 		/// it is attached with a 'modified' state,
 		/// else this parameter has no effect.
 		/// </param>
+		/// <exception cref="ArgumentException">
+		/// Thrown when the <see cref="CreditSystem.FundsTransferFileConverterName"/>
+		/// if the <paramref name="creditSystem"/>
+		/// does not point to a registered <see cref="IFundsTransferFileConverter"/>.
+		/// </exception>
 		public async Task EditCreditSystemAsync(CreditSystem creditSystem, bool attachAsModified = false)
 		{
 			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
+
+			EnsureCreditSystemIsValid(creditSystem);
 
 			using (GetElevatedAccessScope())
 			{
@@ -105,11 +119,54 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Get the register funds transfer file converters, in order to facilitate the
-		/// association with credit systems.
+		/// Get the registration names of the <see cref="IFundsTransferFileConverter"/> implementations
+		/// available in the system. These names are suitable to be set in the <see cref="CreditSystem.FundsTransferFileConverterName"/>
+		/// property of <see cref="CreditSystem"/>.
 		/// </summary>
-		public IEnumerable<IFundsTransferFileConverter> GetFundsTransferFileConverters()
-			=> this.SessionSettings.ResolveAll<IFundsTransferFileConverter>();
+		/// <returns>Returns a collection of the names. The default name is not returned, if such a registration exists.</returns>
+		public IEnumerable<string> GetRegisteredFundsTransferFileConvertersNames()
+			=> this.SessionSettings.GetRegistrationNames<IFundsTransferFileConverter>().Where(n => n != null);
+
+		/// <summary>
+		/// Get all the registered implementations of the <see cref="IFundsTransferFileConverter"/> interface
+		/// in a dictionary whose keys are their registration names. These registration names are
+		/// suitable to be set in the <see cref="CreditSystem.FundsTransferFileConverterName"/>
+		/// property of <see cref="CreditSystem"/>.
+		/// </summary>
+		/// <returns>
+		/// Returns a dictionary of the <see cref="IFundsTransferFileConverter"/> implemtnations keyes by their registration name.
+		/// </returns>
+		public IReadOnlyDictionary<string, IFundsTransferFileConverter> GetRegisteredFundsTransferConvertersByName()
+			=> this.SessionSettings.ResolveAllToDictionary<IFundsTransferFileConverter>();
+
+		#endregion
+
+		#region Protected methods
+
+		/// <summary>
+		/// Validate the credit system and ensure that its <see cref="CreditSystem.FundsTransferFileConverterName"/>
+		/// points to a registered <see cref="IFundsTransferFileConverter"/> type.
+		/// </summary>
+		/// <param name="creditSystem">The credit system.</param>
+		/// <exception cref="ArgumentException">
+		/// Thrown when the <see cref="CreditSystem.FundsTransferFileConverterName"/>
+		/// if the <paramref name="creditSystem"/>
+		/// does not point to a registered <see cref="IFundsTransferFileConverter"/>.
+		/// </exception>
+		protected virtual void EnsureCreditSystemIsValid(CreditSystem creditSystem)
+		{
+			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
+
+			if (creditSystem.FundsTransferFileConverterName != null)
+			{
+				if (!this.SessionSettings.IsRegistered<IFundsTransferFileConverter>(creditSystem.FundsTransferFileConverterName))
+				{
+					throw new ArgumentException(
+						$"The name '{creditSystem.FundsTransferFileConverterName}' does not correspond to a registered funds transfer file converter.",
+						nameof(creditSystem));
+				}
+			}
+		}
 
 		#endregion
 	}

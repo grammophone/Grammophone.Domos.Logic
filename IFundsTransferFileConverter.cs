@@ -15,7 +15,6 @@ namespace Grammophone.Domos.Logic
 	{
 		/// <summary>
 		/// The name of the converter.
-		/// Warning: It must match the name under which it is registered in the settings.
 		/// </summary>
 		string Name { get; }
 
