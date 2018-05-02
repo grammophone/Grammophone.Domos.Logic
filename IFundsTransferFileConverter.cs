@@ -41,7 +41,8 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="requestFile">The native request file.</param>
 		/// <param name="outputStream">The stream to write the converted platform-specific file.</param>
-		void ExportRequestFile(FundsRequestFile requestFile, Stream outputStream);
+		/// <returns>Returns a proposed filename, not specifying any path.</returns>
+		string ExportRequestFile(FundsRequestFile requestFile, Stream outputStream);
 
 		/// <summary>
 		/// Convert a platform-specific funds response file to a native response file.
