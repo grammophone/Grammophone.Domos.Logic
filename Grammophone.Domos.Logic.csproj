@@ -78,6 +78,7 @@
     <Compile Include="Configuration\ContentTypeAssociations.cs" />
     <Compile Include="Configuration\FilesConfiguration.cs" />
     <Compile Include="ConfiguredManager.cs" />
+    <Compile Include="CreditSystemsManager.cs" />
     <Compile Include="DomainIntegrityException.cs" />
     <Compile Include="ElevatedAccessScope.cs" />
     <Compile Include="EntityAccessDeniedException.cs" />
