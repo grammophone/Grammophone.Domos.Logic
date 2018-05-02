@@ -853,10 +853,14 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="fundsResponseLine">The funds transfer line being digested.</param>
 		/// <param name="fundsTransferEvent">The event that is created for the line.</param>
+		/// <param name="remittance">The remittance serving the transfer event, if any.</param>
 		/// <remarks>
 		/// The default implementation does nothing.
 		/// </remarks>
-		protected virtual Task OnResponseLineDigestionSuccessAsync(FundsResponseLine fundsResponseLine, FundsTransferEvent fundsTransferEvent)
+		protected virtual Task OnResponseLineDigestionSuccessAsync(
+			FundsResponseLine fundsResponseLine,
+			FundsTransferEvent fundsTransferEvent,
+			R remittance = null)
 			=> Task.CompletedTask;
 
 		/// <summary>
@@ -868,7 +872,10 @@ namespace Grammophone.Domos.Logic
 		/// <remarks>
 		/// The default implementation does nothing.
 		/// </remarks>
-		protected virtual Task OnResponseLineDigestionFailureAsync(FundsResponseLine fundsResponseLine, FundsTransferEvent fundsTransferEvent, Exception exception)
+		protected virtual Task OnResponseLineDigestionFailureAsync(
+			FundsResponseLine fundsResponseLine,
+			FundsTransferEvent fundsTransferEvent,
+			Exception exception)
 			=> Task.CompletedTask;
 
 		/// <summary>
@@ -914,6 +921,7 @@ namespace Grammophone.Domos.Logic
 			{
 				using (var accountingSession = CreateAccountingSession())
 				using (GetElevatedAccessScope())
+				using (var transaction = this.DomainContainer.BeginTransaction())
 				{
 					var errorActionResult = await accountingSession.AddFundsTransferEventAsync(
 						fundsTransferRequest,
@@ -927,6 +935,8 @@ namespace Grammophone.Domos.Logic
 						exception: exception);
 
 					await OnResponseLineDigestionFailureAsync(line, errorActionResult.FundsTransferEvent, exception);
+
+					await transaction.CommitAsync();
 
 					return new FundsResponseResult
 					{
@@ -1126,7 +1136,9 @@ namespace Grammophone.Domos.Logic
 
 					var transferEvent = actionResult.FundsTransferEvent;
 
-					await OnResponseLineDigestionSuccessAsync(line, transferEvent);
+					var transferRemittance = TryGetTransferRemittance(actionResult);
+
+					await OnResponseLineDigestionSuccessAsync(line, transferEvent, transferRemittance);
 
 					await transaction.CommitAsync();
 
@@ -1160,6 +1172,9 @@ namespace Grammophone.Domos.Logic
 
 			return new FundsFileSchemaException(message, invalidOperationException);
 		}
+
+		private R TryGetTransferRemittance(AccountingSession<U, BST, P, R, J, D>.ActionResult actionResult)
+			=> actionResult.Journal.Remittances.FirstOrDefault(r => r.FundsTransferEvent == actionResult.FundsTransferEvent);
 
 		#endregion
 	}
