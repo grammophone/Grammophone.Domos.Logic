@@ -343,6 +343,9 @@ namespace Grammophone.Domos.Logic
 						actionArguments);
 
 					fundsResponseResult.Event = transition.FundsTransferEvent;
+
+					if (transition.FundsTransferEvent != null)
+						await OnResponseLineDigestionSuccessAsync(line, transition.FundsTransferEvent);
 				}
 				else // If no path is specified, record the event directly.
 				{

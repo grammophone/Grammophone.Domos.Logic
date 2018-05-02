@@ -849,6 +849,29 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Called when the funds transfer event is created for successfully digesting a funds response line.
+		/// </summary>
+		/// <param name="fundsResponseLine">The funds transfer line being digested.</param>
+		/// <param name="fundsTransferEvent">The event that is created for the line.</param>
+		/// <remarks>
+		/// The default implementation does nothing.
+		/// </remarks>
+		protected virtual Task OnResponseLineDigestionSuccessAsync(FundsResponseLine fundsResponseLine, FundsTransferEvent fundsTransferEvent)
+			=> Task.CompletedTask;
+
+		/// <summary>
+		/// Called when the funds transfer event is created for marking an error digesting a funds response line.
+		/// </summary>
+		/// <param name="fundsResponseLine">The funds transfer line being digested.</param>
+		/// <param name="fundsTransferEvent">The event that is created for the line.</param>
+		/// <param name="exception">The exception occured during digestion.</param>
+		/// <remarks>
+		/// The default implementation does nothing.
+		/// </remarks>
+		protected virtual Task OnResponseLineDigestionFailureAsync(FundsResponseLine fundsResponseLine, FundsTransferEvent fundsTransferEvent, Exception exception)
+			=> Task.CompletedTask;
+
+		/// <summary>
 		/// Override to append the journal during processing of a batch line. The default implementation deoes nothing.
 		/// </summary>
 		/// <param name="journal">The journal to append.</param>
@@ -862,7 +885,7 @@ namespace Grammophone.Domos.Logic
 			FundsResponseLine line,
 			FundsTransferEventType eventType,
 			Exception exception = null)
-			=> Task.FromResult(0);
+			=> Task.CompletedTask;
 
 		/// <summary>
 		/// Create a failure funds transfer event for an exception as a result of a response line processing.
@@ -902,6 +925,8 @@ namespace Grammophone.Domos.Logic
 						line.TraceCode,
 						line.Comments,
 						exception: exception);
+
+					await OnResponseLineDigestionFailureAsync(line, errorActionResult.FundsTransferEvent, exception);
 
 					return new FundsResponseResult
 					{
@@ -1100,6 +1125,8 @@ namespace Grammophone.Domos.Logic
 						traceCode: line.TraceCode);
 
 					var transferEvent = actionResult.FundsTransferEvent;
+
+					await OnResponseLineDigestionSuccessAsync(line, transferEvent);
 
 					await transaction.CommitAsync();
 
