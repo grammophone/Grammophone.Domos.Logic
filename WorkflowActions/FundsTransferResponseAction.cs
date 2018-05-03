@@ -129,7 +129,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// <param name="fundsResponseLine">The funds response line being consumed.</param>
 		/// <param name="agent">The user agent running the action.</param>
 		protected virtual Task AppendToJournalAsync(D domainContainer, SO stateful, J journal, FundsResponseLine fundsResponseLine, U agent)
-			=> Task.FromResult(0);
+			=> Task.CompletedTask;
 
 		/// <summary>
 		/// Get the funds transfer request which corresponds to this workflow action.
