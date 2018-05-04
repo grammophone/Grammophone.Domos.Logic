@@ -629,7 +629,13 @@ namespace Grammophone.Domos.Logic
 			if (stream == null) throw new ArgumentNullException(nameof(stream));
 			if (requestFile == null) throw new ArgumentNullException(nameof(requestFile));
 
-			using (var xmlWriter = XmlWriter.Create(stream))
+			var writerSettings = new XmlWriterSettings
+			{
+				Indent = true,
+				Encoding = System.Text.Encoding.UTF8
+			};
+
+			using (var xmlWriter = XmlWriter.Create(stream, writerSettings))
 			{
 				WriteRequestFile(xmlWriter, requestFile);
 			}
@@ -648,6 +654,28 @@ namespace Grammophone.Domos.Logic
 			var serializer = GetRequestFileSerializer();
 
 			serializer.Serialize(xmlWriter, requestFile);
+		}
+
+		/// <summary>
+		/// Writes a <see cref="FundsResponseFile"/> into a stream as XML.
+		/// </summary>
+		/// <param name="stream">The stream to write to.</param>
+		/// <param name="responseFile">The response file to write.</param>
+		public void WriteResponseFile(System.IO.Stream stream, FundsResponseFile responseFile)
+		{
+			if (stream == null) throw new ArgumentNullException(nameof(stream));
+			if (responseFile == null) throw new ArgumentNullException(nameof(responseFile));
+
+			var writerSettings = new XmlWriterSettings
+			{
+				Indent = true,
+				Encoding = System.Text.Encoding.UTF8
+			};
+
+			using (var xmlWriter = XmlWriter.Create(stream, writerSettings))
+			{
+				WriteResponseFile(xmlWriter, responseFile);
+			}
 		}
 
 		/// <summary>
