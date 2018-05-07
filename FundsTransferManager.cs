@@ -208,10 +208,28 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Get all the funds transfer file converters registered in the system.
+		/// Get all the <see cref="IFundsTransferFileConverter"/> implementations registered in the system.
 		/// </summary>
 		public IEnumerable<IFundsTransferFileConverter> GetFundsTransferFileConverters()
 			=> this.SessionSettings.ResolveAll<IFundsTransferFileConverter>();
+
+		/// <summary>
+		/// Get all the names under which the available <see cref="IFundsTransferFileConverter"/>
+		/// implementations are registered in the system.
+		/// </summary>
+		/// <returns></returns>
+		public IEnumerable<string> GetFundsTransferFileConvertersNames()
+			=> this.SessionSettings.GetRegistrationNames<IFundsTransferFileConverter>();
+
+		/// <summary>
+		/// Get all the registered implementations of the <see cref="IFundsTransferFileConverter"/> interface
+		/// in a dictionary whose keys are their registration names.
+		/// </summary>
+		/// <returns>
+		/// Returns a dictionary of the <see cref="IFundsTransferFileConverter"/> implemtnations keyes by their registration name.
+		/// </returns>
+		public IReadOnlyDictionary<string, IFundsTransferFileConverter> GetFundsTransferFileConvertersByName()
+			=> this.SessionSettings.ResolveAllToDictionary<IFundsTransferFileConverter>();
 
 		#endregion
 

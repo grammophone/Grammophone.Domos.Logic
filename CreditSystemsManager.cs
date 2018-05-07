@@ -124,7 +124,7 @@ namespace Grammophone.Domos.Logic
 		/// property of <see cref="CreditSystem"/>.
 		/// </summary>
 		/// <returns>Returns a collection of the names. The default name is not returned, if such a registration exists.</returns>
-		public IEnumerable<string> GetRegisteredFundsTransferFileConvertersNames()
+		public IEnumerable<string> GetFundsTransferFileConvertersNames()
 			=> this.SessionSettings.GetRegistrationNames<IFundsTransferFileConverter>().Where(n => n != null);
 
 		/// <summary>
@@ -136,7 +136,7 @@ namespace Grammophone.Domos.Logic
 		/// <returns>
 		/// Returns a dictionary of the <see cref="IFundsTransferFileConverter"/> implemtnations keyes by their registration name.
 		/// </returns>
-		public IReadOnlyDictionary<string, IFundsTransferFileConverter> GetRegisteredFundsTransferConvertersByName()
+		public IReadOnlyDictionary<string, IFundsTransferFileConverter> GetFundsTransferFileConvertersByName()
 			=> this.SessionSettings.ResolveAllToDictionary<IFundsTransferFileConverter>();
 
 		#endregion
