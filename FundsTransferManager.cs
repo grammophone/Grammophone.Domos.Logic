@@ -17,7 +17,7 @@ using Grammophone.Domos.Logic.Models.FundsTransfer;
 namespace Grammophone.Domos.Logic
 {
 	/// <summary>
-	/// Base manager for exposrting fund transfer requests and importing
+	/// Base manager for exporting fund transfer requests and importing
 	/// fund transfer responses.
 	/// </summary>
 	/// <typeparam name="U">
@@ -36,7 +36,7 @@ namespace Grammophone.Domos.Logic
 	/// The type of accounting journals, derived from <see cref="Journal{U, ST, P, R}"/>.
 	/// </typeparam>
 	/// <typeparam name="D">
-	/// The type of domain container, derived from <see cref="IWorkflowUsersDomainContainer{U, ST}"/>.
+	/// The type of domain container, derived from <see cref="IDomosDomainContainer{U, BST, P, R, J}"/>.
 	/// </typeparam>
 	/// <typeparam name="S">
 	/// The type of session, derived from <see cref="LogicSession{U, D}"/>.
