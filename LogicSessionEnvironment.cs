@@ -51,7 +51,7 @@ namespace Grammophone.Domos.Logic
 		/// Create.
 		/// </summary>
 		/// <param name="configurationSectionName">The name of the Unity configuration section.</param>
-		public LogicSessionEnvironment(string configurationSectionName)
+		internal LogicSessionEnvironment(string configurationSectionName)
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 
@@ -84,7 +84,7 @@ namespace Grammophone.Domos.Logic
 		/// The access resolver using the <see cref="IPermissionsSetupProvider"/>
 		/// specified in <see cref="Settings"/>.
 		/// </summary>
-		public AccessResolver<U> AccessResolver { get; private set; }
+		public AccessResolver<U> AccessResolver { get; }
 
 		/// <summary>
 		/// Dictionary of content type IDs by MIME.
@@ -97,14 +97,10 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		public IReadOnlyDictionary<string, string> ContentTypesByExtension => lazyContentTypesByExtension.Value;
 
-		#endregion
-
-		#region Internal properties
-
 		/// <summary>
-		/// The Unity DI container.
+		/// The Dependency Injection container associated with the environment.
 		/// </summary>
-		internal Settings Settings { get; private set; }
+		public Settings Settings { get; }
 
 		#endregion
 
