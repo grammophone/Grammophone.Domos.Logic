@@ -871,7 +871,7 @@ namespace Grammophone.Domos.Logic
 
 			switch (line.Status)
 			{
-				case FundsResponseStatus.Reject:
+				case FundsResponseStatus.Rejected:
 					eventType = FundsTransferEventType.Rejected;
 					break;
 

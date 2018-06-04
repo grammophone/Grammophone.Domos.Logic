@@ -17,8 +17,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		[Display(
 			ResourceType = typeof(FundsResponseStatusResources),
-			Name = nameof(FundsResponseStatusResources.Accepted_Name))]
-		Reject,
+			Name = nameof(FundsResponseStatusResources.Rejected_Name))]
+		Rejected,
 
 		/// <summary>
 		/// The request has been validated and accepted, but the response is not ready yet.

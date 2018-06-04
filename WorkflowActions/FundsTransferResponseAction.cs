@@ -79,7 +79,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 			switch (billingItem.Status)
 			{
-				case FundsResponseStatus.Reject:
+				case FundsResponseStatus.Rejected:
 					eventType = FundsTransferEventType.Rejected;
 					break;
 

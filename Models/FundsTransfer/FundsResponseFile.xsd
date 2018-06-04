@@ -24,8 +24,9 @@
 	</xs:complexType>
 	<xs:simpleType name="FundsResponseStatus">
 		<xs:restriction base="xs:string">
-			<xs:enumeration value="Failed" />
+			<xs:enumeration value="Rejected" />
 			<xs:enumeration value="Accepted" />
+			<xs:enumeration value="Failed" />
 			<xs:enumeration value="Succeeded" />
 		</xs:restriction>
 	</xs:simpleType>
