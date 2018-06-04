@@ -120,6 +120,9 @@
   <data name="AccountHolderName_Name" xml:space="preserve">
     <value>Titulaire du Compte</value>
   </data>
+  <data name="AccountHolderToken_Name" xml:space="preserve">
+    <value>Jeton du Compte</value>
+  </data>
   <data name="Amount_Name" xml:space="preserve">
     <value>Montant</value>
   </data>

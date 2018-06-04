@@ -70,6 +70,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Account Token.
+        /// </summary>
+        public static string AccountHolderToken_Name {
+            get {
+                return ResourceManager.GetString("AccountHolderToken_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Amount.
         /// </summary>
         public static string Amount_Name {

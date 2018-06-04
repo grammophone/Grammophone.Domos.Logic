@@ -87,6 +87,14 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			ResourceType = typeof(FundsRequestFileItemResources))]
 		public string AccountHolderName { get; set; }
 
+		/// <summary>
+		/// Optional token for the identification of the account holder.
+		/// </summary>
+		[Display(
+			Name = nameof(FundsRequestFileItemResources.AccountHolderToken_Name),
+			ResourceType = typeof(FundsRequestFileItemResources))]
+		public string AccountHolderToken { get; set; }
+
 		#endregion
 	}
 }
