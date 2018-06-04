@@ -30,6 +30,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		public FundsResponseFile()
 		{
+			this.Type = FundsResponseFileType.Responded;
 		}
 
 		/// <summary>
@@ -37,6 +38,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		/// <param name="time">The date and time of the batch in UTC.</param>
 		public FundsResponseFile(DateTime time)
+			: this()
 		{
 			if (time.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(time));
 
@@ -51,6 +53,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		public FundsResponseFile(
 			DateTime time,
 			int capacity)
+			: this()
 		{
 			if (time.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(time));
 
@@ -62,6 +65,11 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		#endregion
 
 		#region Public properties
+
+		/// <summary>
+		/// The type of the file. Default is <see cref="FundsResponseFileType.Responded"/>.
+		/// </summary>
+		public FundsResponseFileType Type { get; set; }
 
 		/// <summary>
 		/// The date and time, in UTC.

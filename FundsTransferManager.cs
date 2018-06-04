@@ -344,12 +344,14 @@ namespace Grammophone.Domos.Logic
 
 			var batch = await batchQuery.Include(b => b.Messages).SingleAsync();
 
+			FundsTransferBatchMessageType messageType = GetMessageTypeForResponseFile(file);
+
 			using (var accountingSession = CreateAccountingSession())
 			using (GetElevatedAccessScope())
 			{
 				var responseBatchMessage = await accountingSession.AddFundsTransferBatchMessageAsync(
 					batch,
-					FundsTransferBatchMessageType.Responded,
+					messageType,
 					file.Time);
 
 				return await DigestResponseFileAsync(file, responseBatchMessage);
@@ -808,6 +810,32 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		protected AS CreateAccountingSession()
 			=> accountingSessionFactory(this.DomainContainer, this.Session.User);
+
+		/// <summary>
+		/// Get the batch message type corresponding to the type of a response file.
+		/// </summary>
+		/// <param name="file">The response file.</param>
+		protected static FundsTransferBatchMessageType GetMessageTypeForResponseFile(FundsResponseFile file)
+		{
+			FundsTransferBatchMessageType messageType;
+
+			switch (file.Type)
+			{
+				case FundsResponseFileType.Rejected:
+					messageType = FundsTransferBatchMessageType.Rejected;
+					break;
+
+				case FundsResponseFileType.Accepted:
+					messageType = FundsTransferBatchMessageType.Accepted;
+					break;
+
+				default:
+					messageType = FundsTransferBatchMessageType.Responded;
+					break;
+			}
+
+			return messageType;
+		}
 
 		/// <summary>
 		/// Digest a funds response file.

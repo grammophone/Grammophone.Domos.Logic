@@ -3,6 +3,7 @@
 	<xs:element name="FundsResponseFile" nillable="true" type="tns:FundsResponseFile" />
 	<xs:complexType name="FundsResponseFile">
 		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="1" name="Type" type="tns:FundsResponseFileType" />
 			<xs:element minOccurs="0" maxOccurs="1" name="Items" type="tns:ArrayOfFundsResponseFileItem" />
 		</xs:sequence>
 		<xs:attribute name="Time" type="xs:dateTime" use="required" />
@@ -28,6 +29,13 @@
 			<xs:enumeration value="Accepted" />
 			<xs:enumeration value="Failed" />
 			<xs:enumeration value="Succeeded" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FundsResponseFileType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Rejected" />
+			<xs:enumeration value="Accepted" />
+			<xs:enumeration value="Responded" />
 		</xs:restriction>
 	</xs:simpleType>
 </xs:schema>
