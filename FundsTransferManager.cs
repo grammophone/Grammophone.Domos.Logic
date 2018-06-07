@@ -342,7 +342,10 @@ namespace Grammophone.Domos.Logic
 											 where b.ID == file.BatchID
 											 select b;
 
-			var batch = await batchQuery.Include(b => b.Messages).SingleAsync();
+			var batch = await batchQuery.Include(b => b.Messages).SingleOrDefaultAsync();
+
+			if (batch == null)
+				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
 
 			FundsTransferBatchMessageType messageType = GetMessageTypeForResponseFile(file);
 
