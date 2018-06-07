@@ -31,7 +31,7 @@ namespace Grammophone.Domos.Logic
 
 		/// <summary>
 		/// The MIME type of the converted response file
-		/// used in <see cref="ImportResponseFile(Stream)"/>.
+		/// used in <see cref="ImportResponseFile(Stream, String)"/>.
 		/// </summary>
 		string ResponseContentType { get; }
 
@@ -47,7 +47,8 @@ namespace Grammophone.Domos.Logic
 		/// Convert a platform-specific funds response file to a native response file.
 		/// </summary>
 		/// <param name="inputStream">The stream containing the contents of the platform-specific response file.</param>
+		/// <param name="fileName">The input file name.</param>
 		/// <returns>Returns the native file.</returns>
-		FundsResponseFile ImportResponseFile(Stream inputStream);
+		FundsResponseFile ImportResponseFile(Stream inputStream, string fileName);
 	}
 }
