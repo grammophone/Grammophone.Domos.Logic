@@ -404,6 +404,11 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		public AccessResolver<U> AccessResolver => this.Environment.AccessResolver;
 
+		/// <summary>
+		/// The Unity dependency injection container for this session.
+		/// </summary>
+		public Settings Settings => this.Environment.Settings;
+
 		#endregion
 
 		#region Protected properties
@@ -413,11 +418,6 @@ namespace Grammophone.Domos.Logic
 		/// is the session object.
 		/// </summary>
 		protected internal D DomainContainer { get; private set; }
-
-		/// <summary>
-		/// The Unity dependency injection container for this session.
-		/// </summary>
-		protected internal Settings Settings => this.Environment.Settings;
 
 		#endregion
 
