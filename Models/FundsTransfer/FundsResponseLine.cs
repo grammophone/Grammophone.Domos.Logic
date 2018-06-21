@@ -96,7 +96,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.BatchMessageID_Name))]
+			Name = nameof(FundsResponseLineResources.BatchMessageID_Name),
+			Description = nameof(FundsResponseLineResources.BatchMessageID_Description))]
 		public long? BatchMessageID { get; set; }
 
 		/// <summary>
@@ -104,7 +105,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.Time_Name))]
+			Name = nameof(FundsResponseLineResources.Time_Name),
+			Description = nameof(FundsResponseLineResources.Time_Description))]
 		public DateTime Time
 		{
 			get
@@ -127,7 +129,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[Required]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.LineID_Name))]
+			Name = nameof(FundsResponseLineResources.LineID_Name),
+			Description = nameof(FundsResponseLineResources.LineID_Description))]
 		public long LineID { get; set; }
 
 		/// <summary>
@@ -136,7 +139,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[Required]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.BatchID_Name))]
+			Name = nameof(FundsResponseLineResources.BatchID_Name),
+			Description = nameof(FundsResponseLineResources.BatchID_Description))]
 		public long BatchID { get; set; }
 
 		/// <summary>
@@ -144,7 +148,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		/// </summary>
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.Status_Name))]
+			Name = nameof(FundsResponseLineResources.Status_Name),
+			Description = nameof(FundsResponseLineResources.Status_Description))]
 		public FundsResponseStatus Status { get; set; }
 
 		/// <summary>
@@ -163,7 +168,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[MaxLength(FundsTransferEvent.TraceCodeLength)]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.TraceCode_Name))]
+			Name = nameof(FundsResponseLineResources.TraceCode_Name),
+			Description = nameof(FundsResponseLineResources.TraceCode_Description))]
 		public string TraceCode { get; set; }
 
 		/// <summary>
@@ -173,7 +179,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[DataType(DataType.MultilineText)]
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),
-			Name = nameof(FundsResponseLineResources.Comments_Name))]
+			Name = nameof(FundsResponseLineResources.Comments_Name),
+			Description = nameof(FundsResponseLineResources.Comments_Description))]
 		public string Comments { get; set; }
 
 		#endregion

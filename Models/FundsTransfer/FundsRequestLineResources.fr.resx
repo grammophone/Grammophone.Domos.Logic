@@ -117,8 +117,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="BatchID_Description" xml:space="preserve">
+    <value>ID optionnel du lot sous lequel inscrire le nouveau transfert de fonds.</value>
+  </data>
   <data name="BatchID_Name" xml:space="preserve">
     <value>ID de Lot</value>
+  </data>
+  <data name="Comments_Description" xml:space="preserve">
+    <value>Commentaires optionnels à enregistrer.</value>
   </data>
   <data name="Comments_Name" xml:space="preserve">
     <value>Commentaire</value>

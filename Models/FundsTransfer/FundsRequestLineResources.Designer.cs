@@ -61,11 +61,29 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Optional ID of the batch under which to enroll the new funds transfer..
+        /// </summary>
+        public static string BatchID_Description {
+            get {
+                return ResourceManager.GetString("BatchID_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Batch ID.
         /// </summary>
         public static string BatchID_Name {
             get {
                 return ResourceManager.GetString("BatchID_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional comments to be recorded..
+        /// </summary>
+        public static string Comments_Description {
+            get {
+                return ResourceManager.GetString("Comments_Description", resourceCulture);
             }
         }
         

@@ -19,11 +19,12 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		public const int CommentsLength = 512;
 
 		/// <summary>
-		/// Optional ID of the batch to enroll the new funds transfer under.
+		/// Optional ID of the batch under which to enroll the new funds transfer.
 		/// </summary>
 		[Display(
 			ResourceType = typeof(FundsRequestLineResources),
-			Name = nameof(FundsRequestLineResources.BatchID_Name))]
+			Name = nameof(FundsRequestLineResources.BatchID_Name),
+			Description = nameof(FundsRequestLineResources.BatchID_Description))]
 		public long? BatchID { get; set; }
 
 		/// <summary>
@@ -33,7 +34,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[DataType(DataType.MultilineText)]
 		[Display(
 			ResourceType = typeof(FundsRequestLineResources),
-			Name = nameof(FundsRequestLineResources.Comments_Name))]
+			Name = nameof(FundsRequestLineResources.Comments_Name),
+			Description = nameof(FundsRequestLineResources.Comments_Description))]
 		public string Comments { get; set; }
 	}
 }

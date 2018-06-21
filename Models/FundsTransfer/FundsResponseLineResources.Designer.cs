@@ -61,11 +61,29 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The ID of the batch..
+        /// </summary>
+        public static string BatchID_Description {
+            get {
+                return ResourceManager.GetString("BatchID_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Batch ID.
         /// </summary>
         public static string BatchID_Name {
             get {
                 return ResourceManager.GetString("BatchID_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional ID of the batch message..
+        /// </summary>
+        public static string BatchMessageID_Description {
+            get {
+                return ResourceManager.GetString("BatchMessageID_Description", resourceCulture);
             }
         }
         
@@ -79,11 +97,29 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Optional comments..
+        /// </summary>
+        public static string Comments_Description {
+            get {
+                return ResourceManager.GetString("Comments_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Comments.
         /// </summary>
         public static string Comments_Name {
             get {
                 return ResourceManager.GetString("Comments_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ID of the line within the batch..
+        /// </summary>
+        public static string LineID_Description {
+            get {
+                return ResourceManager.GetString("LineID_Description", resourceCulture);
             }
         }
         
@@ -106,11 +142,29 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The response code as returned by the Electronic Funds Transfer system..
+        /// </summary>
+        public static string ResponseCode_Description {
+            get {
+                return ResourceManager.GetString("ResponseCode_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Response Code.
         /// </summary>
         public static string ResponseCode_Name {
             get {
                 return ResourceManager.GetString("ResponseCode_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The status of the response..
+        /// </summary>
+        public static string Status_Description {
+            get {
+                return ResourceManager.GetString("Status_Description", resourceCulture);
             }
         }
         
@@ -124,11 +178,29 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The date and time, in UTC..
+        /// </summary>
+        public static string Time_Description {
+            get {
+                return ResourceManager.GetString("Time_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Time.
         /// </summary>
         public static string Time_Name {
             get {
                 return ResourceManager.GetString("Time_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unique code for event tracing..
+        /// </summary>
+        public static string TraceCode_Description {
+            get {
+                return ResourceManager.GetString("TraceCode_Description", resourceCulture);
             }
         }
         

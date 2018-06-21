@@ -117,14 +117,26 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="BatchID_Description" xml:space="preserve">
+    <value>L'ID de la ligne dans le lot.</value>
+  </data>
   <data name="BatchID_Name" xml:space="preserve">
     <value>ID de Fournée</value>
+  </data>
+  <data name="BatchMessageID_Description" xml:space="preserve">
+    <value>ID optionnel du message du lot.</value>
   </data>
   <data name="BatchMessageID_Name" xml:space="preserve">
     <value>ID de Message de Fournée</value>
   </data>
+  <data name="Comments_Description" xml:space="preserve">
+    <value>Commentaires optionnels.</value>
+  </data>
   <data name="Comments_Name" xml:space="preserve">
     <value>Commentaires</value>
+  </data>
+  <data name="LineID_Description" xml:space="preserve">
+    <value>The ID of the line within the batch.</value>
   </data>
   <data name="LineID_Name" xml:space="preserve">
     <value>ID de Ligne</value>
@@ -132,14 +144,26 @@
   <data name="RequestID_Name" xml:space="preserve">
     <value>ID de Requête</value>
   </data>
+  <data name="ResponseCode_Description" xml:space="preserve">
+    <value>Le code de réponse retourné par le système de transfert de fonds électronique.</value>
+  </data>
   <data name="ResponseCode_Name" xml:space="preserve">
     <value>Code de Réponse</value>
+  </data>
+  <data name="Status_Description" xml:space="preserve">
+    <value>Le statut de la réponse.</value>
   </data>
   <data name="Status_Name" xml:space="preserve">
     <value>État</value>
   </data>
+  <data name="Time_Description" xml:space="preserve">
+    <value>La date et l'heure, en UTC.</value>
+  </data>
   <data name="Time_Name" xml:space="preserve">
     <value>Temps</value>
+  </data>
+  <data name="TraceCode_Description" xml:space="preserve">
+    <value>Code unique pour le traçage des événements.</value>
   </data>
   <data name="TraceCode_Name" xml:space="preserve">
     <value>Code de Trace</value>
