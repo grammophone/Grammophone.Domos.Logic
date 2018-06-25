@@ -130,10 +130,14 @@ namespace Grammophone.Domos.Logic
 
 			public void OnAdding(object entity)
 			{
-				if (entity is ITrackingEntity trackedEntity)
+				if (entity is ITrackingEntity<U> trackedEntity)
 				{
-					trackedEntity.CreatorUserID = user.ID;
-					trackedEntity.LastModifierUserID = user.ID;
+					long userID = user.ID;
+
+					trackedEntity.CreatorUserID = userID;
+					trackedEntity.CreatorUser = user;
+					trackedEntity.LastModifierUserID = userID;
+					trackedEntity.LastModifierUser = user;
 
 					var now = DateTime.UtcNow;
 					trackedEntity.CreationDate = now;
@@ -145,6 +149,7 @@ namespace Grammophone.Domos.Logic
 							&& !domainContainer.Entry(userTrackingEntity).Reference(ute => ute.OwningUser).IsLoaded)
 						{
 							userTrackingEntity.OwningUserID = user.ID;
+							userTrackingEntity.OwningUser = user;
 						}
 					}
 				}
@@ -162,9 +167,10 @@ namespace Grammophone.Domos.Logic
 					LogActionAndThrowAccessDenied(entity, "write");
 				}
 
-				if (entity is ITrackingEntity trackedEntity)
+				if (entity is ITrackingEntity<U> trackedEntity)
 				{
 					trackedEntity.LastModifierUserID = user.ID;
+					trackedEntity.LastModifierUser = user;
 
 					trackedEntity.LastModificationDate = DateTime.UtcNow;
 				}
