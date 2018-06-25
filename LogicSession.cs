@@ -148,7 +148,7 @@ namespace Grammophone.Domos.Logic
 						if (userTrackingEntity.OwningUserID == 0L
 							&& !domainContainer.Entry(userTrackingEntity).Reference(ute => ute.OwningUser).IsLoaded)
 						{
-							userTrackingEntity.OwningUserID = user.ID;
+							userTrackingEntity.OwningUserID = userID;
 							userTrackingEntity.OwningUser = user;
 						}
 					}
