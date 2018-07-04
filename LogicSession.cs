@@ -130,42 +130,17 @@ namespace Grammophone.Domos.Logic
 
 			public void OnAdding(object entity)
 			{
-				if (entity is ITrackingEntity trackingEntity)
+				if (entity is ICreationLoggingEntity<U> creationLoggingEntity)
 				{
-					long userID = user.ID;
-
-					trackingEntity.CreatorUserID = userID;
-					trackingEntity.LastModifierUserID = userID;
-
-					var now = DateTime.UtcNow;
-					trackingEntity.CreationDate = now;
-					trackingEntity.LastModificationDate = now;
-
-					if (trackingEntity is ITrackingEntity<U> strongTrackingEntity)
-					{
-						strongTrackingEntity.CreatorUser = user;
-						strongTrackingEntity.LastModifierUser = user;
-
-						if (trackingEntity is IUserTrackingEntity<U> strongUserTrackingEntity)
-						{
-							if (strongUserTrackingEntity.OwningUserID == 0L
-								&& !domainContainer.Entry(strongUserTrackingEntity).Reference(ute => ute.OwningUser).IsLoaded)
-							{
-								strongUserTrackingEntity.OwningUserID = userID;
-								strongUserTrackingEntity.OwningUser = user;
-							}
-						}
-					}
-					else if (trackingEntity is IUserTrackingEntity userTrackingEntity)
-					{
-						if (userTrackingEntity.OwningUserID == 0L)
-						{
-							userTrackingEntity.OwningUserID = userID;
-						}
-					}
+					creationLoggingEntity.SetCreator(user, DateTime.UtcNow);
 				}
 
-				if (!SupressAccessCheck && !accessResolver.CanUserCreateEntity(user, entity))
+				if (entity is IUpdatableOwnerEntity<U> updatableOwnerEntity)
+				{
+					if (!updatableOwnerEntity.HasOwners()) updatableOwnerEntity.AddOwner(user);
+				}
+
+				if (!this.SupressAccessCheck && !accessResolver.CanUserCreateEntity(user, entity))
 				{
 					LogActionAndThrowAccessDenied(entity, "create");
 				}
@@ -173,27 +148,20 @@ namespace Grammophone.Domos.Logic
 
 			public void OnChanging(object entity)
 			{
-				if (!SupressAccessCheck && !accessResolver.CanUserWriteEntity(user, entity))
+				if (!this.SupressAccessCheck && !accessResolver.CanUserWriteEntity(user, entity))
 				{
 					LogActionAndThrowAccessDenied(entity, "write");
 				}
 
-				if (entity is ITrackingEntity trackingEntity)
+				if (entity is IChangeLoggingEntity<U> changeLoggingEntity)
 				{
-					trackingEntity.LastModifierUserID = user.ID;
-
-					trackingEntity.LastModificationDate = DateTime.UtcNow;
-
-					if (trackingEntity is ITrackingEntity<U> strongTrackingEntity)
-					{
-						strongTrackingEntity.LastModifierUser = user;
-					}
+					changeLoggingEntity.RecordChange(user, DateTime.UtcNow);
 				}
 			}
 
 			public void OnDeleting(object entity)
 			{
-				if (!SupressAccessCheck && !accessResolver.CanUserDeleteEntity(user, entity))
+				if (!this.SupressAccessCheck && !accessResolver.CanUserDeleteEntity(user, entity))
 				{
 					LogActionAndThrowAccessDenied(entity, "delete");
 				}
@@ -201,7 +169,7 @@ namespace Grammophone.Domos.Logic
 
 			public void OnRead(object entity)
 			{
-				if (!SupressAccessCheck && !accessResolver.CanUserReadEntity(user, entity))
+				if (!this.SupressAccessCheck && !accessResolver.CanUserReadEntity(user, entity))
 				{
 					LogActionAndThrowAccessDenied(entity, "read");
 				}
