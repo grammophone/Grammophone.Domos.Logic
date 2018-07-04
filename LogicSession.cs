@@ -130,26 +130,37 @@ namespace Grammophone.Domos.Logic
 
 			public void OnAdding(object entity)
 			{
-				if (entity is ITrackingEntity<U> trackedEntity)
+				if (entity is ITrackingEntity trackingEntity)
 				{
 					long userID = user.ID;
 
-					trackedEntity.CreatorUserID = userID;
-					trackedEntity.CreatorUser = user;
-					trackedEntity.LastModifierUserID = userID;
-					trackedEntity.LastModifierUser = user;
+					trackingEntity.CreatorUserID = userID;
+					trackingEntity.LastModifierUserID = userID;
 
 					var now = DateTime.UtcNow;
-					trackedEntity.CreationDate = now;
-					trackedEntity.LastModificationDate = now;
+					trackingEntity.CreationDate = now;
+					trackingEntity.LastModificationDate = now;
 
-					if (trackedEntity is IUserTrackingEntity<U> userTrackingEntity)
+					if (trackingEntity is ITrackingEntity<U> strongTrackingEntity)
 					{
-						if (userTrackingEntity.OwningUserID == 0L
-							&& !domainContainer.Entry(userTrackingEntity).Reference(ute => ute.OwningUser).IsLoaded)
+						strongTrackingEntity.CreatorUser = user;
+						strongTrackingEntity.LastModifierUser = user;
+
+						if (trackingEntity is IUserTrackingEntity<U> strongUserTrackingEntity)
+						{
+							if (strongUserTrackingEntity.OwningUserID == 0L
+								&& !domainContainer.Entry(strongUserTrackingEntity).Reference(ute => ute.OwningUser).IsLoaded)
+							{
+								strongUserTrackingEntity.OwningUserID = userID;
+								strongUserTrackingEntity.OwningUser = user;
+							}
+						}
+					}
+					else if (trackingEntity is IUserTrackingEntity userTrackingEntity)
+					{
+						if (userTrackingEntity.OwningUserID == 0L)
 						{
 							userTrackingEntity.OwningUserID = userID;
-							userTrackingEntity.OwningUser = user;
 						}
 					}
 				}
@@ -167,12 +178,16 @@ namespace Grammophone.Domos.Logic
 					LogActionAndThrowAccessDenied(entity, "write");
 				}
 
-				if (entity is ITrackingEntity<U> trackedEntity)
+				if (entity is ITrackingEntity trackingEntity)
 				{
-					trackedEntity.LastModifierUserID = user.ID;
-					trackedEntity.LastModifierUser = user;
+					trackingEntity.LastModifierUserID = user.ID;
 
-					trackedEntity.LastModificationDate = DateTime.UtcNow;
+					trackingEntity.LastModificationDate = DateTime.UtcNow;
+
+					if (trackingEntity is ITrackingEntity<U> strongTrackingEntity)
+					{
+						strongTrackingEntity.LastModifierUser = user;
+					}
 				}
 			}
 
