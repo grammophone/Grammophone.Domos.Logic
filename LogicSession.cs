@@ -140,6 +140,11 @@ namespace Grammophone.Domos.Logic
 					if (!updatableOwnerEntity.HasOwners()) updatableOwnerEntity.AddOwner(user);
 				}
 
+				if (entity is IChangeLoggingEntity<U> changeLoggingEntity)
+				{
+					changeLoggingEntity.RecordChange(user, DateTime.UtcNow);
+				}
+
 				if (!this.SupressAccessCheck && !accessResolver.CanUserCreateEntity(user, entity))
 				{
 					LogActionAndThrowAccessDenied(entity, "create");
