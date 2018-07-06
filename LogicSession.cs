@@ -130,9 +130,11 @@ namespace Grammophone.Domos.Logic
 
 			public void OnAdding(object entity)
 			{
+				var utcNow = DateTime.UtcNow;
+
 				if (entity is ICreationLoggingEntity<U> creationLoggingEntity)
 				{
-					creationLoggingEntity.SetCreator(user, DateTime.UtcNow);
+					creationLoggingEntity.SetCreator(user, utcNow);
 				}
 
 				if (entity is IUpdatableOwnerEntity<U> updatableOwnerEntity)
@@ -142,7 +144,7 @@ namespace Grammophone.Domos.Logic
 
 				if (entity is IChangeLoggingEntity<U> changeLoggingEntity)
 				{
-					changeLoggingEntity.RecordChange(user, DateTime.UtcNow);
+					changeLoggingEntity.RecordChange(user, utcNow);
 				}
 
 				if (!this.SupressAccessCheck && !accessResolver.CanUserCreateEntity(user, entity))
