@@ -97,6 +97,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to UTC Time.
+        /// </summary>
+        public static string Time_Name {
+            get {
+                return ResourceManager.GetString("Time_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Trace Code.
         /// </summary>
         public static string TraceCode_Name {

@@ -44,7 +44,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			if (file == null) throw new ArgumentNullException(nameof(file));
 			if (fileItem == null) throw new ArgumentNullException(nameof(fileItem));
 
-			this.Time = file.Time;
+			this.Time = fileItem.Time;
 			this.BatchID = file.BatchID;
 			this.LineID = fileItem.LineID;
 			this.Status = fileItem.Status;

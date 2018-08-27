@@ -126,4 +126,7 @@
   <data name="Responded_Name" xml:space="preserve">
     <value>Répondu</value>
   </data>
+  <data name="Time_Name" xml:space="preserve">
+    <value>Temps UTC</value>
+  </data>
 </root>

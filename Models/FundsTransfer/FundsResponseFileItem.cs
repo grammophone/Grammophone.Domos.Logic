@@ -15,6 +15,14 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 	public class FundsResponseFileItem
 	{
 		/// <summary>
+		/// Create.
+		/// </summary>
+		public FundsResponseFileItem()
+		{
+			this.Time = DateTime.UtcNow;
+		}
+
+		/// <summary>
 		/// The ID of the line in the batch.
 		/// </summary>
 		[XmlAttribute]
@@ -59,5 +67,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			ResourceType = typeof(FundsResponseFileItemResources))]
 		[MaxLength(Domain.Accounting.FundsTransferEvent.CommentsLength)]
 		public string Comments { get; set; }
+
+		/// <summary>
+		/// The UTC date and time when the line was executed by the funds transfer gateway..
+		/// </summary>
+		[XmlAttribute]
+		[DataType(DataType.DateTime)]
+		[Display(
+			Name = nameof(FundsResponseFileItemResources.Time_Name),
+			ResourceType = typeof(FundsResponseFileItemResources))]
+		public DateTime Time { get; set; }
 	}
 }

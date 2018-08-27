@@ -31,6 +31,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		public FundsResponseFile()
 		{
 			this.Type = FundsResponseFileType.Responded;
+
+			this.Time = DateTime.UtcNow;
 		}
 
 		/// <summary>
@@ -43,6 +45,8 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			if (time.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(time));
 
 			this.time = time;
+
+			this.Type = FundsResponseFileType.Responded;
 		}
 
 		/// <summary>
@@ -53,13 +57,11 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		public FundsResponseFile(
 			DateTime time,
 			int capacity)
-			: this()
+			: this(time)
 		{
 			if (time.Kind != DateTimeKind.Utc) throw new ArgumentException("The date is not UTC.", nameof(time));
 
 			this.items = new FundsResponseFileItems(capacity);
-
-			this.time = time;
 		}
 
 		#endregion

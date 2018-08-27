@@ -21,6 +21,7 @@
 			<xs:element minOccurs="1" maxOccurs="1" name="Status" type="tns:FundsResponseStatus" />
 			<xs:element minOccurs="0" maxOccurs="1" name="Comments" type="xs:string" />
 		</xs:sequence>
+		<xs:attribute name="Time" type="xs:dateTime" use="required" />
 		<xs:attribute name="LineID" type="xs:long" use="required" />
 	</xs:complexType>
 	<xs:simpleType name="FundsResponseStatus">
