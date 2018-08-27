@@ -66,6 +66,8 @@ namespace Grammophone.Domos.Logic
 
 		private Func<D, U, AS> accountingSessionFactory;
 
+		private static IReadOnlyCollection<FundsResponseResult> emptyFundsResponseResults;
+
 		#endregion
 
 		#region Construction
@@ -95,6 +97,8 @@ namespace Grammophone.Domos.Logic
 			lazyResponseFileSerializer = new Lazy<XmlSerializer>(() => new XmlSerializer(typeof(FundsResponseFile)));
 
 			lazyRequestFileSerializer = new Lazy<XmlSerializer>(() => new XmlSerializer(typeof(FundsRequestFile)));
+
+			emptyFundsResponseResults = new FundsResponseResult[0];
 		}
 
 		#endregion
@@ -328,6 +332,8 @@ namespace Grammophone.Domos.Logic
 		/// <returns>
 		/// Returns a collection of results describing the execution outcome of the
 		/// contents of the <paramref name="file"/>.
+		/// If the <paramref name="file"/> is not relevant to this manager, it returns
+		/// an empty collection.
 		/// </returns>
 		public virtual async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseFileAsync(
 			FundsResponseFile file)
@@ -344,8 +350,7 @@ namespace Grammophone.Domos.Logic
 
 			var batch = await batchQuery.Include(b => b.Messages).SingleOrDefaultAsync();
 
-			if (batch == null)
-				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
+			if (batch == null) return emptyFundsResponseResults;
 
 			FundsTransferBatchMessageType messageType = GetMessageTypeForResponseFile(file);
 
@@ -368,6 +373,8 @@ namespace Grammophone.Domos.Logic
 		/// <returns>
 		/// Returns the collection of the results which correspond to the 
 		/// funds transfer requests grouped in the line.
+		/// If the <paramref name="line"/> is not relevant to this manager, it returns
+		/// an empty collection.
 		/// </returns>
 		public virtual async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseLineAsync(FundsResponseLine line)
 		{
@@ -379,8 +386,7 @@ namespace Grammophone.Domos.Logic
 
 			var requests = await requestsQuery.Include(r => r.Batch).ToArrayAsync();
 
-			if (requests.Length == 0)
-				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
+			if (requests.Length == 0) return emptyFundsResponseResults;
 
 			var results = new List<FundsResponseResult>(requests.Length);
 
