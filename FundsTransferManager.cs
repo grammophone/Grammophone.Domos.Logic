@@ -340,9 +340,8 @@ namespace Grammophone.Domos.Logic
 		{
 			if (file == null) throw new ArgumentNullException(nameof(file));
 
-			if (file.Items.Count == 0) return new FundsResponseResult[0];
 
-			var firstItem = file.Items.First();
+			var firstItem = file.Items.FirstOrDefault();
 
 			var batchQuery = from b in this.FundsTransferBatches
 											 where b.ID == file.BatchID
@@ -361,6 +360,8 @@ namespace Grammophone.Domos.Logic
 					batch,
 					messageType,
 					file.Time);
+
+				if (file.Items.Count == 0) return new FundsResponseResult[0];
 
 				return await DigestResponseFileAsync(file, responseBatchMessage);
 			}
