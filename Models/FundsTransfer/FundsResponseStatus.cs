@@ -42,6 +42,14 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[Display(
 			ResourceType = typeof(FundsResponseStatusResources),
 			Name = nameof(FundsResponseStatusResources.Succeeded_Name))]
-		Succeeded
+		Succeeded,
+
+		/// <summary>
+		/// The transfer request has been anulled by the account owner and the funds have been reversed.
+		/// </summary>
+		[Display(
+			ResourceType = typeof(FundsResponseStatusResources),
+			Name = nameof(FundsResponseStatusResources.Returned_Name))]
+		Returned
 	}
 }

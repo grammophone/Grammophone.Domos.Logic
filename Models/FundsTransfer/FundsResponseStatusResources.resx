@@ -126,6 +126,9 @@
   <data name="Rejected_Name" xml:space="preserve">
     <value>Rejected</value>
   </data>
+  <data name="Returned_Name" xml:space="preserve">
+    <value>Returned</value>
+  </data>
   <data name="Succeeded_Name" xml:space="preserve">
     <value>Succeeded</value>
   </data>

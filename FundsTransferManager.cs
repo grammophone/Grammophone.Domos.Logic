@@ -925,6 +925,10 @@ namespace Grammophone.Domos.Logic
 					eventType = FundsTransferEventType.Succeeded;
 					break;
 
+				case FundsResponseStatus.Returned:
+					eventType = FundsTransferEventType.Returned;
+					break;
+
 				default:
 					throw new LogicException($"Unexpected item status '{line.Status}' for request with ID {line.LineID}.");
 			}
