@@ -376,9 +376,10 @@ namespace Grammophone.Domos.Logic
 		/// <returns>
 		/// Returns the collection of the results which correspond to the 
 		/// funds transfer requests grouped in the line.
-		/// If the <paramref name="line"/> is not relevant to this manager, it returns
-		/// an empty collection.
 		/// </returns>
+		/// <exception cref="UserException">
+		/// Thrown if the <paramref name="line"/> is not relevant to this manager.
+		/// </exception>
 		public virtual async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseLineAsync(FundsResponseLine line)
 		{
 			if (line == null) throw new ArgumentNullException(nameof(line));
@@ -389,7 +390,7 @@ namespace Grammophone.Domos.Logic
 
 			var requests = await requestsQuery.Include(r => r.Batch).ToArrayAsync();
 
-			if (requests.Length == 0) return emptyFundsResponseResults;
+			if (requests.Length == 0) throw new UserException(FundsTransferManagerMessages.LINE_NOT_APPLICABLE);
 
 			var results = new List<FundsResponseResult>(requests.Length);
 

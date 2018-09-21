@@ -126,6 +126,9 @@
   <data name="FILE_NOT_APPLICABLE" xml:space="preserve">
     <value>Le fichier n'est pas applicable à ce gestionnaire.</value>
   </data>
+  <data name="LINE_NOT_APPLICABLE" xml:space="preserve">
+    <value>La ligne n'est pas applicable à ce gestionnaire.</value>
+  </data>
   <data name="REQUESTS_NOT_IN_SAME_BATCH" xml:space="preserve">
     <value>Les demandes dans le fichier n'ont pas été émises sous le même lot.</value>
   </data>

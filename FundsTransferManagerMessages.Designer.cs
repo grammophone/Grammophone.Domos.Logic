@@ -88,6 +88,15 @@ namespace Grammophone.Domos.Logic {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The line is not applicable to the managed transfer requests..
+        /// </summary>
+        internal static string LINE_NOT_APPLICABLE {
+            get {
+                return ResourceManager.GetString("LINE_NOT_APPLICABLE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The requests in the file have not been issued under the same batch..
         /// </summary>
         internal static string REQUESTS_NOT_IN_SAME_BATCH {

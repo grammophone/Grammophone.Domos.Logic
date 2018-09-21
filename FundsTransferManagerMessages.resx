@@ -126,6 +126,9 @@
   <data name="FILE_NOT_APPLICABLE" xml:space="preserve">
     <value>The file is not applicable to the managed transfer requests.</value>
   </data>
+  <data name="LINE_NOT_APPLICABLE" xml:space="preserve">
+    <value>The line is not applicable to the managed transfer requests.</value>
+  </data>
   <data name="REQUESTS_NOT_IN_SAME_BATCH" xml:space="preserve">
     <value>The requests in the file have not been issued under the same batch.</value>
   </data>
