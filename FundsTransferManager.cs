@@ -332,9 +332,10 @@ namespace Grammophone.Domos.Logic
 		/// <returns>
 		/// Returns a collection of results describing the execution outcome of the
 		/// contents of the <paramref name="file"/>.
-		/// If the <paramref name="file"/> is not relevant to this manager, it returns
-		/// an empty collection.
 		/// </returns>
+		/// <exception cref="UserException">
+		/// Thrown if the <paramref name="file"/> is not relevant to this manager.
+		/// </exception>
 		public virtual async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseFileAsync(
 			FundsResponseFile file)
 		{
@@ -349,7 +350,7 @@ namespace Grammophone.Domos.Logic
 
 			var batch = await batchQuery.Include(b => b.Messages).SingleOrDefaultAsync();
 
-			if (batch == null) return emptyFundsResponseResults;
+			if (batch == null) throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
 
 			FundsTransferBatchMessageType messageType = GetMessageTypeForResponseFile(file);
 
@@ -361,8 +362,7 @@ namespace Grammophone.Domos.Logic
 					messageType,
 					file.Time);
 
-				// If there are no items, skip digesting, which would
-				// otherwise throw exception for irrelevance as no requests match the file.
+				// If there are no items, skip digesting.
 				if (file.Items.Count == 0) return emptyFundsResponseResults;
 
 				return await DigestResponseFileAsync(file, responseBatchMessage);
