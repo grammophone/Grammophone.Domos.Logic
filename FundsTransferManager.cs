@@ -361,7 +361,9 @@ namespace Grammophone.Domos.Logic
 					messageType,
 					file.Time);
 
-				if (file.Items.Count == 0) return new FundsResponseResult[0];
+				// If there are no items, skip digesting, which would
+				// otherwise throw exception for irrelevance as no requests match the file.
+				if (file.Items.Count == 0) return emptyFundsResponseResults;
 
 				return await DigestResponseFileAsync(file, responseBatchMessage);
 			}
