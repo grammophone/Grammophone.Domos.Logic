@@ -10,6 +10,7 @@ using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.TemplateRendering;
 using Grammophone.Setup;
+using Grammophone.Logging;
 
 namespace Grammophone.Domos.Logic
 {
@@ -34,6 +35,8 @@ namespace Grammophone.Domos.Logic
 		#endregion
 
 		#region Private fields
+
+		private Lazy<LoggersRepository> lazyLoggerRepository;
 
 		private Lazy<IReadOnlyDictionary<string, int>> lazyContentTypeIDsByMIME;
 
@@ -60,6 +63,10 @@ namespace Grammophone.Domos.Logic
 			var permissionsSetupProvider = this.Settings.Resolve<IPermissionsSetupProvider>();
 
 			this.AccessResolver = new AccessResolver<U>(permissionsSetupProvider);
+
+			lazyLoggerRepository = new Lazy<LoggersRepository>(
+				this.CreateLoggerRepository,
+				true);
 
 			lazyContentTypeIDsByMIME = new Lazy<IReadOnlyDictionary<string, int>>(
 				this.LoadContentTypeIDsByMIME,
@@ -101,6 +108,12 @@ namespace Grammophone.Domos.Logic
 		/// The Dependency Injection container associated with the environment.
 		/// </summary>
 		public Settings Settings { get; }
+
+		/// <summary>
+		/// Reporitory for loggers. If no <see cref="ILoggerProvider"/> is specified in <see cref="Settings"/>,
+		/// null loggers are provided.
+		/// </summary>
+		public LoggersRepository LoggerRepository { get; }
 
 		#endregion
 
@@ -296,6 +309,22 @@ namespace Grammophone.Domos.Logic
 			return contentTypeAssociations.ToDictionary(
 				a => a.FileExtension.Trim().ToLower(),
 				a => a.MIMEType.Trim());
+		}
+
+		private LoggersRepository CreateLoggerRepository()
+		{
+			ILoggerProvider loggerProvider;
+
+			if (this.Settings.IsRegistered<ILoggerProvider>())
+			{
+				loggerProvider = this.Settings.Resolve<ILoggerProvider>();
+			}
+			else
+			{
+				loggerProvider = new Logging.Null.NullLoggerProvider();
+			}
+
+			return new LoggersRepository(loggerProvider);
 		}
 
 		#endregion
