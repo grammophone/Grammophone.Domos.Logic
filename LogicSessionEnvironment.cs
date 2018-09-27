@@ -10,7 +10,6 @@ using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.TemplateRendering;
 using Grammophone.Setup;
-using Grammophone.Logging;
 
 namespace Grammophone.Domos.Logic
 {
@@ -21,7 +20,7 @@ namespace Grammophone.Domos.Logic
 	/// </summary>
 	/// <typeparam name="U">The type of users in the session.</typeparam>
 	/// <typeparam name="D">The type of domain container of the session.</typeparam>
-	public class LogicSessionEnvironment<U, D> : IDisposable
+	public class LogicSessionEnvironment<U, D> : ILogicSessionEnvironment, IDisposable
 		where U : User
 		where D : IUsersDomainContainer<U>
 	{
@@ -32,11 +31,16 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		private const int StorageProvidersCacheSize = 16;
 
+		/// <summary>
+		/// Name of the logger used to record failures while the asynchronous worker for sending e-mails fails. 
+		/// </summary>
+		private const string EmailWorkerLoggerName = "EmailWorker";
+
 		#endregion
 
 		#region Private fields
 
-		private Lazy<LoggersRepository> lazyLoggerRepository;
+		private Lazy<Logging.LoggersRepository> lazyLoggerRepository;
 
 		private Lazy<IReadOnlyDictionary<string, int>> lazyContentTypeIDsByMIME;
 
@@ -64,7 +68,7 @@ namespace Grammophone.Domos.Logic
 
 			this.AccessResolver = new AccessResolver<U>(permissionsSetupProvider);
 
-			lazyLoggerRepository = new Lazy<LoggersRepository>(
+			lazyLoggerRepository = new Lazy<Logging.LoggersRepository>(
 				this.CreateLoggerRepository,
 				true);
 
@@ -80,7 +84,7 @@ namespace Grammophone.Domos.Logic
 				name => this.Settings.Resolve<Storage.IStorageProvider>(name),
 				StorageProvidersCacheSize);
 
-			mailQueue = new AsyncWorkQueue<System.Net.Mail.MailMessage>(SendEmailAsync);
+			mailQueue = new AsyncWorkQueue<System.Net.Mail.MailMessage>(this, SendEmailAsync, EmailWorkerLoggerName);
 		}
 
 		#endregion
@@ -109,15 +113,16 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		public Settings Settings { get; }
 
-		/// <summary>
-		/// Reporitory for loggers. If no <see cref="ILoggerProvider"/> is specified in <see cref="Settings"/>,
-		/// null loggers are provided.
-		/// </summary>
-		public LoggersRepository LoggerRepository { get; }
-
 		#endregion
 
 		#region Public methods
+
+		/// <summary>
+		/// Get the logger registered under a specified name.
+		/// </summary>
+		/// <param name="loggerName">The name under which the logger is registered.</param>
+		/// <returns>Returns the <see cref="Logging.ILogger"/> requested.</returns>
+		public Logging.ILogger GetLogger(string loggerName) => lazyLoggerRepository.Value.GetLogger(loggerName);
 
 		/// <summary>
 		/// Get a registered storage provider.
@@ -311,20 +316,20 @@ namespace Grammophone.Domos.Logic
 				a => a.MIMEType.Trim());
 		}
 
-		private LoggersRepository CreateLoggerRepository()
+		private Logging.LoggersRepository CreateLoggerRepository()
 		{
-			ILoggerProvider loggerProvider;
+			Logging.ILoggerProvider loggerProvider;
 
-			if (this.Settings.IsRegistered<ILoggerProvider>())
+			if (this.Settings.IsRegistered<Logging.ILoggerProvider>())
 			{
-				loggerProvider = this.Settings.Resolve<ILoggerProvider>();
+				loggerProvider = this.Settings.Resolve<Logging.ILoggerProvider>();
 			}
 			else
 			{
 				loggerProvider = new Logging.Null.NullLoggerProvider();
 			}
 
-			return new LoggersRepository(loggerProvider);
+			return new Logging.LoggersRepository(loggerProvider);
 		}
 
 		#endregion

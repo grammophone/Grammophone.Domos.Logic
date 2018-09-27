@@ -1040,7 +1040,7 @@ namespace Grammophone.Domos.Logic
 			}
 			catch (Exception doubleException)
 			{
-				this.Logger.Log(NLog.LogLevel.Error, doubleException);
+				this.ClassLogger.Log(Logging.LogLevel.Error, doubleException.Message, doubleException);
 
 				this.DomainContainer.ChangeTracker.UndoChanges();
 

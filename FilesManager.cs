@@ -292,7 +292,8 @@ namespace Grammophone.Domos.Logic
 			Task.Run(() => DeleteFileContentsAsync(file))
 				.ContinueWith((result) =>
 				{
-					Logger.Warn(
+					this.ClassLogger.Log(
+						Logging.LogLevel.Warn,
 						$"Could not delete contents of file {file.FullName} in container {file.ContainerName}.", 
 						result.Exception);
 				},

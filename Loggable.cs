@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Grammophone.Logging;
 
 namespace Grammophone.Domos.Logic
 {
@@ -14,9 +15,14 @@ namespace Grammophone.Domos.Logic
 		#region Private fields
 
 		/// <summary>
-		/// Backing field for the <see cref="Logger"/> property.
+		/// Backing field for <see cref="ClassLogger"/> property.
 		/// </summary>
-		private NLog.Logger logger;
+		private ILogger classLogger;
+
+		/// <summary>
+		/// Environment to use in order to invoke loggers.
+		/// </summary>
+		private readonly ILogicSessionEnvironment environment;
 
 		#endregion
 
@@ -25,11 +31,12 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Create.
 		/// </summary>
-		public Loggable()
+		/// <param name="environment">Environment to use in order to invoke loggers.</param>
+		public Loggable(ILogicSessionEnvironment environment)
 		{
-			string loggerName = GetLoggerName();
+			if (environment == null) throw new ArgumentNullException(nameof(environment));
 
-			logger = NLog.LogManager.GetLogger(loggerName);
+			this.environment = environment;
 		}
 
 		#endregion
@@ -38,18 +45,18 @@ namespace Grammophone.Domos.Logic
 
 		/// <summary>
 		/// The logger associated with the class.
-		/// Uses the name specified in <see cref="GetLoggerName"/>.
+		/// Uses the name specified in <see cref="GetClassLoggerName"/>.
 		/// </summary>
-		protected NLog.Logger Logger
+		protected ILogger ClassLogger
 		{
 			get
 			{
-				if (logger == null)
+				if (classLogger == null)
 				{
-					logger = NLog.LogManager.GetLogger(GetLoggerName());
+					classLogger = this.environment.GetLogger(GetClassLoggerName());
 				}
 
-				return logger;
+				return classLogger;
 			}
 		}
 
@@ -58,13 +65,20 @@ namespace Grammophone.Domos.Logic
 		#region Protected methods
 
 		/// <summary>
-		/// Specifies the name of the logger to use.
+		/// Specifies the name of the logger to use to obtain <see cref="ClassLogger"/>.
 		/// The default implementation returns the full class name.
 		/// </summary>
-		protected virtual string GetLoggerName()
+		protected virtual string GetClassLoggerName()
 		{
 			return this.GetType().FullName;
 		}
+
+		/// <summary>
+		/// Get the logger registered under a given name.
+		/// </summary>
+		/// <param name="loggerName">The name under which the logger is registered.</param>
+		/// <returns>Returns the requested logger.</returns>
+		protected ILogger GetLogger(string loggerName) => environment.GetLogger(loggerName);
 
 		#endregion
 	}

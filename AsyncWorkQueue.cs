@@ -16,13 +16,15 @@ namespace Grammophone.Domos.Logic
 	{
 		#region Private fields
 
-		private ConcurrentQueue<M> messagesQueue;
+		private readonly ConcurrentQueue<M> messagesQueue;
 
-		private int workerStartedFlag;
+		private readonly Func<M, Task> asyncMessageConsumer;
 
-		private Func<M, Task> asyncMessageConsumer;
+		private readonly string classLoggerName;
 
 		private bool isShuttingDown;
+
+		private int workerStartedFlag;
 
 		#endregion
 
@@ -31,12 +33,18 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Create.
 		/// </summary>
-		/// <param name="asyncMessageConsumer">Asynchronous functino for consuming a message.</param>
-		public AsyncWorkQueue(Func<M, Task> asyncMessageConsumer)
+		/// <param name="environment">Environment to use in order to invoke loggers.</param>
+		/// <param name="asyncMessageConsumer">Asynchronous function for consuming a message.</param>
+		/// <param name="classLoggerName">The name of the logger to use for recording failure of the message consumer.</param>
+		public AsyncWorkQueue(ILogicSessionEnvironment environment, Func<M, Task> asyncMessageConsumer, string classLoggerName)
+			: base(environment)
 		{
 			if (asyncMessageConsumer == null) throw new ArgumentNullException(nameof(asyncMessageConsumer));
+			if (classLoggerName == null) throw new ArgumentNullException(nameof(classLoggerName));
 
 			this.asyncMessageConsumer = asyncMessageConsumer;
+
+			this.classLoggerName = classLoggerName;
 
 			messagesQueue = new ConcurrentQueue<M>();
 		}
@@ -73,6 +81,15 @@ namespace Grammophone.Domos.Logic
 
 			await StartDequeAsync();
 		}
+
+		#endregion
+
+		#region Protected methods
+
+		/// <summary>
+		/// Returns the class logger name specified in the constructor.
+		/// </summary>
+		protected override string GetClassLoggerName() => classLoggerName;
 
 		#endregion
 
@@ -115,7 +132,7 @@ namespace Grammophone.Domos.Logic
 				}
 				catch (Exception ex)
 				{
-					Logger.Error(ex, "Failed queued work.");
+					this.ClassLogger.Log(Logging.LogLevel.Error, ex, "Failed queued work.");
 				}
 			}
 		}

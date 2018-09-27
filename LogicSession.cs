@@ -15,6 +15,7 @@ using Grammophone.Domos.Environment;
 using Grammophone.TemplateRendering;
 using Grammophone.Email;
 using Grammophone.Setup;
+using Grammophone.Logging;
 
 namespace Grammophone.Domos.Logic
 {
@@ -58,7 +59,7 @@ namespace Grammophone.Domos.Logic
 	/// </list>
 	/// </para>
 	/// </remarks>
-	public abstract class LogicSession<U, D> : Loggable, IDisposable
+	public abstract class LogicSession<U, D> : IDisposable
 		where U : User
 		where D : IUsersDomainContainer<U>
 	{
@@ -93,6 +94,9 @@ namespace Grammophone.Domos.Logic
 			/// <summary>
 			/// Create.
 			/// </summary>
+			/// <param name="environment">
+			/// Environment to use in order to invoke loggers.
+			/// </param>
 			/// <param name="user">
 			/// The user, which must have prefetched the roles, disposition and disposition types
 			/// for proper performance.
@@ -103,7 +107,8 @@ namespace Grammophone.Domos.Logic
 			/// <param name="domainContainer">
 			/// The domain container.
 			/// </param>
-			public EntityListener(U user, AccessResolver<U> accessResolver, D domainContainer)
+			public EntityListener(ILogicSessionEnvironment environment, U user, AccessResolver<U> accessResolver, D domainContainer)
+				: base(environment)
 			{
 				if (user == null) throw new ArgumentNullException(nameof(user));
 				if (accessResolver == null) throw new ArgumentNullException(nameof(accessResolver));
@@ -184,6 +189,15 @@ namespace Grammophone.Domos.Logic
 
 			#endregion
 
+			#region Protected methods
+
+			/// <summary>
+			/// Returns class logger name in the form of "EntityListener[full class name of container <typeparamref name="D"/>]".
+			/// </summary>
+			protected override string GetClassLoggerName() => $"EntityListener[{typeof(D).FullName}]";
+
+			#endregion
+
 			#region Private methods
 
 			/// <summary>
@@ -223,7 +237,9 @@ namespace Grammophone.Domos.Logic
 			/// <exception cref="AccessDeniedDomainException">Thrown always.</exception>
 			private void LogAndThrowAccessDenied(string entityName, string message)
 			{
-				this.Logger.Error(message);
+				this.ClassLogger.Log(LogLevel.Warn, message);
+
+				var ex = new Exception("lala");
 
 				throw new EntityAccessDeniedException(entityName, message);
 			}
@@ -1171,7 +1187,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (domainContainer == null) throw new ArgumentNullException(nameof(domainContainer));
 
-			entityListener = new EntityListener(user, this.AccessResolver, domainContainer);
+			entityListener = new EntityListener(this.Environment, user, this.AccessResolver, domainContainer);
 
 			domainContainer.EntityListeners.Add(entityListener);
 		}

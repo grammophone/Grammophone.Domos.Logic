@@ -30,6 +30,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="session">The session handing off the manager.</param>
 		protected Manager(S session)
+			: base(session.Environment)
 		{
 			if (session == null) throw new ArgumentNullException(nameof(session));
 
@@ -128,7 +129,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (objectGraphRoot == null) throw new ArgumentNullException(nameof(objectGraphRoot));
 
-			using (var transaction = DomainContainer.BeginTransaction())
+			using (var transaction = this.DomainContainer.BeginTransaction())
 			{
 				if (attachAsModified) this.DomainContainer.AttachGraphAsModified(objectGraphRoot);
 
