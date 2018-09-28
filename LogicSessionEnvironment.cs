@@ -326,7 +326,7 @@ namespace Grammophone.Domos.Logic
 			}
 			else
 			{
-				loggerProvider = new Logging.Null.NullLoggerProvider();
+				loggerProvider = new Logging.Trace.TraceLoggerProvider();
 			}
 
 			return new Logging.LoggersRepository(loggerProvider);
