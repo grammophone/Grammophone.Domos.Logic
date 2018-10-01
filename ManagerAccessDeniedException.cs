@@ -38,9 +38,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Used in serialization.
 		/// </summary>
-		protected ManagerAccessDeniedException(
-		System.Runtime.Serialization.SerializationInfo info,
-		System.Runtime.Serialization.StreamingContext context)
+		protected ManagerAccessDeniedException(SerializationInfo info, StreamingContext context)
 			: base(info, context)
 		{
 			this.ManagerName = info.GetString(nameof(ManagerName));

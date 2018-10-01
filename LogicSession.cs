@@ -209,21 +209,31 @@ namespace Grammophone.Domos.Logic
 			/// <exception cref="AccessDeniedDomainException">Thrown always.</exception>
 			private void LogActionAndThrowAccessDenied(object entity, string action)
 			{
-				var entityWithID = entity as IEntityWithID<object>;
-
 				string message;
 
 				string entityName = AccessRight.GetEntityTypeName(entity);
 
-				if (entityWithID != null)
+				if (entity is IEntityWithID<object> entityWithID)
 				{
-					message =
-						$"The user with ID {user.ID} cannot {action} an entity of type {entityName} with ID {entityWithID.ID}.";
+					if (user.IsAnonymous)
+					{
+						message = $"The anonymous user cannot {action} an entity of type {entityName} with ID {entityWithID.ID}.";
+					}
+					else
+					{
+						message = $"The user with ID {user.ID} cannot {action} an entity of type {entityName} with ID {entityWithID.ID}.";
+					}
 				}
 				else
 				{
-					message =
-						$"The user with ID {user.ID} cannot {action} an entity of type {entityName}.";
+					if (user.IsAnonymous)
+					{
+						message = $"The anonymous user cannot {action} an entity of type {entityName}.";
+					}
+					else
+					{
+						message = $"The user with ID {user.ID} cannot {action} an entity of type {entityName}.";
+					}
 				}
 
 				LogAndThrowAccessDenied(entityName, message);
