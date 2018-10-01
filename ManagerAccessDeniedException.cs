@@ -22,25 +22,23 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="managerType">The type of the manager.</param>
 		public ManagerAccessDeniedException(Type managerType)
-			: this(managerType, $"Access to manager {GetManagerName(managerType)} is denied.")
+			: this($"Access to manager {GetManagerName(managerType)} is denied.")
 		{
 		}
 
 		/// <summary>
 		/// Create.
 		/// </summary>
-		/// <param name="managerType">The type of the manager.</param>
 		/// <param name="message">The exception message.</param>
-		public ManagerAccessDeniedException(Type managerType, string message)
+		public ManagerAccessDeniedException(string message)
 			: base(message) { }
 
 		/// <summary>
 		/// Create.
 		/// </summary>
-		/// <param name="managerType">The type of the manager.</param>
 		/// <param name="message">The exception message.</param>
 		/// <param name="inner">The inner exception.</param>
-		public ManagerAccessDeniedException(Type managerType, string message, Exception inner)
+		public ManagerAccessDeniedException(string message, Exception inner)
 			: base(message, inner) { }
 
 		/// <summary>
