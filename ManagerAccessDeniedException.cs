@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,49 +13,62 @@ namespace Grammophone.Domos.Logic
 	[Serializable]
 	public class ManagerAccessDeniedException : AccessDeniedException
 	{
-		/// <summary>
-		/// The type of the manager on which access is denied.
-		/// </summary>
-		public Type ManagerType { get; private set; }
+		#region Construction
 
 		/// <summary>
 		/// Create with default message.
 		/// </summary>
 		/// <param name="managerType">The type of the manager.</param>
 		public ManagerAccessDeniedException(Type managerType)
-			: this($"Access to manager {GetManagerName(managerType)} is denied.")
+			: this(managerType, $"Access to manager {managerType.FullName} is denied.")
 		{
 		}
 
 		/// <summary>
 		/// Create.
 		/// </summary>
+		/// <param name="managerType">The type of the manager.</param>
 		/// <param name="message">The exception message.</param>
-		public ManagerAccessDeniedException(string message)
-			: base(message) { }
-
-		/// <summary>
-		/// Create.
-		/// </summary>
-		/// <param name="message">The exception message.</param>
-		/// <param name="inner">The inner exception.</param>
-		public ManagerAccessDeniedException(string message, Exception inner)
-			: base(message, inner) { }
+		public ManagerAccessDeniedException(Type managerType, string message)
+			: base(message)
+		{
+			this.ManagerName = managerType.FullName;
+		}
 
 		/// <summary>
 		/// Used in serialization.
 		/// </summary>
 		protected ManagerAccessDeniedException(
 		System.Runtime.Serialization.SerializationInfo info,
-		System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
-
-		private static string GetManagerName(Type managerType)
+		System.Runtime.Serialization.StreamingContext context)
+			: base(info, context)
 		{
-			if (managerType == null) throw new ArgumentNullException(nameof(managerType));
-
-			if (managerType.IsConstructedGenericType) managerType = managerType.GetGenericTypeDefinition();
-
-			return managerType.FullName;
+			this.ManagerName = info.GetString(nameof(ManagerName));
 		}
+
+		#endregion
+
+		#region Public properties
+
+		/// <summary>
+		/// The name of the manager.
+		/// </summary>
+		public string ManagerName { get; }
+
+		#endregion
+
+		#region Protected methods
+
+		/// <summary>
+		/// Serialize the exception.
+		/// </summary>
+		public override void GetObjectData(SerializationInfo info, StreamingContext context)
+		{
+			base.GetObjectData(info, context);
+
+			info.AddValue(nameof(ManagerName), this.ManagerName);
+		}
+
+		#endregion
 	}
 }

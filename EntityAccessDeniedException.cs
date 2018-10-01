@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using Grammophone.Domos.AccessChecking;
@@ -14,10 +15,7 @@ namespace Grammophone.Domos.Logic
 	[Serializable]
 	public class EntityAccessDeniedException : AccessDeniedException, IEntityAccessDeniedException
 	{
-		/// <summary>
-		/// The name of the entity under violation.
-		/// </summary>
-		public string EntityName { get; private set; }
+		#region Construction
 
 		/// <summary>
 		/// Create.
@@ -27,14 +25,43 @@ namespace Grammophone.Domos.Logic
 		public EntityAccessDeniedException(string entityName, string message)
 			: base(message)
 		{
+			if (entityName == null) throw new ArgumentNullException(nameof(entityName));
+
 			this.EntityName = entityName;
 		}
 
 		/// <summary>
 		/// Used for serialization.
 		/// </summary>
-		protected EntityAccessDeniedException(
-		System.Runtime.Serialization.SerializationInfo info,
-		System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+		protected EntityAccessDeniedException(SerializationInfo info, StreamingContext context)
+			: base(info, context)
+		{
+			this.EntityName = info.GetString(nameof(EntityName));
+		}
+
+		#endregion
+
+		#region Public properties
+
+		/// <summary>
+		/// The name of the entity under violation.
+		/// </summary>
+		public string EntityName { get; private set; }
+
+		#endregion
+
+		#region Protected methods
+
+		/// <summary>
+		/// Serialize the exception.
+		/// </summary>
+		public override void GetObjectData(SerializationInfo info, StreamingContext context)
+		{
+			base.GetObjectData(info, context);
+
+			info.AddValue(nameof(EntityName), this.EntityName);
+		}
+
+		#endregion
 	}
 }

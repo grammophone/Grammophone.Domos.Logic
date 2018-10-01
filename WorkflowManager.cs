@@ -180,7 +180,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="statePath">The state path.</param>
 		/// <param name="actionArguments">A dictinary of arguments to be passed to the path actions.</param>
 		/// <returns>Returns the state transition created.</returns>
-		/// <exception cref="AccessDeniedDomainException">
+		/// <exception cref="StatePathAccessDeniedException">
 		/// Thrown when the session user has no right to execute the state path.
 		/// </exception>
 		/// <exception cref="StatePathArgumentsException">
@@ -215,10 +215,24 @@ namespace Grammophone.Domos.Logic
 					$"The specified path '{statePath.CodeName}' is not available for the current state of the stateful object.");
 
 			if (!this.AccessResolver.CanUserExecuteStatePath(this.Session.User, stateful, statePath))
-				throw new AccessDeniedDomainException(
-					$"The user with ID {this.Session.User.ID} has no rights " +
-					$"to execute path '{statePath.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.",
-					stateful);
+			{
+				string message;
+
+				if (this.Session.User != null)
+				{
+					message = $"The user with ID {this.Session.User.ID} has no rights " +
+						$"to execute path '{statePath.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.";
+				}
+				else
+				{
+					message = $"The anonymous user has no rights " +
+						$"to execute path '{statePath.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.";
+				}
+
+				this.ClassLogger.Log(Logging.LogLevel.Warn, message);
+
+				throw new StatePathAccessDeniedException(statePath, stateful, message);
+			}
 
 			var validationErrors = ValidateStatePathArguments(statePath.CodeName, actionArguments);
 

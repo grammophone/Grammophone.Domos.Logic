@@ -1002,11 +1002,13 @@ namespace Grammophone.Domos.Logic
 
 			if (manager == null)
 			{
-				string message = GetManagerAccessDeniedMessage(typeof(M));
+				Type managerType = typeof(M);
+
+				string message = GetManagerAccessDeniedMessage(managerType);
 
 				this.ClassLogger.Log(LogLevel.Warn, message);
 
-				throw new ManagerAccessDeniedException(message);
+				throw new ManagerAccessDeniedException(managerType, message);
 			}
 
 			return manager;
@@ -1030,11 +1032,13 @@ namespace Grammophone.Domos.Logic
 
 			if (manager == null)
 			{
-				string message = GetManagerAccessDeniedMessage(typeof(M));
+				Type managerType = typeof(M);
+
+				string message = GetManagerAccessDeniedMessage(managerType);
 
 				this.ClassLogger.Log(LogLevel.Warn, message);
 
-				throw new ManagerAccessDeniedException(message);
+				throw new ManagerAccessDeniedException(managerType, message);
 			}
 
 			return manager;
@@ -1062,11 +1066,13 @@ namespace Grammophone.Domos.Logic
 
 			if (manager == null)
 			{
-				string message = GetManagerAccessDeniedMessage(typeof(M), segregatedEntity);
+				Type managerType = typeof(M);
+
+				string message = GetManagerAccessDeniedMessage(managerType, segregatedEntity);
 
 				this.ClassLogger.Log(LogLevel.Warn, message);
 
-				throw new ManagerAccessDeniedException(message);
+				throw new ManagerAccessDeniedException(managerType, message);
 			}
 
 			return manager;
@@ -1096,11 +1102,13 @@ namespace Grammophone.Domos.Logic
 
 			if (manager == null)
 			{
-				string message = GetManagerAccessDeniedMessage(typeof(M), segregatedEntity);
+				Type managerType = typeof(M);
+
+				string message = GetManagerAccessDeniedMessage(managerType, segregatedEntity);
 
 				this.ClassLogger.Log(LogLevel.Warn, message);
 
-				throw new ManagerAccessDeniedException(message);
+				throw new ManagerAccessDeniedException(managerType, message);
 			}
 
 			return manager;
@@ -1126,11 +1134,13 @@ namespace Grammophone.Domos.Logic
 
 			if (manager == null)
 			{
-				string message = GetManagerAccessDeniedMessage(typeof(M), segregationID);
+				Type managerType = typeof(M);
+
+				string message = GetManagerAccessDeniedMessage(managerType, segregationID);
 
 				this.ClassLogger.Log(LogLevel.Warn, message);
 
-				throw new ManagerAccessDeniedException(message);
+				throw new ManagerAccessDeniedException(managerType, message);
 			}
 
 			return manager;
@@ -1156,11 +1166,13 @@ namespace Grammophone.Domos.Logic
 
 			if (manager == null)
 			{
-				string message = GetManagerAccessDeniedMessage(typeof(M), segregationID);
+				Type managerType = typeof(M);
+
+				string message = GetManagerAccessDeniedMessage(managerType, segregationID);
 
 				this.ClassLogger.Log(LogLevel.Warn, message);
 
-				throw new ManagerAccessDeniedException(message);
+				throw new ManagerAccessDeniedException(managerType, message);
 			}
 
 			return manager;
@@ -1349,12 +1361,12 @@ namespace Grammophone.Domos.Logic
 			if (this.User != null)
 			{
 				return $"The user with ID {this.user.ID} cannot access manager '{managerType.FullName}'" + 
-					$" for an entity of type '{segregatedEntity.GetType().FullName}' under segregation with ID {segregatedEntity.SegregationID}.";
+					$" for an entity of type '{AccessRight.GetEntityTypeName(segregatedEntity)}' under segregation with ID {segregatedEntity.SegregationID}.";
 			}
 			else
 			{
 				return $"An anonymous user cannot access manager '{managerType.FullName}'" +
-					$" for an entity of type '{segregatedEntity.GetType().FullName}' under segregation with ID {segregatedEntity.SegregationID}.";
+					$" for an entity of type '{AccessRight.GetEntityTypeName(segregatedEntity)}' under segregation with ID {segregatedEntity.SegregationID}.";
 			}
 		}
 
