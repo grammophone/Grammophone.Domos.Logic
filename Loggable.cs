@@ -66,11 +66,11 @@ namespace Grammophone.Domos.Logic
 
 		/// <summary>
 		/// Specifies the name of the logger to use to obtain <see cref="ClassLogger"/>.
-		/// The default implementation returns the full class name.
+		/// The default implementation returns full_class_name[logic configuration section name].
 		/// </summary>
 		protected virtual string GetClassLoggerName()
 		{
-			return this.GetType().FullName;
+			return $"{GetType().FullName}[{environment.ConfigurationSectionName}]";
 		}
 
 		/// <summary>

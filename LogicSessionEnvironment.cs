@@ -34,7 +34,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Name of the logger used to record failures while the asynchronous worker for sending e-mails fails. 
 		/// </summary>
-		private const string EmailWorkerLoggerName = "EmailWorker";
+		private const string EmailQueueLoggerName = "EmailQueue";
 
 		#endregion
 
@@ -57,10 +57,12 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Create.
 		/// </summary>
-		/// <param name="configurationSectionName">The name of the Unity configuration section.</param>
+		/// <param name="configurationSectionName">The name of the configuration section in which the <see cref="Settings"/> are defined.</param>
 		internal LogicSessionEnvironment(string configurationSectionName)
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
+
+			this.ConfigurationSectionName = configurationSectionName;
 
 			this.Settings = LoadSettings(configurationSectionName);
 
@@ -84,12 +86,20 @@ namespace Grammophone.Domos.Logic
 				name => this.Settings.Resolve<Storage.IStorageProvider>(name),
 				StorageProvidersCacheSize);
 
-			mailQueue = new AsyncWorkQueue<System.Net.Mail.MailMessage>(this, SendEmailAsync, EmailWorkerLoggerName);
+			mailQueue = new AsyncWorkQueue<System.Net.Mail.MailMessage>(
+				this,
+				SendEmailAsync,
+				$"{EmailQueueLoggerName}[{configurationSectionName}]");
 		}
 
 		#endregion
 
 		#region Public properties
+
+		/// <summary>
+		/// The name of the configuration section in which the <see cref="Settings"/> are defined.
+		/// </summary>
+		public string ConfigurationSectionName { get; }
 
 		/// <summary>
 		/// The access resolver using the <see cref="IPermissionsSetupProvider"/>

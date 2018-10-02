@@ -87,6 +87,8 @@ namespace Grammophone.Domos.Logic
 
 			private readonly D domainContainer;
 
+			private readonly ILogicSessionEnvironment environment;
+
 			#endregion
 
 			#region Construction
@@ -117,6 +119,7 @@ namespace Grammophone.Domos.Logic
 				this.user = user;
 				this.accessResolver = accessResolver;
 				this.domainContainer = domainContainer;
+				this.environment = environment;
 			}
 
 			#endregion
@@ -192,9 +195,9 @@ namespace Grammophone.Domos.Logic
 			#region Protected methods
 
 			/// <summary>
-			/// Returns class logger name in the form of "EntityListener[full class name of container <typeparamref name="D"/>]".
+			/// Returns class logger name in the form of "EntityListener[name of the logic configuration section]".
 			/// </summary>
-			protected override string GetClassLoggerName() => $"EntityListener[{typeof(D).FullName}]";
+			protected override string GetClassLoggerName() => $"{nameof(EntityListener)}[{environment.ConfigurationSectionName}]";
 
 			#endregion
 
@@ -755,7 +758,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <returns>Returns the name of the logger to use for the <see cref="ClassLogger"/> property.</returns>
 		/// <remarks>The default implementation yields the full type name of the session class.</remarks>
-		protected virtual string GetClassLoggerName() => this.GetType().FullName;
+		protected virtual string GetClassLoggerName() => $"{GetType().FullName}[{this.ConfigurationSectionName}]";
 
 		/// <summary>
 		/// Elevate access to all entities for the duration of a <paramref name="transaction"/>,

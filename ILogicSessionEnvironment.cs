@@ -13,6 +13,11 @@ namespace Grammophone.Domos.Logic
 	public interface ILogicSessionEnvironment
 	{
 		/// <summary>
+		/// The name of the configuration section in which the <see cref="Settings"/> are defined.
+		/// </summary>
+		string ConfigurationSectionName { get; }
+
+		/// <summary>
 		/// Dictionary of content type IDs by MIME.
 		/// </summary>
 		IReadOnlyDictionary<string, int> ContentTypeIDsByMIME { get; }
