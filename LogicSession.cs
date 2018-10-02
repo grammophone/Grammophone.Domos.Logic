@@ -213,7 +213,9 @@ namespace Grammophone.Domos.Logic
 
 				string entityName = AccessRight.GetEntityTypeName(entity);
 
-				if (entity is IEntityWithID<object> entityWithID)
+				var entityWithID = entity as IEntityWithID<long>; // Don't inline cast test because covariance wouldn't work.
+
+				if (entityWithID != null)
 				{
 					if (user.IsAnonymous)
 					{
