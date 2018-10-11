@@ -30,6 +30,7 @@
 			<xs:enumeration value="Accepted" />
 			<xs:enumeration value="Failed" />
 			<xs:enumeration value="Succeeded" />
+			<xs:enumeration value="Returned" />
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="FundsResponseFileType">
