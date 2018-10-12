@@ -199,10 +199,10 @@ namespace Grammophone.Domos.Logic
 		/// when a <see cref="FundsResponseLine"/> arrives for it.
 		/// Returns null to indicate that no path should be executed and the that the line should
 		/// be consumed directly. Throws an exception to abort normal digestion of the line
-		/// and to record a transfer event of type <see cref="FundsTransferEventType.Failed"/> instead.
+		/// and to record a transfer event with <see cref="FundsTransferEvent.ExceptionData"/> set instead.
 		/// </summary>
-		/// <param name="currentStateCodeName">The code name of the current state.</param>
-		/// <param name="stateCodeNameAfterRequest">The code name of the state after the funds transfer request.</param>
+		/// <param name="statefulObject">The stateful object for which to decide the state path.</param>
+		/// <param name="stateAfterFundsTransferRequest">The state of the <paramref name="statefulObject"/> right after the funds transfer request.</param>
 		/// <param name="fundsResponseLine">The batch line arriving for the stateful object.</param>
 		/// <returns>Returns the code name of the path to execute or null to execute none.</returns>
 		/// <exception cref="Exception">
@@ -210,14 +210,14 @@ namespace Grammophone.Domos.Logic
 		/// containing the thrown exception.
 		/// </exception>
 		protected abstract string TryGetNextStatePathCodeName(
-			string currentStateCodeName,
-			string stateCodeNameAfterRequest,
+			SO statefulObject,
+			State stateAfterFundsTransferRequest,
 			FundsResponseLine fundsResponseLine);
 
 		/// <summary>
 		/// Digest a funds transfer response file from a credit system
 		/// and execute the appropriate state paths
-		/// as specified by the <see cref="TryGetNextStatePathCodeName(string, string, FundsResponseLine)"/> method
+		/// as specified by the <see cref="TryGetNextStatePathCodeName(SO, State, FundsResponseLine)"/> method
 		/// on the corresponding stateful objects.
 		/// The existence of the credit system and
 		/// the collation specified in <paramref name="file"/> is assumed.
@@ -349,7 +349,7 @@ namespace Grammophone.Domos.Logic
 				string currentStateCodeName = statefulObject.State.CodeName;
 
 				// Attempt to get the next path to be executed. Any exception will be recorded in a funds transfer event with ExceptionData.
-				string nextStatePathCodeName = TryGetNextStatePathCodeName(currentStateCodeName, stateAfterRequest.CodeName, line);
+				string nextStatePathCodeName = TryGetNextStatePathCodeName(statefulObject, stateAfterRequest, line);
 
 				if (nextStatePathCodeName != null) // A path should be executed?
 				{
