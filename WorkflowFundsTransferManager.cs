@@ -80,9 +80,14 @@ namespace Grammophone.Domos.Logic
 			public SO StatefulObject { get; set; }
 
 			/// <summary>
-			/// The state of the <see cref="StatefulObject"/>.
+			/// The current state of the <see cref="StatefulObject"/>.
 			/// </summary>
-			public State State { get; set; }
+			public State CurrentState { get; set; }
+
+			/// <summary>
+			/// The state transition of the <see cref="StatefulObject"/> associated with the <see cref="Event"/>.
+			/// </summary>
+			public ST StateTransition { get; set; }
 		}
 
 		#endregion
@@ -151,6 +156,7 @@ namespace Grammophone.Domos.Logic
 			if (line == null) throw new ArgumentNullException(nameof(line));
 
 			var associationsQuery = from a in this.FundsTransferEventAssociations
+															where a.Event.Type == FundsTransferEventType.Pending
 															let ftr = a.Event.Request
 															where ftr.GroupID == line.LineID && ftr.BatchID == line.BatchID
 															select new
@@ -158,7 +164,8 @@ namespace Grammophone.Domos.Logic
 																Request = ftr,
 																ftr.Events,
 																a.StatefulObject,
-																a.State
+																a.CurrentState,
+																StateAfterRequest = a.StateTransition.Path.NextState
 															};
 
 			var associations = await associationsQuery.ToArrayAsync();
@@ -166,17 +173,15 @@ namespace Grammophone.Domos.Logic
 			if (associations.Length == 0)
 				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
 
-			var associationGroups = from a in associations
-															 group a by new { a.Request, a.StatefulObject };
-
 			var responseResults = new List<FundsResponseResult>(associations.Length);
 
-			foreach (var associationGroup in associationGroups)
+			foreach (var association in associations)
 			{
 				var fundsResponseResult =
 					await AcceptResponseItemAsync(
-						associationGroup.Key.StatefulObject,
-						associationGroup.Key.Request,
+						association.StatefulObject,
+						association.StateAfterRequest,
+						association.Request,
 						line);
 
 				responseResults.Add(fundsResponseResult);
@@ -196,7 +201,8 @@ namespace Grammophone.Domos.Logic
 		/// be consumed directly. Throws an exception to abort normal digestion of the line
 		/// and to record a transfer event of type <see cref="FundsTransferEventType.Failed"/> instead.
 		/// </summary>
-		/// <param name="stateCodeName">The code name of the current state.</param>
+		/// <param name="currentStateCodeName">The code name of the current state.</param>
+		/// <param name="stateCodeNameAfterRequest">The code name of the state after the funds transfer request.</param>
 		/// <param name="fundsResponseLine">The batch line arriving for the stateful object.</param>
 		/// <returns>Returns the code name of the path to execute or null to execute none.</returns>
 		/// <exception cref="Exception">
@@ -204,13 +210,14 @@ namespace Grammophone.Domos.Logic
 		/// containing the thrown exception.
 		/// </exception>
 		protected abstract string TryGetNextStatePathCodeName(
-			string stateCodeName,
+			string currentStateCodeName,
+			string stateCodeNameAfterRequest,
 			FundsResponseLine fundsResponseLine);
 
 		/// <summary>
 		/// Digest a funds transfer response file from a credit system
 		/// and execute the appropriate state paths
-		/// as specified by the <see cref="TryGetNextStatePathCodeName(string, FundsResponseLine)"/> method
+		/// as specified by the <see cref="TryGetNextStatePathCodeName(string, string, FundsResponseLine)"/> method
 		/// on the corresponding stateful objects.
 		/// The existence of the credit system and
 		/// the collation specified in <paramref name="file"/> is assumed.
@@ -235,30 +242,36 @@ namespace Grammophone.Domos.Logic
 			long[] lineIDs = file.Items.Select(i => i.LineID).ToArray();
 
 			var associationsQuery = from a in this.FundsTransferEventAssociations
+															where a.Event.Type == FundsTransferEventType.Pending
 															let ftr = a.Event.Request
 															where lineIDs.Contains(ftr.GroupID) && ftr.BatchID == file.BatchID
-															select a;
+															select new
+															{
+																Request = ftr,
+																ftr.Events,
+																a.StatefulObject,
+																a.CurrentState,
+																StateAfterRequest = a.StateTransition.Path.NextState
+															};
 
 			var associations = await associationsQuery.ToArrayAsync();
 
 			if (associations.Length == 0)
 				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
 
-			var uniqueAssociationGroups = from a in associations
-																		group a by new { a.Event.Request, a.StatefulObject };
-
 			var responseResults = new List<FundsResponseResult>(associations.Length);
 
 			var itemsByLineID = file.Items.ToDictionary(i => i.LineID);
 
-			foreach (var associationGroup in uniqueAssociationGroups)
+			foreach (var association in associations)
 			{
 				var fundsResponseResult =
 					await AcceptResponseItemAsync(
 						file,
-						itemsByLineID[associationGroup.Key.Request.GroupID],
-						associationGroup.Key.StatefulObject,
-						associationGroup.Key.Request,
+						itemsByLineID[association.Request.GroupID],
+						association.StatefulObject,
+						association.StateAfterRequest,
+						association.Request,
 						responseBatchMessage);
 
 				responseResults.Add(fundsResponseResult);
@@ -285,6 +298,7 @@ namespace Grammophone.Domos.Logic
 			FundsResponseFile file,
 			FundsResponseFileItem item,
 			SO statefulObject,
+			State stateAfterRequest,
 			FundsTransferRequest fundsTransferRequest,
 			FundsTransferBatchMessage responseBatchMessage)
 		{
@@ -294,10 +308,14 @@ namespace Grammophone.Domos.Logic
 
 			var line = new FundsResponseLine(file, item, responseBatchMessage.ID);
 
-			return await AcceptResponseItemAsync(statefulObject, fundsTransferRequest, line);
+			return await AcceptResponseItemAsync(statefulObject, stateAfterRequest, fundsTransferRequest, line);
 		}
 
-		private async Task<FundsResponseResult> AcceptResponseItemAsync(SO statefulObject, FundsTransferRequest fundsTransferRequest, FundsResponseLine line)
+		private async Task<FundsResponseResult> AcceptResponseItemAsync(
+			SO statefulObject,
+			State stateAfterRequest,
+			FundsTransferRequest fundsTransferRequest,
+			FundsResponseLine line)
 		{
 			if (fundsTransferRequest == null) throw new ArgumentNullException(nameof(fundsTransferRequest));
 			if (line == null) throw new ArgumentNullException(nameof(line));
@@ -330,8 +348,8 @@ namespace Grammophone.Domos.Logic
 
 				string currentStateCodeName = statefulObject.State.CodeName;
 
-				// Attempt to get the next path to be executed. Any exception will be recorded in a failure funds transfer event.
-				string nextStatePathCodeName = TryGetNextStatePathCodeName(currentStateCodeName, line);
+				// Attempt to get the next path to be executed. Any exception will be recorded in a funds transfer event with ExceptionData.
+				string nextStatePathCodeName = TryGetNextStatePathCodeName(currentStateCodeName, stateAfterRequest.CodeName, line);
 
 				if (nextStatePathCodeName != null) // A path should be executed?
 				{
