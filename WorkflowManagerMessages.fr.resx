@@ -117,10 +117,16 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="INCOMPATIBLE_STATE_PATH" xml:space="preserve">
+    <value>Le chemin d'accès spécifié '{0}' n'est pas disponible pour l'état actuel '{1}'de l'objet ayant l'ID {2}. L'état de l'objet a peut-être été modifié par un autre agent.</value>
+  </data>
+  <data name="INVALID_ACTION_PARAMETERS" xml:space="preserve">
+    <value>Les paramètres de l'action ne sont pas valides.</value>
+  </data>
   <data name="PARAMETER_IS_REQUIRED" xml:space="preserve">
     <value>Le paramètre est requis.</value>
   </data>
   <data name="WRONG_PARAMETER_TYPE" xml:space="preserve">
-    <value />
+    <value>Le type du paramètre n’est pas valide.</value>
   </data>
 </root>

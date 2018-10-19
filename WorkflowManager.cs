@@ -188,11 +188,13 @@ namespace Grammophone.Domos.Logic
 		/// against the parameter specifications of the path actions.
 		/// </exception>
 		/// <exception cref="LogicException">
-		/// Thrown when the specified path 
-		/// is not available for the current state of the stateful object
-		/// or when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		/// <exception cref="UserException">
+		/// Thrown when the specified path 
+		/// is not available for the current state of the stateful object.
 		/// </exception>
 		/// <remarks>
 		/// For best performance, the <see cref="StatePath.PreviousState"/>,
@@ -209,10 +211,6 @@ namespace Grammophone.Domos.Logic
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
 
 			ValidatePath(statePath);
-
-			if (stateful.State != statePath.PreviousState)
-				throw new LogicException(
-					$"The specified path '{statePath.CodeName}' is not available for the current state of the stateful object.");
 
 			if (!this.AccessResolver.CanUserExecuteStatePath(this.Session.User, stateful, statePath))
 			{
@@ -239,16 +237,19 @@ namespace Grammophone.Domos.Logic
 			if (validationErrors.Count > 0)
 				throw new StatePathArgumentsException(validationErrors);
 
-			ST stateTransition = this.DomainContainer.StateTransitions.Create<ST>();
-
-			var statePathConfiguration = GetStatePathConfiguration(statePath.CodeName);
-
-			stateTransition.BindToStateful(stateful);
-
-			var now = DateTime.UtcNow;
-
 			using (var transaction = this.DomainContainer.BeginTransaction())
 			{
+				if (stateful.State != statePath.PreviousState)
+					throw new UserException(String.Format(WorkflowManagerMessages.INCOMPATIBLE_STATE_PATH, statePath.Name, stateful.State.Name, stateful.ID));
+
+				ST stateTransition = this.DomainContainer.StateTransitions.Create<ST>();
+
+				var statePathConfiguration = GetStatePathConfiguration(statePath.CodeName);
+
+				stateTransition.BindToStateful(stateful);
+
+				var now = DateTime.UtcNow;
+
 				stateTransition.Path = statePath;
 				stateTransition.ChangeStampBefore = stateful.ChangeStamp;
 
@@ -271,9 +272,9 @@ namespace Grammophone.Domos.Logic
 				await ExecuteActionsAsync(statePathConfiguration.PostActions, stateful, stateTransition, actionArguments);
 
 				await transaction.CommitAsync();
-			}
 
-			return stateTransition;
+				return stateTransition;
+			}
 		}
 
 		/// <summary>

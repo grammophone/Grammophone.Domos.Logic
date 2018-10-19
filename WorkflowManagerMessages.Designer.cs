@@ -19,7 +19,7 @@ namespace Grammophone.Domos.Logic {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class WorkflowManagerMessages {
@@ -61,6 +61,15 @@ namespace Grammophone.Domos.Logic {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The specified path &apos;{0}&apos; is not available for the current state &apos;{1}&apos; of the stateful object with ID {2}. Perhaps the state of the object was changed by a different agent..
+        /// </summary>
+        internal static string INCOMPATIBLE_STATE_PATH {
+            get {
+                return ResourceManager.GetString("INCOMPATIBLE_STATE_PATH", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The parameters of the action are invalid..
         /// </summary>
         internal static string INVALID_ACTION_PARAMETERS {
@@ -79,7 +88,7 @@ namespace Grammophone.Domos.Logic {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Le type du paramètre n’est pas valide..
+        ///   Looks up a localized string similar to The type of the parameter is not valid..
         /// </summary>
         internal static string WRONG_PARAMETER_TYPE {
             get {
