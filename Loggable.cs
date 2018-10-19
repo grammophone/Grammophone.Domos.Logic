@@ -70,7 +70,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		protected virtual string GetClassLoggerName()
 		{
-			return $"{GetType().FullName}[{environment.ConfigurationSectionName}]";
+			return $"{environment.ConfigurationSectionName}.{GetType().FullName}";
 		}
 
 		/// <summary>

@@ -85,9 +85,7 @@ namespace Grammophone.Domos.Logic
 
 			private readonly U user;
 
-			private readonly D domainContainer;
-
-			private readonly ILogicSessionEnvironment environment;
+			private readonly LogicSession<U, D> logicSession;
 
 			#endregion
 
@@ -96,30 +94,15 @@ namespace Grammophone.Domos.Logic
 			/// <summary>
 			/// Create.
 			/// </summary>
-			/// <param name="environment">
-			/// Environment to use in order to invoke loggers.
-			/// </param>
-			/// <param name="user">
-			/// The user, which must have prefetched the roles, disposition and disposition types
-			/// for proper performance.
-			/// </param>
-			/// <param name="accessResolver">
-			/// The <see cref="AccessChecking.AccessResolver{U}"/> to use in order to enforce entity rights.
-			/// </param>
-			/// <param name="domainContainer">
-			/// The domain container.
-			/// </param>
-			public EntityListener(ILogicSessionEnvironment environment, U user, AccessResolver<U> accessResolver, D domainContainer)
-				: base(environment)
+			/// <param name="logicSession">The logic session which employs the entity listener.</param>
+			public EntityListener(LogicSession<U, D> logicSession)
+				: base(logicSession.Environment)
 			{
-				if (user == null) throw new ArgumentNullException(nameof(user));
-				if (accessResolver == null) throw new ArgumentNullException(nameof(accessResolver));
-				if (domainContainer == null) throw new ArgumentNullException(nameof(domainContainer));
+				if (logicSession == null) throw new ArgumentNullException(nameof(logicSession));
 
-				this.user = user;
-				this.accessResolver = accessResolver;
-				this.domainContainer = domainContainer;
-				this.environment = environment;
+				this.logicSession = logicSession;
+				this.user = logicSession.user; // WARNING: Use the backing field, not the property which is null for anonymous users.
+				this.accessResolver = logicSession.AccessResolver;
 			}
 
 			#endregion
@@ -195,9 +178,9 @@ namespace Grammophone.Domos.Logic
 			#region Protected methods
 
 			/// <summary>
-			/// Returns class logger name in the form of "EntityListener[name of the logic configuration section]".
+			/// Returns class logger name in the form of "[logic session class logger name].EntityListener".
 			/// </summary>
-			protected override string GetClassLoggerName() => $"{nameof(EntityListener)}[{environment.ConfigurationSectionName}]";
+			protected override string GetClassLoggerName() => $"{logicSession.GetClassLoggerName()}.{nameof(EntityListener)}";
 
 			#endregion
 
@@ -464,6 +447,12 @@ namespace Grammophone.Domos.Logic
 				return classLogger;
 			}
 		}
+
+		/// <summary>
+		/// The acting user. Differs from property <see cref="User"/> when the acting user is anonymous.
+		/// In this case, <see cref="User"/> is null but this property contains the anonymous impersonating user.
+		/// </summary>
+		protected U ActingUser => user;
 
 		#endregion
 
@@ -734,7 +723,7 @@ namespace Grammophone.Domos.Logic
 		/// Until all nested of elevated access scopes are disposed,
 		/// no security checks are performed by the session.
 		/// </remarks>
-		internal ElevatedAccessScope GetElevatedAccessScope()
+		protected internal ElevatedAccessScope GetElevatedAccessScope()
 		{
 			IncrementAccessElevationLevel();
 
@@ -757,8 +746,10 @@ namespace Grammophone.Domos.Logic
 		/// Get the name of the logger used in <see cref="ClassLogger"/> property.
 		/// </summary>
 		/// <returns>Returns the name of the logger to use for the <see cref="ClassLogger"/> property.</returns>
-		/// <remarks>The default implementation yields the full type name of the session class.</remarks>
-		protected virtual string GetClassLoggerName() => $"{GetType().FullName}[{this.ConfigurationSectionName}]";
+		/// <remarks>
+		/// The default implementation yields [configuration section name].[full type name of the session class].
+		/// </remarks>
+		protected virtual string GetClassLoggerName() => $"{this.ConfigurationSectionName}.{GetType().FullName}";
 
 		/// <summary>
 		/// Elevate access to all entities for the duration of a <paramref name="transaction"/>,
@@ -1201,7 +1192,9 @@ namespace Grammophone.Domos.Logic
 		{
 			D domainContainer = this.CreateDomainContainer();
 
-			InstallEntityAccessListener(domainContainer);
+			var entityListener = new EntityListener(this);
+
+			domainContainer.EntityListeners.Add(entityListener);
 
 			return domainContainer;
 		}
@@ -1272,19 +1265,9 @@ namespace Grammophone.Domos.Logic
 			if (user == null)
 				throw new LogicException("The specified user doesn't exist in the database.");
 
-			InstallEntityAccessListener(this.DomainContainer);
-		}
+			entityListener = new EntityListener(this);
 
-		/// <summary>
-		/// Installs entity access check control to a domain container.
-		/// </summary>
-		private void InstallEntityAccessListener(D domainContainer)
-		{
-			if (domainContainer == null) throw new ArgumentNullException(nameof(domainContainer));
-
-			entityListener = new EntityListener(this.Environment, user, this.AccessResolver, domainContainer);
-
-			domainContainer.EntityListeners.Add(entityListener);
+			this.DomainContainer.EntityListeners.Add(entityListener);
 		}
 
 		/// <summary>
