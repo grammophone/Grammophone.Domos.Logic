@@ -50,7 +50,7 @@ namespace Grammophone.Domos.Logic
 		where D : IWorkflowUsersDomainContainer<U, BST>
 		where S : LogicSession<U, D>
 		where ST : BST, new()
-		where SO : IStateful<U, ST>
+		where SO : class, IStateful<U, ST>
 		where C : Configurator, new()
 	{
 		#region Construction
@@ -239,6 +239,15 @@ namespace Grammophone.Domos.Logic
 
 			using (var transaction = this.DomainContainer.BeginTransaction())
 			{
+				var statefulObjectEntry = this.DomainContainer.Entry(stateful);
+
+				switch (statefulObjectEntry.State)
+				{
+					case Grammophone.DataAccess.TrackingState.Unchanged: // Get the most fresh possible contents of the stateful obbject. 
+						await statefulObjectEntry.ReloadAsync();
+						break;
+				}
+
 				if (stateful.State != statePath.PreviousState)
 					throw new UserException(String.Format(WorkflowManagerMessages.INCOMPATIBLE_STATE_PATH, statePath.Name, stateful.State.Name, stateful.ID));
 
