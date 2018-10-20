@@ -201,7 +201,7 @@ namespace Grammophone.Domos.Logic
 		/// <see cref="StatePath.NextState"/> and <see cref="StatePath.WorkflowGraph"/>
 		/// properties of the <paramref name="statePath"/> must be eagerly loaded.
 		/// </remarks>
-		public async Task<ST> ExecuteStatePathAsync(
+		public virtual async Task<ST> ExecuteStatePathAsync(
 			SO stateful,
 			StatePath statePath,
 			IDictionary<string, object> actionArguments)
