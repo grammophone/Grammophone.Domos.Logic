@@ -43,12 +43,14 @@ namespace Grammophone.Domos.Logic
 		/// <returns>Returns a proposed filename, not specifying any path.</returns>
 		string Export(FundsRequestFile requestFile, Stream outputStream);
 
-		/// <summary>
-		/// Convert a platform-specific funds response file to a native response file.
-		/// </summary>
-		/// <param name="inputStream">The stream containing the contents of the platform-specific response file.</param>
-		/// <param name="fileName">The input file name.</param>
-		/// <returns>Returns the native file.</returns>
-		IEnumerable<FundsResponseFile> Import(Stream inputStream, string fileName);
-	}
+        /// <summary>
+        /// Convert a platform-specific funds response file to a native response file.
+        /// </summary>
+        /// <param name="inputStream">The stream containing the contents of the platform-specific response file.</param>
+        /// <param name="fileName">The input file name.</param>
+        /// <param name="responseCreatedDateTime">The optional date time in UTC that the funds response file was created.</param>
+        /// <returns>Returns the native file.</returns>
+        IEnumerable<FundsResponseFile> Import(Stream inputStream, string fileName, DateTime? responseCreatedDateTime = null);
+
+    }
 }
