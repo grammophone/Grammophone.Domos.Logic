@@ -31,7 +31,7 @@ namespace Grammophone.Domos.Logic
 
 		/// <summary>
 		/// The MIME type of the converted response file
-		/// used in <see cref="Import(Stream, String)"/>.
+		/// used in <see cref="Import(Stream, String, DateTime?)"/>.
 		/// </summary>
 		string ResponseContentType { get; }
 
@@ -43,14 +43,13 @@ namespace Grammophone.Domos.Logic
 		/// <returns>Returns a proposed filename, not specifying any path.</returns>
 		string Export(FundsRequestFile requestFile, Stream outputStream);
 
-        /// <summary>
-        /// Convert a platform-specific funds response file to a native response file.
-        /// </summary>
-        /// <param name="inputStream">The stream containing the contents of the platform-specific response file.</param>
-        /// <param name="fileName">The input file name.</param>
-        /// <param name="responseCreatedDateTime">The optional date time in UTC that the funds response file was created.</param>
-        /// <returns>Returns the native file.</returns>
-        IEnumerable<FundsResponseFile> Import(Stream inputStream, string fileName, DateTime? responseCreatedDateTime = null);
-
-    }
+		/// <summary>
+		/// Convert a platform-specific funds response file to a native response file.
+		/// </summary>
+		/// <param name="inputStream">The stream containing the contents of the platform-specific response file.</param>
+		/// <param name="fileName">The input file name.</param>
+		/// <param name="responseTimeOverride">The optional date time in UTC to override the response time implied by the imported file.</param>
+		/// <returns>Returns the native file.</returns>
+		IEnumerable<FundsResponseFile> Import(Stream inputStream, string fileName, DateTime? responseTimeOverride = null);
+	}
 }
