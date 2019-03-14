@@ -711,6 +711,99 @@ namespace Grammophone.Domos.Logic
 			this.DomainContainer.Dispose();
 		}
 
+		/// <summary>
+		/// Send a notification to the registered <see cref="INotificationChannel{T}"/>s in the system.
+		/// </summary>
+		/// <typeparam name="M">The type of the model.</typeparam>
+		/// <typeparam name="T">The type of the notification topic.</typeparam>
+		/// <param name="subject">The subject of the notification.</param>
+		/// <param name="templateKey">The key of the template.</param>
+		/// <param name="source">The source specifying the sender or system generating the notification.</param>
+		/// <param name="destination">The destination of the notification.</param>
+		/// <param name="model">The model of the notification.</param>
+		/// <param name="topic">The topic which the notification serves.</param>
+		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
+		/// <param name="dynamicProperties">Optional dynamic properties.</param>
+		/// <remarks>
+		/// The registered channels are filtered as specified
+		/// in <see cref="IsChannelApplicableToNotification{M, T}(INotificationChannel{T}, string, string, INotificationSource, object, M, T, DateTime, IDictionary{string, object})"/>
+		/// </remarks>
+		public virtual async Task SendNotificationToChannelsAsync<M, T>(
+			string subject,
+			string templateKey,
+			INotificationSource source,
+			object destination,
+			M model,
+			T topic,
+			DateTime utcEffectiveDate,
+			IDictionary<string, object> dynamicProperties = null)
+		{
+			var channels = this.Settings.ResolveAll<INotificationChannel<T>>();
+
+			foreach (var channel in channels)
+			{
+				if (!IsChannelApplicableToNotification(channel, subject, templateKey, source, destination, model, topic, utcEffectiveDate, dynamicProperties))
+					continue;
+
+				try
+				{
+					await channel.SendAsync(subject, templateKey, source, destination, model, topic, utcEffectiveDate, dynamicProperties);
+				}
+				catch (Exception e)
+				{
+					this.ClassLogger.Log(
+						LogLevel.Error,
+						$"Failed to send via channel of type {channel.GetType().FullName}, subject: '{subject}'",
+						e);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Send a notification to the registered <see cref="INotificationChannel{T}"/>s in the system.
+		/// </summary>
+		/// <typeparam name="T">The type of the notification topic.</typeparam>
+		/// <param name="subject">The subject of the notification.</param>
+		/// <param name="templateKey">The key of the template.</param>
+		/// <param name="source">The source specifying the sender or system generating the notification.</param>
+		/// <param name="destination"></param>
+		/// <param name="topic">The topic which the notification serves.</param>
+		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
+		/// <param name="dynamicProperties">The dynamic properties.</param>
+		/// <remarks>
+		/// The registered channels are filtered as specified
+		/// in <see cref="IsChannelApplicableToNotification{T}(INotificationChannel{T}, string, string, INotificationSource, object, T, DateTime, IDictionary{string, object})"/>
+		/// </remarks>
+		public virtual async Task SendNotificationToChannelsAsync<T>(
+			string subject,
+			string templateKey,
+			INotificationSource source,
+			object destination,
+			T topic,
+			DateTime utcEffectiveDate,
+			IDictionary<string, object> dynamicProperties)
+		{
+			var channels = this.Settings.ResolveAll<INotificationChannel<T>>();
+
+			foreach (var channel in channels)
+			{
+				if (!IsChannelApplicableToNotification(channel, subject, templateKey, source, destination, topic, utcEffectiveDate, dynamicProperties))
+					continue;
+
+				try
+				{
+					await channel.SendAsync(subject, templateKey, source, destination, topic, utcEffectiveDate, dynamicProperties);
+				}
+				catch (Exception e)
+				{
+					this.ClassLogger.Log(
+						LogLevel.Error,
+						$"Failed to send via channel of type {channel.GetType().FullName}, subject: '{subject}'",
+						e);
+				}
+			}
+		}
+
 		#endregion
 
 		#region Internal methods
@@ -741,6 +834,63 @@ namespace Grammophone.Domos.Logic
 		#endregion
 
 		#region Protected methods
+
+		/// <summary>
+		/// Used by method <see cref="SendNotificationToChannelsAsync{M, T}(string, string, INotificationSource, Object, M, T, DateTime, IDictionary{string, object})"/>
+		/// to determine whether a notification should be forwarded to a channel. Default implementation returns always true.
+		/// </summary>
+		/// <typeparam name="M">The type of the model.</typeparam>
+		/// <typeparam name="T">The type of the notification topic.</typeparam>
+		/// <param name="channel">The channel being tested.</param>
+		/// <param name="subject">The subject of the notification.</param>
+		/// <param name="templateKey">The key of the template.</param>
+		/// <param name="source">The source specifying the sender or system generating the notification.</param>
+		/// <param name="destination">The destination of the notification.</param>
+		/// <param name="model">The model.</param>
+		/// <param name="topic">The topic which the notification serves.</param>
+		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
+		/// <param name="dynamicProperties">Optional dynamic properties.</param>
+		/// <returns>Returns whether the notification should be forwarded to the channel.</returns>
+		protected virtual bool IsChannelApplicableToNotification<M, T>(
+			INotificationChannel<T> channel,
+			string subject,
+			string templateKey,
+			INotificationSource source,
+			object destination,
+			M model,
+			T topic,
+			DateTime utcEffectiveDate,
+			IDictionary<string, object> dynamicProperties = null)
+		{
+			return true;
+		}
+
+		/// <summary>
+		/// Used by method <see cref="SendNotificationToChannelsAsync{T}(string, string, INotificationSource, Object, T, DateTime, IDictionary{string, object})"/>
+		/// to determine whether a notification should be forwarded to a channel. Default implementation returns always true.
+		/// </summary>
+		/// <typeparam name="T">The type of the notification topic.</typeparam>
+		/// <param name="channel">The channel being tested.</param>
+		/// <param name="subject">The subject of the notification.</param>
+		/// <param name="templateKey">The key of the template.</param>
+		/// <param name="source">The source specifying the sender or system generating the notification.</param>
+		/// <param name="destination">The destination of the notification.</param>
+		/// <param name="topic">The topic which the notification serves.</param>
+		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
+		/// <param name="dynamicProperties">The dynamic properties.</param>
+		/// <returns>Returns whether the notification should be forwarded to the channel.</returns>
+		protected virtual bool IsChannelApplicableToNotification<T>(
+			INotificationChannel<T> channel,
+			string subject,
+			string templateKey,
+			INotificationSource source,
+			object destination,
+			T topic,
+			DateTime utcEffectiveDate,
+			IDictionary<string, object> dynamicProperties)
+		{
+			return true;
+		}
 
 		/// <summary>
 		/// Get the name of the logger used in <see cref="ClassLogger"/> property.

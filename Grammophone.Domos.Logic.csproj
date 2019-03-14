@@ -90,6 +90,8 @@
     </Compile>
     <Compile Include="IFundsTransferFileConverter.cs" />
     <Compile Include="ILogicSessionEnvironment.cs" />
+    <Compile Include="INotificationChannel.cs" />
+    <Compile Include="INotificationSource.cs" />
     <Compile Include="Models\FundsTransfer\FundsFileSchemaException.cs" />
     <Compile Include="Models\FundsTransfer\FundsRequestLine.cs" />
     <Compile Include="Models\FundsTransfer\FundsRequestLineResources.Designer.cs">
