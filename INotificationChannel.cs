@@ -32,7 +32,7 @@ namespace Grammophone.Domos.Logic
 			M model,
 			T topic,
 			DateTime utcEffectiveDate,
-			IDictionary<string, object> dynamicProperties = null);
+			IReadOnlyDictionary<string, object> dynamicProperties = null);
 
 		/// <summary>
 		/// Send a notification to the channel.
@@ -51,6 +51,6 @@ namespace Grammophone.Domos.Logic
 			object destination,
 			T topic,
 			DateTime utcEffectiveDate,
-			IDictionary<string, object> dynamicProperties);
+			IReadOnlyDictionary<string, object> dynamicProperties);
 	}
 }
