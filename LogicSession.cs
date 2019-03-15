@@ -917,7 +917,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		internal virtual LogicSessionEnvironment<U, D> ResolveEnvironment()
 		{
-			return sessionEnvironmentsCache.Get(this.ConfigurationSectionName);
+			return GetEnvironment(this.ConfigurationSectionName);
 		}
 
 		#endregion
