@@ -741,12 +741,12 @@ namespace Grammophone.Domos.Logic
 		/// <returns>Returns a task which is completed when all channels invokation has been completed.</returns>
 		/// <remarks>
 		/// The registered channels are filtered as specified
-		/// in <see cref="IsChannelApplicableToNotification{M, T}(INotificationChannel{T}, string, string, INotificationSource, object, M, T, DateTime, IReadOnlyDictionary{string, object})"/>
+		/// in <see cref="IsChannelApplicableToNotification{M, T}(INotificationChannel{T}, string, string, INotificationIdentity, object, M, T, DateTime, IReadOnlyDictionary{string, object})"/>
 		/// </remarks>
 		public async Task SendNotificationToChannelsAsync<M, T>(
 			string subject,
 			string templateKey,
-			INotificationSource source,
+			INotificationIdentity source,
 			object destination,
 			M model,
 			T topic,
@@ -778,12 +778,12 @@ namespace Grammophone.Domos.Logic
 		/// <returns>Returns a task which is completed when all channels invokation has been completed.</returns>
 		/// <remarks>
 		/// The registered channels are filtered as specified
-		/// in <see cref="IsChannelApplicableToNotification{T}(INotificationChannel{T}, string, string, INotificationSource, object, T, DateTime, IReadOnlyDictionary{string, object})"/>
+		/// in <see cref="IsChannelApplicableToNotification{T}(INotificationChannel{T}, string, string, INotificationIdentity, object, T, DateTime, IReadOnlyDictionary{string, object})"/>
 		/// </remarks>
 		public async Task SendNotificationToChannelsAsync<T>(
 			string subject,
 			string templateKey,
-			INotificationSource source,
+			INotificationIdentity source,
 			object destination,
 			T topic,
 			DateTime utcEffectiveDate,
@@ -816,12 +816,12 @@ namespace Grammophone.Domos.Logic
 		/// <param name="dynamicProperties">Optional dynamic properties.</param>
 		/// <remarks>
 		/// The registered channels are filtered as specified
-		/// in <see cref="IsChannelApplicableToNotification{M, T}(INotificationChannel{T}, string, string, INotificationSource, object, M, T, DateTime, IReadOnlyDictionary{string, object})"/>
+		/// in <see cref="IsChannelApplicableToNotification{M, T}(INotificationChannel{T}, string, string, INotificationIdentity, object, M, T, DateTime, IReadOnlyDictionary{string, object})"/>
 		/// </remarks>
 		public void QueueNotificationToChannels<M, T>(
 			string subject,
 			string templateKey,
-			INotificationSource source,
+			INotificationIdentity source,
 			object destination,
 			M model,
 			T topic,
@@ -857,12 +857,12 @@ namespace Grammophone.Domos.Logic
 		/// <param name="dynamicProperties">The dynamic properties.</param>
 		/// <remarks>
 		/// The registered channels are filtered as specified
-		/// in <see cref="IsChannelApplicableToNotification{T}(INotificationChannel{T}, string, string, INotificationSource, object, T, DateTime, IReadOnlyDictionary{string, object})"/>
+		/// in <see cref="IsChannelApplicableToNotification{T}(INotificationChannel{T}, string, string, INotificationIdentity, object, T, DateTime, IReadOnlyDictionary{string, object})"/>
 		/// </remarks>
 		public void QueueNotificationToChannels<T>(
 			string subject,
 			string templateKey,
-			INotificationSource source,
+			INotificationIdentity source,
 			object destination,
 			T topic,
 			DateTime utcEffectiveDate,
@@ -925,7 +925,7 @@ namespace Grammophone.Domos.Logic
 		#region Protected methods
 
 		/// <summary>
-		/// Used by method <see cref="SendNotificationToChannelsAsync{M, T}(string, string, INotificationSource, Object, M, T, DateTime, IReadOnlyDictionary{string, object})"/>
+		/// Used by method <see cref="SendNotificationToChannelsAsync{M, T}(string, string, INotificationIdentity, Object, M, T, DateTime, IReadOnlyDictionary{string, object})"/>
 		/// to determine whether a notification should be forwarded to a channel. Default implementation returns always true.
 		/// </summary>
 		/// <typeparam name="M">The type of the model.</typeparam>
@@ -944,7 +944,7 @@ namespace Grammophone.Domos.Logic
 			INotificationChannel<T> channel,
 			string subject,
 			string templateKey,
-			INotificationSource source,
+			INotificationIdentity source,
 			object destination,
 			M model,
 			T topic,
@@ -955,7 +955,7 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Used by method <see cref="SendNotificationToChannelsAsync{T}(string, string, INotificationSource, Object, T, DateTime, IReadOnlyDictionary{string, object})"/>
+		/// Used by method <see cref="SendNotificationToChannelsAsync{T}(string, string, INotificationIdentity, Object, T, DateTime, IReadOnlyDictionary{string, object})"/>
 		/// to determine whether a notification should be forwarded to a channel. Default implementation returns always true.
 		/// </summary>
 		/// <typeparam name="T">The type of the notification topic.</typeparam>
@@ -972,7 +972,7 @@ namespace Grammophone.Domos.Logic
 			INotificationChannel<T> channel,
 			string subject,
 			string templateKey,
-			INotificationSource source,
+			INotificationIdentity source,
 			object destination,
 			T topic,
 			DateTime utcEffectiveDate,
@@ -1643,7 +1643,7 @@ namespace Grammophone.Domos.Logic
 			INotificationChannel<T> channel,
 			string subject,
 			string templateKey,
-			INotificationSource source,
+			INotificationIdentity source,
 			object destination,
 			M model,
 			T topic,
@@ -1678,7 +1678,7 @@ namespace Grammophone.Domos.Logic
 		private async Task SendNotificationToChannelAsync<T>(
 			string subject,
 			string templateKey,
-			INotificationSource source,
+			INotificationIdentity source,
 			object destination,
 			T topic,
 			DateTime utcEffectiveDate,

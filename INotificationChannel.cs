@@ -27,7 +27,7 @@ namespace Grammophone.Domos.Logic
 		Task SendAsync<M>(
 			string subject,
 			string templateKey,
-			INotificationSource source,
+			INotificationIdentity source,
 			object destination,
 			M model,
 			T topic,
@@ -47,7 +47,7 @@ namespace Grammophone.Domos.Logic
 		Task SendAsync(
 			string subject,
 			string templateKey,
-			INotificationSource source,
+			INotificationIdentity source,
 			object destination,
 			T topic,
 			DateTime utcEffectiveDate,
