@@ -726,7 +726,7 @@ namespace Grammophone.Domos.Logic
 		#region Notification Channels
 
 		/// <summary>
-		/// Send a notification to the registered <see cref="INotificationChannel{T}"/>s in the system.
+		/// Send a notification to the registered <see cref="INotificationChannel{T}"/>s sequentially.
 		/// </summary>
 		/// <typeparam name="M">The type of the model.</typeparam>
 		/// <typeparam name="T">The type of the notification topic.</typeparam>
@@ -738,7 +738,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="topic">The topic which the notification serves.</param>
 		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
 		/// <param name="dynamicProperties">Optional dynamic properties.</param>
-		/// <returns>Returns a task which is completed when all channels invokation has been completed.</returns>
+		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
 		/// <remarks>
 		/// The registered channels are filtered as specified
 		/// in <see cref="IsChannelApplicableToNotification{M, T}(INotificationChannel{T}, string, string, INotificationIdentity, object, M, T, DateTime, IReadOnlyDictionary{string, object})"/>
@@ -765,7 +765,7 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Send a notification to the registered <see cref="INotificationChannel{T}"/>s in the system.
+		/// Send a notification to the registered <see cref="INotificationChannel{T}"/>s sequentially.
 		/// </summary>
 		/// <typeparam name="T">The type of the notification topic.</typeparam>
 		/// <param name="subject">The subject of the notification.</param>
@@ -775,7 +775,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="topic">The topic which the notification serves.</param>
 		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
 		/// <param name="dynamicProperties">The dynamic properties.</param>
-		/// <returns>Returns a task which is completed when all channels invokation has been completed.</returns>
+		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
 		/// <remarks>
 		/// The registered channels are filtered as specified
 		/// in <see cref="IsChannelApplicableToNotification{T}(INotificationChannel{T}, string, string, INotificationIdentity, object, T, DateTime, IReadOnlyDictionary{string, object})"/>
@@ -801,8 +801,7 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Queue a notification to the registered <see cref="INotificationChannel{T}"/>s in the system.
-		/// Channels are invoked asynchronously.
+		/// Post a notification to the registered <see cref="INotificationChannel{T}"/>s in parallel.
 		/// </summary>
 		/// <typeparam name="M">The type of the model.</typeparam>
 		/// <typeparam name="T">The type of the notification topic.</typeparam>
@@ -814,11 +813,12 @@ namespace Grammophone.Domos.Logic
 		/// <param name="topic">The topic which the notification serves.</param>
 		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
 		/// <param name="dynamicProperties">Optional dynamic properties.</param>
+		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
 		/// <remarks>
 		/// The registered channels are filtered as specified
 		/// in <see cref="IsChannelApplicableToNotification{M, T}(INotificationChannel{T}, string, string, INotificationIdentity, object, M, T, DateTime, IReadOnlyDictionary{string, object})"/>
 		/// </remarks>
-		public void QueueNotificationToChannels<M, T>(
+		public Task PostNotificationToChannelsAsync<M, T>(
 			string subject,
 			string templateKey,
 			INotificationIdentity source,
@@ -828,24 +828,30 @@ namespace Grammophone.Domos.Logic
 			DateTime utcEffectiveDate,
 			IReadOnlyDictionary<string, object> dynamicProperties = null)
 		{
-			var channels = this.Settings.ResolveAll<INotificationChannel<T>>();
+			var channels = from c in this.Settings.ResolveAll<INotificationChannel<T>>()
+										 where IsChannelApplicableToNotification(c, subject, templateKey, source, destination, model, topic, utcEffectiveDate, dynamicProperties)
+										 select c;
 
-			foreach (var channel in channels)
+			if (!channels.Any()) return Task.CompletedTask;
+
+			var parentTask = Task.Factory.StartNew(() =>
 			{
-				if (!IsChannelApplicableToNotification(channel, subject, templateKey, source, destination, model, topic, utcEffectiveDate, dynamicProperties))
-					continue;
-
-				Task.Run(() =>
+				foreach (var channel in channels)
 				{
-					var sendingSubtask = 
-						SendNotificationToChannelAsync(channel, subject, templateKey, source, destination, model, topic, utcEffectiveDate, dynamicProperties);
-				});
-			}
+					Task.Factory.StartNew(() =>
+					{
+						var sendingSubtask =
+							SendNotificationToChannelAsync(channel, subject, templateKey, source, destination, model, topic, utcEffectiveDate, dynamicProperties);
+					},
+					TaskCreationOptions.AttachedToParent);
+				}
+			});
+
+			return parentTask;
 		}
 
 		/// <summary>
-		/// Queue a notification to the registered <see cref="INotificationChannel{T}"/>s in the system.
-		/// Channels are invoked asynchronously.
+		/// Post a notification to the registered <see cref="INotificationChannel{T}"/>s in parallel.
 		/// </summary>
 		/// <typeparam name="T">The type of the notification topic.</typeparam>
 		/// <param name="subject">The subject of the notification.</param>
@@ -855,11 +861,12 @@ namespace Grammophone.Domos.Logic
 		/// <param name="topic">The topic which the notification serves.</param>
 		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
 		/// <param name="dynamicProperties">The dynamic properties.</param>
+		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
 		/// <remarks>
 		/// The registered channels are filtered as specified
 		/// in <see cref="IsChannelApplicableToNotification{T}(INotificationChannel{T}, string, string, INotificationIdentity, object, T, DateTime, IReadOnlyDictionary{string, object})"/>
 		/// </remarks>
-		public void QueueNotificationToChannels<T>(
+		public Task PostNotificationToChannelsAsync<T>(
 			string subject,
 			string templateKey,
 			INotificationIdentity source,
@@ -868,19 +875,26 @@ namespace Grammophone.Domos.Logic
 			DateTime utcEffectiveDate,
 			IReadOnlyDictionary<string, object> dynamicProperties)
 		{
-			var channels = this.Settings.ResolveAll<INotificationChannel<T>>();
+			var channels = from c in this.Settings.ResolveAll<INotificationChannel<T>>()
+										 where IsChannelApplicableToNotification(c, subject, templateKey, source, destination, topic, utcEffectiveDate, dynamicProperties)
+										 select c;
 
-			foreach (var channel in channels)
+			if (!channels.Any()) return Task.CompletedTask;
+
+			var parentTask = Task.Factory.StartNew(() =>
 			{
-				if (!IsChannelApplicableToNotification(channel, subject, templateKey, source, destination, topic, utcEffectiveDate, dynamicProperties))
-					continue;
-
-				Task.Run(() =>
+				foreach (var channel in channels)
 				{
-					var sendingSubtask =
-						SendNotificationToChannelAsync(subject, templateKey, source, destination, topic, utcEffectiveDate, dynamicProperties, channel);
-				});
-			}
+					Task.Factory.StartNew(() =>
+					{
+						var sendingSubtask =
+							SendNotificationToChannelAsync(subject, templateKey, source, destination, topic, utcEffectiveDate, dynamicProperties, channel);
+					},
+					TaskCreationOptions.AttachedToParent);
+				}
+			});
+
+			return parentTask;
 		}
 
 		#endregion

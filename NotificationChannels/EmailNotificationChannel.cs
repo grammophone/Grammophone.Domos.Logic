@@ -10,7 +10,7 @@ namespace Grammophone.Domos.Logic.NotificationChannels
 {
 	/// <summary>
 	/// Abstract notification channel for e-mail.
-	/// Override <see cref="GetDestinationNotificationIdentities(object)"/> to 
+	/// Override <see cref="GetDestinationIdentities(object)"/> to 
 	/// extract e-mail recepients from a destination object.
 	/// </summary>
 	/// <typeparam name="T">The type of the topic; not used in this implementation.</typeparam>
@@ -88,7 +88,7 @@ namespace Grammophone.Domos.Logic.NotificationChannels
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var destinationIdentities = GetDestinationNotificationIdentities(destination);
+			var destinationIdentities = GetDestinationIdentities(destination);
 
 			if (!destinationIdentities.Any()) return;
 
@@ -127,7 +127,7 @@ namespace Grammophone.Domos.Logic.NotificationChannels
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var destinationIdentities = GetDestinationNotificationIdentities(destination);
+			var destinationIdentities = GetDestinationIdentities(destination);
 
 			if (!destinationIdentities.Any()) return;
 
@@ -151,7 +151,7 @@ namespace Grammophone.Domos.Logic.NotificationChannels
 		/// <summary>
 		/// Override to extract e-mail recepients from a destination object.
 		/// </summary>
-		protected abstract IEnumerable<INotificationIdentity> GetDestinationNotificationIdentities(object destination);
+		protected abstract IEnumerable<INotificationIdentity> GetDestinationIdentities(object destination);
 
 		#endregion
 
