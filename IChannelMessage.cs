@@ -10,7 +10,7 @@ namespace Grammophone.Domos.Logic
 	/// Contract for a message to be consumed by channels.
 	/// </summary>
 	/// <typeparam name="T">The type of <see cref="Topic"/>.</typeparam>
-	interface IChannelMessage<out T>
+	public interface IChannelMessage<out T>
 	{
 		/// <summary>
 		/// The subject of the message.
@@ -53,7 +53,7 @@ namespace Grammophone.Domos.Logic
 	/// </summary>
 	/// <typeparam name="M">The type of the <see cref="Model"/>.</typeparam>
 	/// <typeparam name="T">The type of the <see cref="IChannelMessage{T}.Topic"/>.</typeparam>
-	interface IChannelMessage<out M, out T> : IChannelMessage<T>
+	public interface IChannelMessage<out M, out T> : IChannelMessage<T>
 	{
 		/// <summary>
 		/// The model to included in the message.
