@@ -64,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccessDeniedException.cs" />
+    <Compile Include="ChannelMessage.cs" />
     <Compile Include="CommonMessages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -89,9 +90,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>FundsTransferManagerMessages.resx</DependentUpon>
     </Compile>
+    <Compile Include="IChannelMessage.cs" />
+    <Compile Include="IChannelsQueuer.cs" />
     <Compile Include="IFundsTransferFileConverter.cs" />
     <Compile Include="ILogicSessionEnvironment.cs" />
-    <Compile Include="INotificationChannel.cs" />
+    <Compile Include="IChannel.cs" />
     <Compile Include="INotificationIdentity.cs" />
     <Compile Include="Models\FundsTransfer\FundsFileSchemaException.cs" />
     <Compile Include="Models\FundsTransfer\FundsRequestLine.cs" />
@@ -119,7 +122,7 @@
       <DependentUpon>FundsResponseStatusResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Models\FundsTransfer\FundsTransferStatistic.cs" />
-    <Compile Include="NotificationChannels\EmailNotificationChannel.cs" />
+    <Compile Include="Channels\EmailNotificationChannel.cs" />
     <Compile Include="StatePathAccessDeniedException.cs" />
     <Compile Include="WorkflowActions\FundsTransferResponseAction.cs" />
     <Compile Include="WorkflowActions\FundsTransferResponseActionResources.Designer.cs">

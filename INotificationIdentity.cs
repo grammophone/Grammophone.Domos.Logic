@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Grammophone.Domos.Logic
 {
 	/// <summary>
-	/// Source or destination of notifications sent via <see cref="INotificationChannel{T}"/>.
+	/// Source or destination of notifications sent via <see cref="IChannel{T}"/>.
 	/// </summary>
 	public interface INotificationIdentity
 	{

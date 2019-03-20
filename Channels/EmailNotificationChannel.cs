@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Grammophone.Email;
 using Grammophone.TemplateRendering;
 
-namespace Grammophone.Domos.Logic.NotificationChannels
+namespace Grammophone.Domos.Logic.Channels
 {
 	/// <summary>
 	/// Abstract notification channel for e-mail.
@@ -14,7 +14,7 @@ namespace Grammophone.Domos.Logic.NotificationChannels
 	/// extract e-mail recepients from a destination object.
 	/// </summary>
 	/// <typeparam name="T">The type of the topic; not used in this implementation.</typeparam>
-	public abstract class EmailNotificationChannel<T> : INotificationChannel<T>
+	public abstract class EmailChannel<T> : IChannel<T>
 	{
 		#region Private fields
 
@@ -34,7 +34,7 @@ namespace Grammophone.Domos.Logic.NotificationChannels
 		/// <param name="emailSettings">The settings to use in order to instanciate an e-mail client.</param>
 		/// <param name="renderProvider">The render provider to use in order to provide the body of the mesage.</param>
 		/// <param name="templateKeyPrefix">Any template key prefix to add when invoking <paramref name="renderProvider"/> to produce the body of the message.</param>
-		public EmailNotificationChannel(
+		public EmailChannel(
 			EmailSettings emailSettings,
 			IRenderProvider renderProvider,
 			string templateKeyPrefix)
@@ -53,7 +53,7 @@ namespace Grammophone.Domos.Logic.NotificationChannels
 		/// </summary>
 		/// <param name="emailSettings">The settings to use in order to instanciate an e-mail client.</param>
 		/// <param name="renderProvider">The render provider to use in order to provide the body of the mesage.</param>
-		public EmailNotificationChannel(
+		public EmailChannel(
 			EmailSettings emailSettings,
 			IRenderProvider renderProvider)
 			: this(emailSettings, renderProvider, String.Empty)

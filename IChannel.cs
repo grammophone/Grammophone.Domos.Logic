@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace Grammophone.Domos.Logic
 {
 	/// <summary>
-	/// Contract for implementations chanelling notifications.
+	/// Contract for implementations chanelling messages.
 	/// </summary>
 	/// <typeparam name="T">The type of notification topics in the system.</typeparam>
-	public interface INotificationChannel<T>
+	public interface IChannel<T>
 	{
 		/// <summary>
 		/// Send a notification to the channel.
