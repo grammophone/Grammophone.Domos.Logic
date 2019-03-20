@@ -247,9 +247,6 @@ namespace Grammophone.Domos.Logic
 
 		#region Private fields
 
-		private static readonly Tasks.ChannelsTaskQueuer<object> channelsTaskQueuer = new Tasks.ChannelsTaskQueuer<object>();
-
-
 		/// <summary>
 		/// Caches <see cref="LogicSessionEnvironment{U, D}"/>s by configuration section names.
 		/// </summary>
@@ -731,32 +728,19 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Send a notification to the registered <see cref="IChannel{T}"/>s sequentially.
 		/// </summary>
-		/// <typeparam name="M">The type of the model.</typeparam>
-		/// <typeparam name="T">The type of the notification topic.</typeparam>
-		/// <param name="subject">The subject of the notification.</param>
-		/// <param name="templateKey">The key of the template.</param>
-		/// <param name="source">The source specifying the sender or system generating the notification.</param>
-		/// <param name="destination">The destination of the notification.</param>
-		/// <param name="model">The model of the notification.</param>
-		/// <param name="topic">The topic which the notification serves.</param>
-		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
-		/// <param name="dynamicProperties">Optional dynamic properties.</param>
+		/// <typeparam name="M">The type of the model in the message.</typeparam>
+		/// <typeparam name="T">The type of the topic.</typeparam>
+		/// <param name="channelMessage">The message to send via the channels.</param>
 		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
-		public async Task SendNotificationToChannelsAsync<M, T>(
-			string subject,
-			string templateKey,
-			INotificationIdentity source,
-			object destination,
-			M model,
-			T topic,
-			DateTime utcEffectiveDate,
-			IReadOnlyDictionary<string, object> dynamicProperties = null)
+		public async Task SendMessageToChannelsAsync<M, T>(IChannelMessage<M, T> channelMessage)
 		{
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
+
 			var channels = this.Settings.ResolveAll<IChannel<T>>();
 
 			foreach (var channel in channels)
 			{
-				await SendNotificationToChannelAsync(channel, subject, templateKey, source, destination, model, topic, utcEffectiveDate, dynamicProperties);
+				await SendMessageToChannelAsync(channel, channelMessage);
 			}
 		}
 
@@ -764,54 +748,26 @@ namespace Grammophone.Domos.Logic
 		/// Send a notification to the registered <see cref="IChannel{T}"/>s sequentially.
 		/// </summary>
 		/// <typeparam name="T">The type of the notification topic.</typeparam>
-		/// <param name="subject">The subject of the notification.</param>
-		/// <param name="templateKey">The key of the template.</param>
-		/// <param name="source">The source specifying the sender or system generating the notification.</param>
-		/// <param name="destination"></param>
-		/// <param name="topic">The topic which the notification serves.</param>
-		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
-		/// <param name="dynamicProperties">The dynamic properties.</param>
+		/// <param name="channelMessage">The message to send via the channels.</param>
 		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
-		public async Task SendNotificationToChannelsAsync<T>(
-			string subject,
-			string templateKey,
-			INotificationIdentity source,
-			object destination,
-			T topic,
-			DateTime utcEffectiveDate,
-			IReadOnlyDictionary<string, object> dynamicProperties)
+		public async Task SendMessageToChannelsAsync<T>(IChannelMessage<T> channelMessage)
 		{
 			var channels = this.Settings.ResolveAll<IChannel<T>>();
 
 			foreach (var channel in channels)
 			{
-				await SendNotificationToChannelAsync(subject, templateKey, source, destination, topic, utcEffectiveDate, dynamicProperties, channel);
+				await SendMessageToChannelAsync(channel, channelMessage);
 			}
 		}
 
 		/// <summary>
 		/// Post a notification to the registered <see cref="IChannel{T}"/>s in parallel.
 		/// </summary>
-		/// <typeparam name="M">The type of the model.</typeparam>
+		/// <typeparam name="M">The type of the model in the message.</typeparam>
 		/// <typeparam name="T">The type of the notification topic.</typeparam>
-		/// <param name="subject">The subject of the notification.</param>
-		/// <param name="templateKey">The key of the template.</param>
-		/// <param name="source">The source specifying the sender or system generating the notification.</param>
-		/// <param name="destination">The destination of the notification.</param>
-		/// <param name="model">The model of the notification.</param>
-		/// <param name="topic">The topic which the notification serves.</param>
-		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
-		/// <param name="dynamicProperties">Optional dynamic properties.</param>
+		/// <param name="channelMessage">The message to send via the channels.</param>
 		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
-		public Task PostNotificationToChannelsAsync<M, T>(
-			string subject,
-			string templateKey,
-			INotificationIdentity source,
-			object destination,
-			M model,
-			T topic,
-			DateTime utcEffectiveDate,
-			IReadOnlyDictionary<string, object> dynamicProperties = null)
+		public Task PostMessageToChannelsAsync<M, T>(IChannelMessage<M, T> channelMessage)
 		{
 			var channels = this.Settings.ResolveAll<IChannel<T>>();
 
@@ -823,7 +779,7 @@ namespace Grammophone.Domos.Logic
 			{
 				var channelTask = Task.Run(async () =>
 				{
-					await SendNotificationToChannelAsync(channel, subject, templateKey, source, destination, model, topic, utcEffectiveDate, dynamicProperties);
+					await SendMessageToChannelAsync(channel, channelMessage);
 				});
 
 				channelsTasks.Add(channelTask);
@@ -835,70 +791,10 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Post a notification to the registered <see cref="IChannel{T}"/>s in parallel.
 		/// </summary>
-		/// <typeparam name="M">The type of the model.</typeparam>
 		/// <typeparam name="T">The type of the notification topic.</typeparam>
-		/// <param name="subject">The subject of the notification.</param>
-		/// <param name="templateKey">The key of the template.</param>
-		/// <param name="source">The source specifying the sender or system generating the notification.</param>
-		/// <param name="destination">The destination of the notification.</param>
-		/// <param name="model">The model of the notification.</param>
-		/// <param name="topic">The topic which the notification serves.</param>
-		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
-		/// <param name="dynamicProperties">Optional dynamic properties.</param>
+		/// <param name="channelMessage">The message to send via the channels.</param>
 		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
-		public Task QueueNotificationToChannelsAsync<M, T>(
-			string subject,
-			string templateKey,
-			INotificationIdentity source,
-			object destination,
-			M model,
-			T topic,
-			DateTime utcEffectiveDate,
-			IReadOnlyDictionary<string, object> dynamicProperties = null)
-		{
-			var channels = this.Settings.ResolveAll<IChannel<T>>();
-
-			if (!channels.Any()) return Task.CompletedTask;
-
-			var channelsTasks = new List<Task>(channels.Count());
-
-			foreach (var channel in channels)
-			{
-
-				var channelTask = channelsTaskQueuer.QueueAsyncAction(
-					channel,
-					async () =>
-					{
-						await SendNotificationToChannelAsync(channel, subject, templateKey, source, destination, model, topic, utcEffectiveDate, dynamicProperties);
-					});
-
-				channelsTasks.Add(channelTask);
-			}
-
-			return Task.WhenAll(channelsTasks);
-
-		}
-
-		/// <summary>
-		/// Post a notification to the registered <see cref="IChannel{T}"/>s in parallel.
-		/// </summary>
-		/// <typeparam name="T">The type of the notification topic.</typeparam>
-		/// <param name="subject">The subject of the notification.</param>
-		/// <param name="templateKey">The key of the template.</param>
-		/// <param name="source">The source specifying the sender or system generating the notification.</param>
-		/// <param name="destination"></param>
-		/// <param name="topic">The topic which the notification serves.</param>
-		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
-		/// <param name="dynamicProperties">The dynamic properties.</param>
-		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
-		public Task PostNotificationToChannelsAsync<T>(
-			string subject,
-			string templateKey,
-			INotificationIdentity source,
-			object destination,
-			T topic,
-			DateTime utcEffectiveDate,
-			IReadOnlyDictionary<string, object> dynamicProperties)
+		public Task PostMessageToChannelsAsync<T>(IChannelMessage<T> channelMessage)
 		{
 			var channels = this.Settings.ResolveAll<IChannel<T>>();
 
@@ -910,7 +806,7 @@ namespace Grammophone.Domos.Logic
 			{
 				var channelTask = Task.Run(async () =>
 				{
-					await SendNotificationToChannelAsync(subject, templateKey, source, destination, topic, utcEffectiveDate, dynamicProperties, channel);
+					await SendMessageToChannelAsync(channel, channelMessage);
 				});
 
 				channelsTasks.Add(channelTask);
@@ -1607,37 +1503,21 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Attempt to send a notification to a channel and log any error.
 		/// </summary>
-		/// <typeparam name="M">The type of the model.</typeparam>
+		/// <typeparam name="M">The type of the model in the message.</typeparam>
 		/// <typeparam name="T">The type of the topic.</typeparam>
-		/// <param name="channel">The Channel to send to.</param>
-		/// <param name="subject">The subject of the notification.</param>
-		/// <param name="templateKey">The key of the template.</param>
-		/// <param name="source">The source specifying the sender or system generating the notification.</param>
-		/// <param name="destination">The destination of the notification.</param>
-		/// <param name="model">The model of the notification.</param>
-		/// <param name="topic">The topic which the notification serves.</param>
-		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
-		/// <param name="dynamicProperties">Optional dynamic properties.</param>
-		private async Task SendNotificationToChannelAsync<M, T>(
-			IChannel<T> channel,
-			string subject,
-			string templateKey,
-			INotificationIdentity source,
-			object destination,
-			M model,
-			T topic,
-			DateTime utcEffectiveDate,
-			IReadOnlyDictionary<string, object> dynamicProperties = null)
+		/// <param name="channel">The channel to send the message to.</param>
+		/// <param name="channelMessage">The message to send to the channel.</param>
+		private async Task SendMessageToChannelAsync<M, T>(IChannel<T> channel, IChannelMessage<M, T> channelMessage)
 		{
 			try
 			{
-				await channel.SendAsync(subject, templateKey, source, destination, model, topic, utcEffectiveDate, dynamicProperties);
+				await channel.SendAsync(channelMessage);
 			}
 			catch (Exception e)
 			{
 				this.ClassLogger.Log(
 					LogLevel.Error,
-					$"Failed to send notification with model {model.GetType().FullName} via channel of type {channel.GetType().FullName}, subject: '{subject}'",
+					$"Failed to send notification with model {channelMessage.Model.GetType().FullName} via channel of type {channel.GetType().FullName}, subject: '{channelMessage.Subject}'",
 					e);
 			}
 		}
@@ -1647,32 +1527,18 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <typeparam name="T">The type of the topic.</typeparam>
 		/// <param name="channel">The Channel to send to.</param>
-		/// <param name="subject">The subject of the notification.</param>
-		/// <param name="templateKey">The key of the template.</param>
-		/// <param name="source">The source specifying the sender or system generating the notification.</param>
-		/// <param name="destination">The destination of the notification.</param>
-		/// <param name="topic">The topic which the notification serves.</param>
-		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
-		/// <param name="dynamicProperties">The dynamic properties.</param>
-		private async Task SendNotificationToChannelAsync<T>(
-			string subject,
-			string templateKey,
-			INotificationIdentity source,
-			object destination,
-			T topic,
-			DateTime utcEffectiveDate,
-			IReadOnlyDictionary<string, object> dynamicProperties,
-			IChannel<T> channel)
+		/// <param name="channelMessage">The message to send via the channel.</param>
+		private async Task SendMessageToChannelAsync<T>(IChannel<T> channel, IChannelMessage<T> channelMessage)
 		{
 			try
 			{
-				await channel.SendAsync(subject, templateKey, source, destination, topic, utcEffectiveDate, dynamicProperties);
+				await channel.SendAsync(channelMessage);
 			}
 			catch (Exception e)
 			{
 				this.ClassLogger.Log(
 					LogLevel.Error,
-					$"Failed to send via channel of type {channel.GetType().FullName}, subject: '{subject}'",
+					$"Failed to send via channel of type {channel.GetType().FullName}, subject: '{channelMessage.Subject}'",
 					e);
 			}
 		}

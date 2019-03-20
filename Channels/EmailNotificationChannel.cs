@@ -65,82 +65,54 @@ namespace Grammophone.Domos.Logic.Channels
 		#region INotificationChannel<T> implementation
 
 		/// <summary>
-		/// E-mail a notification.
+		/// E-mail a message.
 		/// </summary>
-		/// <typeparam name="M">The type of the model.</typeparam>
-		/// <param name="subject">The subject of the notification.</param>
-		/// <param name="templateKey">The key of the template.</param>
-		/// <param name="source">The source specifying the sender or system generating the notification.</param>
-		/// <param name="destination">The destination of the notification.</param>
-		/// <param name="model">The model of the notification.</param>
-		/// <param name="topic">The topic which the notification serves.</param>
-		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
-		/// <param name="dynamicProperties">Optional dynamic properties.</param>
-		public async Task SendAsync<M>(
-			string subject,
-			string templateKey,
-			INotificationIdentity source,
-			object destination,
-			M model,
-			T topic,
-			DateTime utcEffectiveDate,
-			IReadOnlyDictionary<string, object> dynamicProperties = null)
+		/// <typeparam name="M">The type of the model in the message.</typeparam>
+		/// <param name="channelMessage">The message to send to the channel.</param>
+		public async Task SendAsync<M>(IChannelMessage<M, T> channelMessage)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
 
-			var destinationIdentities = GetDestinationIdentities(destination);
+			var destinationIdentities = GetDestinationIdentities(channelMessage.Destination);
 
 			if (!destinationIdentities.Any()) return;
 
-			if (subject == null) throw new ArgumentNullException(nameof(subject));
-			if (templateKey == null) throw new ArgumentNullException(nameof(templateKey));
-			if (model == null) throw new ArgumentNullException(nameof(model));
-
 			using (var bodyWriter = new System.IO.StringWriter())
 			{
-				renderProvider.Render(GetFullTemplateKey(templateKey), bodyWriter, model, dynamicProperties?.ToDictionary(d => d.Key, e => e.Value));
+				renderProvider.Render(
+					GetFullTemplateKey(channelMessage.TemplateKey),
+					bodyWriter,
+					channelMessage.Model,
+					channelMessage.DynamicProperties?.ToDictionary(d => d.Key, e => e.Value));
 
 				string messageBody = bodyWriter.ToString();
 
-				await SendEmailMessageAsync(subject, source, destinationIdentities, messageBody);
+				await SendEmailMessageAsync(channelMessage.Subject, channelMessage.Source, destinationIdentities, messageBody);
 			}
 		}
 
 		/// <summary>
-		/// E-mail a notification.
+		/// E-mail a message.
 		/// </summary>
-		/// <param name="subject">The subject of the notification.</param>
-		/// <param name="templateKey">The key of the template.</param>
-		/// <param name="source">The source specifying the sender or system generating the notification.</param>
-		/// <param name="destination">The destination of the notification.</param>
-		/// <param name="topic">The topic which the notification serves.</param>
-		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
-		/// <param name="dynamicProperties">The dynamic properties.</param>
-		public async Task SendAsync(
-			string subject,
-			string templateKey,
-			INotificationIdentity source,
-			object destination,
-			T topic,
-			DateTime utcEffectiveDate,
-			IReadOnlyDictionary<string, object> dynamicProperties)
+		/// <param name="channelMessage">The message to send to the channel.</param>
+		public async Task SendAsync(IChannelMessage<T> channelMessage)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
 
-			var destinationIdentities = GetDestinationIdentities(destination);
+			var destinationIdentities = GetDestinationIdentities(channelMessage.Destination);
 
 			if (!destinationIdentities.Any()) return;
 
-			if (subject == null) throw new ArgumentNullException(nameof(subject));
-			if (templateKey == null) throw new ArgumentNullException(nameof(templateKey));
-
 			using (var bodyWriter = new System.IO.StringWriter())
 			{
-				renderProvider.Render(GetFullTemplateKey(templateKey), bodyWriter, dynamicProperties?.ToDictionary(d => d.Key, e => e.Value));
+				renderProvider.Render(
+					GetFullTemplateKey(channelMessage.TemplateKey),
+					bodyWriter,
+					channelMessage.DynamicProperties?.ToDictionary(d => d.Key, e => e.Value));
 
 				string messageBody = bodyWriter.ToString();
 
-				await SendEmailMessageAsync(subject, source, destinationIdentities, messageBody);
+				await SendEmailMessageAsync(channelMessage.Subject, channelMessage.Source, destinationIdentities, messageBody);
 			}
 		}
 

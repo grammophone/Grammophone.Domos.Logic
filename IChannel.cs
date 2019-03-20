@@ -10,47 +10,19 @@ namespace Grammophone.Domos.Logic
 	/// Contract for implementations chanelling messages.
 	/// </summary>
 	/// <typeparam name="T">The type of notification topics in the system.</typeparam>
-	public interface IChannel<T>
+	public interface IChannel<in T>
 	{
 		/// <summary>
-		/// Send a notification to the channel.
+		/// Send a message to the channel.
 		/// </summary>
-		/// <typeparam name="M">The type of the model.</typeparam>
-		/// <param name="subject">The subject of the notification.</param>
-		/// <param name="templateKey">The key of the template.</param>
-		/// <param name="source">The source specifying the sender or system generating the notification.</param>
-		/// <param name="destination">The destination of the notification.</param>
-		/// <param name="model">The model of the notification.</param>
-		/// <param name="topic">The topic which the notification serves.</param>
-		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
-		/// <param name="dynamicProperties">Optional dynamic properties.</param>
-		Task SendAsync<M>(
-			string subject,
-			string templateKey,
-			INotificationIdentity source,
-			object destination,
-			M model,
-			T topic,
-			DateTime utcEffectiveDate,
-			IReadOnlyDictionary<string, object> dynamicProperties = null);
+		/// <param name="channelMessage">The message to send via the channel.</param>
+		Task SendAsync(IChannelMessage<T> channelMessage);
 
 		/// <summary>
-		/// Send a notification to the channel.
+		/// Send a message with a strong-type model to the channel.
 		/// </summary>
-		/// <param name="subject">The subject of the notification.</param>
-		/// <param name="templateKey">The key of the template.</param>
-		/// <param name="source">The source specifying the sender or system generating the notification.</param>
-		/// <param name="destination">The destination of the notification.</param>
-		/// <param name="topic">The topic which the notification serves.</param>
-		/// <param name="utcEffectiveDate">The generation date of the notification, in UTC.</param>
-		/// <param name="dynamicProperties">The dynamic properties.</param>
-		Task SendAsync(
-			string subject,
-			string templateKey,
-			INotificationIdentity source,
-			object destination,
-			T topic,
-			DateTime utcEffectiveDate,
-			IReadOnlyDictionary<string, object> dynamicProperties);
+		/// <typeparam name="M">The type of the model in the message.</typeparam>
+		/// <param name="channelMessage">The message to send via the channel.</param>
+		Task SendAsync<M>(IChannelMessage<M, T> channelMessage);
 	}
 }
