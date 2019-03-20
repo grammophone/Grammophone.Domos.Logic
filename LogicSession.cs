@@ -834,20 +834,19 @@ namespace Grammophone.Domos.Logic
 
 			if (!channels.Any()) return Task.CompletedTask;
 
-			var parentTask = Task.Factory.StartNew(() =>
-			{
-				foreach (var channel in channels)
-				{
-					Task.Factory.StartNew(() =>
-					{
-						var sendingSubtask =
-							SendNotificationToChannelAsync(channel, subject, templateKey, source, destination, model, topic, utcEffectiveDate, dynamicProperties);
-					},
-					TaskCreationOptions.AttachedToParent);
-				}
-			});
+			var channelsTasks = new List<Task>(channels.Count());
 
-			return parentTask;
+			foreach (var channel in channels)
+			{
+				var channelTask = Task.Run(async () =>
+				{
+					await SendNotificationToChannelAsync(channel, subject, templateKey, source, destination, model, topic, utcEffectiveDate, dynamicProperties);
+				});
+
+				channelsTasks.Add(channelTask);
+			}
+
+			return Task.WhenAll(channelsTasks);
 		}
 
 		/// <summary>
@@ -881,20 +880,19 @@ namespace Grammophone.Domos.Logic
 
 			if (!channels.Any()) return Task.CompletedTask;
 
-			var parentTask = Task.Factory.StartNew(() =>
-			{
-				foreach (var channel in channels)
-				{
-					Task.Factory.StartNew(() =>
-					{
-						var sendingSubtask =
-							SendNotificationToChannelAsync(subject, templateKey, source, destination, topic, utcEffectiveDate, dynamicProperties, channel);
-					},
-					TaskCreationOptions.AttachedToParent);
-				}
-			});
+			var channelsTasks = new List<Task>(channels.Count());
 
-			return parentTask;
+			foreach (var channel in channels)
+			{
+				var channelTask = Task.Run(async () =>
+				{
+					await SendNotificationToChannelAsync(subject, templateKey, source, destination, topic, utcEffectiveDate, dynamicProperties, channel);
+				});
+
+				channelsTasks.Add(channelTask);
+			}
+
+			return Task.WhenAll(channelsTasks);
 		}
 
 		#endregion
