@@ -1,0 +1,84 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Grammophone.Setup;
+
+namespace Grammophone.Domos.Logic.Channels
+{
+	/// <summary>
+	/// Implementation of <see cref="IChannelsDispatcher{T}"/> using the Task Parallel Library.
+	/// </summary>
+	/// <typeparam name="T">The type of the topic in the messages.</typeparam>
+	public class TaskChannelsDispatcher<T> : IChannelsDispatcher<T>
+	{
+		#region Private fields
+
+		private readonly LogicChannelsTaskQueuer taskQueuer;
+
+		#endregion
+
+		#region Construction
+
+		/// <summary>
+		/// Create.
+		/// </summary>
+		/// <param name="taskQueuer">The task queuer of channel actions.</param>
+		public TaskChannelsDispatcher(LogicChannelsTaskQueuer taskQueuer)
+		{
+			if (taskQueuer == null) throw new ArgumentNullException(nameof(taskQueuer));
+
+			this.taskQueuer = taskQueuer;
+		}
+
+		#endregion
+
+		#region IChannelsQueuer<T> implementation
+
+		/// <summary>
+		/// Queue a message to all available channels.
+		/// </summary>
+		/// <param name="settings">The settings of the session.</param>
+		/// <param name="channelMessage">The message to send to the available channels.</param>
+		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
+		public Task QueueToChannelsAsync(Settings settings, IChannelMessage<T> channelMessage)
+		{
+			var channels = settings.ResolveAll<IChannel<T>>();
+
+			foreach (var channel in channels)
+			{
+				var channelTask = taskQueuer.QueueAsyncAction(channel, async () =>
+				{
+					await channel.SendAsync(channelMessage);
+				});
+			}
+
+			return Task.CompletedTask;
+		}
+
+		/// <summary>
+		/// Queue a message to all available channels.
+		/// </summary>
+		/// <typeparam name="M">The type of the model in the message.</typeparam>
+		/// <param name="settings">The settings of the session.</param>
+		/// <param name="channelMessage">The message to send to the available channels.</param>
+		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
+		public Task QueueToChannelsAsync<M>(Settings settings, IChannelMessage<M, T> channelMessage)
+		{
+			var channels = settings.ResolveAll<IChannel<T>>();
+
+			foreach (var channel in channels)
+			{
+				var channelTask = taskQueuer.QueueAsyncAction(channel, async () =>
+				{
+					await channel.SendAsync(channelMessage);
+				});
+			}
+
+			return Task.CompletedTask;
+		}
+
+		#endregion
+	}
+}

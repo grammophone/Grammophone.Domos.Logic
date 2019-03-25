@@ -65,6 +65,8 @@
   <ItemGroup>
     <Compile Include="AccessDeniedException.cs" />
     <Compile Include="ChannelMessage.cs" />
+    <Compile Include="Channels\LogicChannelsTaskQueuer.cs" />
+    <Compile Include="Channels\TaskChannelsDispatcher.cs" />
     <Compile Include="CommonMessages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -91,7 +93,7 @@
       <DependentUpon>FundsTransferManagerMessages.resx</DependentUpon>
     </Compile>
     <Compile Include="IChannelMessage.cs" />
-    <Compile Include="IChannelsQueuer.cs" />
+    <Compile Include="IChannelsDispatcher.cs" />
     <Compile Include="IFundsTransferFileConverter.cs" />
     <Compile Include="ILogicSessionEnvironment.cs" />
     <Compile Include="IChannel.cs" />
