@@ -88,6 +88,8 @@ namespace Grammophone.Domos.Logic
 
 		#region Protected methods
 
+		#region Transaction rights
+
 		/// <summary>
 		/// Elevate access to all entities for the duration of a <paramref name="transaction"/>,
 		/// taking care of any nesting. Use with care.
@@ -113,6 +115,10 @@ namespace Grammophone.Domos.Logic
 		/// </remarks>
 		protected ElevatedAccessScope GetElevatedAccessScope() => this.Session.GetElevatedAccessScope();
 
+		#endregion
+
+		#region Object graph update.
+
 		/// <summary>
 		/// Update an object graph asynchronously.
 		/// </summary>
@@ -136,6 +142,8 @@ namespace Grammophone.Domos.Logic
 				await transaction.CommitAsync();
 			}
 		}
+
+		#endregion
 
 		#endregion
 	}
