@@ -44,6 +44,8 @@ namespace Grammophone.Domos.Logic.Channels
 		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
 		public Task QueueToChannelsAsync(Settings settings, IChannelMessage<T> channelMessage)
 		{
+			if (settings == null) throw new ArgumentNullException(nameof(settings));
+
 			var channels = settings.ResolveAll<IChannel<T>>();
 
 			foreach (var channel in channels)
@@ -66,6 +68,8 @@ namespace Grammophone.Domos.Logic.Channels
 		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
 		public Task QueueToChannelsAsync<M>(Settings settings, IChannelMessage<M, T> channelMessage)
 		{
+			if (settings == null) throw new ArgumentNullException(nameof(settings));
+
 			var channels = settings.ResolveAll<IChannel<T>>();
 
 			foreach (var channel in channels)

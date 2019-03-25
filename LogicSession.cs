@@ -752,6 +752,8 @@ namespace Grammophone.Domos.Logic
 		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
 		public async Task SendMessageToChannelsAsync<T>(IChannelMessage<T> channelMessage)
 		{
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
+
 			var channels = this.Settings.ResolveAll<IChannel<T>>();
 
 			foreach (var channel in channels)
@@ -769,6 +771,8 @@ namespace Grammophone.Domos.Logic
 		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
 		public Task PostMessageToChannelsAsync<M, T>(IChannelMessage<M, T> channelMessage)
 		{
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
+
 			var channels = this.Settings.ResolveAll<IChannel<T>>();
 
 			if (!channels.Any()) return Task.CompletedTask;
@@ -796,6 +800,8 @@ namespace Grammophone.Domos.Logic
 		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
 		public Task PostMessageToChannelsAsync<T>(IChannelMessage<T> channelMessage)
 		{
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
+
 			var channels = this.Settings.ResolveAll<IChannel<T>>();
 
 			if (!channels.Any()) return Task.CompletedTask;
@@ -813,6 +819,37 @@ namespace Grammophone.Domos.Logic
 			}
 
 			return Task.WhenAll(channelsTasks);
+		}
+
+		/// <summary>
+		/// Queue a message to all available channels.
+		/// </summary>
+		/// <typeparam name="T">The type of the topic in the message.</typeparam>
+		/// <param name="channelMessage">The message to send to the available channels.</param>
+		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
+		public async Task QueueToChannelsAsync<T>(IChannelMessage<T> channelMessage)
+		{
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
+
+			var channelsDispatcher = this.Settings.Resolve<IChannelsDispatcher<T>>();
+
+			await channelsDispatcher.QueueToChannelsAsync(this.Settings, channelMessage);
+		}
+
+		/// <summary>
+		/// Queue a message to all available channels.
+		/// </summary>
+		/// <typeparam name="M">The type of the model in the message.</typeparam>
+		/// <typeparam name="T">The type of the topic in the messages.</typeparam>
+		/// <param name="channelMessage">The message to send to the available channels.</param>
+		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
+		public async Task QueueToChannelsAsync<M, T>(IChannelMessage<M, T> channelMessage)
+		{
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
+
+			var channelsDispatcher = this.Settings.Resolve<IChannelsDispatcher<T>>();
+
+			await channelsDispatcher.QueueToChannelsAsync(this.Settings, channelMessage);
 		}
 
 		#endregion
