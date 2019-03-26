@@ -409,7 +409,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
 
-			var channelsDispatcher = this.Settings.Resolve<IChannelsDispatcher<T>>();
+			IChannelsDispatcher<T> channelsDispatcher = GetChannelsDispatcher<T>();
 
 			await channelsDispatcher.QueueMessageToChannelsAsync(this.Settings, channelMessage);
 		}
@@ -425,7 +425,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
 
-			var channelsDispatcher = this.Settings.Resolve<IChannelsDispatcher<T>>();
+			var channelsDispatcher = GetChannelsDispatcher<T>();
 
 			await channelsDispatcher.QueueMessageToChannelsAsync(this.Settings, channelMessage);
 		}
@@ -548,6 +548,16 @@ namespace Grammophone.Domos.Logic
 					e,
 					$"Failed to send via channel of type {channel.GetType().FullName}, subject: '{channelMessage.Subject}'");
 			}
+		}
+
+		private IChannelsDispatcher<T> GetChannelsDispatcher<T>()
+		{
+			var channelsDispatcher = this.Settings.Resolve<IChannelsDispatcher<T>>();
+
+			if (channelsDispatcher == null)
+				throw new LogicException($"No IChannelsDispatcher<{typeof(T).FullName}> is defined in the configuration.");
+
+			return channelsDispatcher;
 		}
 
 		#endregion
