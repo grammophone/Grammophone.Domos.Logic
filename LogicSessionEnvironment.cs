@@ -471,8 +471,15 @@ namespace Grammophone.Domos.Logic
 		{
 			var filesConfiguration = this.Settings.Resolve<Configuration.FilesConfiguration>();
 
+			if (filesConfiguration == null)
+				throw new LogicConfigurationException(
+					this.ConfigurationSectionName,
+					"No FilesConfiguration is defined.");
+
 			if (String.IsNullOrWhiteSpace(filesConfiguration.ContentTypeAssociationsXamlPath))
-				throw new LogicException("The ContentTypeAssociationsXamlPath property of FilesConfiguration is not specified.");
+				throw new LogicConfigurationException(
+					this.ConfigurationSectionName,
+					"The ContentTypeAssociationsXamlPath property of FilesConfiguration is not specified.");
 
 			var contentTypeAssociations =
 				XamlConfiguration<Configuration.ContentTypeAssociations>.LoadSettings(
@@ -555,7 +562,9 @@ namespace Grammophone.Domos.Logic
 			var channelsDispatcher = this.Settings.Resolve<IChannelsDispatcher<T>>();
 
 			if (channelsDispatcher == null)
-				throw new LogicException($"No IChannelsDispatcher<{typeof(T).FullName}> is defined in the configuration.");
+				throw new LogicConfigurationException(
+					this.ConfigurationSectionName,
+					$"No IChannelsDispatcher<{typeof(T).FullName}> is defined in the configuration.");
 
 			return channelsDispatcher;
 		}

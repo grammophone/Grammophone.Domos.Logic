@@ -98,6 +98,7 @@
     <Compile Include="ILogicSessionEnvironment.cs" />
     <Compile Include="IChannel.cs" />
     <Compile Include="INotificationIdentity.cs" />
+    <Compile Include="LogicConfigurationException.cs" />
     <Compile Include="Models\FundsTransfer\FundsFileSchemaException.cs" />
     <Compile Include="Models\FundsTransfer\FundsRequestLine.cs" />
     <Compile Include="Models\FundsTransfer\FundsRequestLineResources.Designer.cs">
