@@ -83,6 +83,12 @@ namespace Grammophone.Domos.Logic.Channels
 			return Task.CompletedTask;
 		}
 
+		/// <summary>
+		/// Returns a task whose completion marks that all messages to all channels have been sent
+		/// by invoking the respecting <see cref="IChannel{T}"/> methods.
+		/// </summary>
+		public Task WhenAllForwarded() => taskQueuer.WhenAll();
+
 		#endregion
 	}
 }
