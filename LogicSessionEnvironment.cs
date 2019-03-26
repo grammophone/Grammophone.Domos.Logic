@@ -10,7 +10,6 @@ using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.TemplateRendering;
 using Grammophone.Setup;
-using Grammophone.Logging;
 
 namespace Grammophone.Domos.Logic
 {
@@ -520,7 +519,7 @@ namespace Grammophone.Domos.Logic
 				var logger = loggersRepository.GetLogger(channelPostLoggerName);
 
 				logger.Log(
-					LogLevel.Error,
+					Logging.LogLevel.Error,
 					e,
 					$"Failed to send notification with model {channelMessage.Model.GetType().FullName} via channel of type {channel.GetType().FullName}, subject: '{channelMessage.Subject}'");
 			}
@@ -545,7 +544,7 @@ namespace Grammophone.Domos.Logic
 				var logger = loggersRepository.GetLogger(channelPostLoggerName);
 
 				logger.Log(
-					LogLevel.Error,
+					Logging.LogLevel.Error,
 					e,
 					$"Failed to send via channel of type {channel.GetType().FullName}, subject: '{channelMessage.Subject}'");
 			}
