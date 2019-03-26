@@ -19,7 +19,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="settings">The settings of the session.</param>
 		/// <param name="channelMessage">The message to send to the available channels.</param>
 		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
-		Task QueueToChannelsAsync(Settings settings, IChannelMessage<T> channelMessage);
+		Task QueueMessageToChannelsAsync(Settings settings, IChannelMessage<T> channelMessage);
 
 		/// <summary>
 		/// Queue a message to all available channels.
@@ -28,12 +28,12 @@ namespace Grammophone.Domos.Logic
 		/// <param name="settings">The settings of the session.</param>
 		/// <param name="channelMessage">The message to send to the available channels.</param>
 		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
-		Task QueueToChannelsAsync<M>(Settings settings, IChannelMessage<M, T> channelMessage);
+		Task QueueMessageToChannelsAsync<M>(Settings settings, IChannelMessage<M, T> channelMessage);
 
 		/// <summary>
 		/// Returns a task whose completion marks that all messages to all channels have been sent, either directly or to a persistent
-		/// relay or queue mechanism which will eventually forward them
+		/// relay or queue mechanism which will eventually forward them.
 		/// </summary>
-		Task WhenAllForwarded();
+		Task WhenAllMessagesForwarded();
 	}
 }

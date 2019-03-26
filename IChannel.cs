@@ -16,13 +16,13 @@ namespace Grammophone.Domos.Logic
 		/// Send a message to the channel.
 		/// </summary>
 		/// <param name="channelMessage">The message to send via the channel.</param>
-		Task SendAsync(IChannelMessage<T> channelMessage);
+		Task SendMessageAsync(IChannelMessage<T> channelMessage);
 
 		/// <summary>
 		/// Send a message with a strong-type model to the channel.
 		/// </summary>
 		/// <typeparam name="M">The type of the model in the message.</typeparam>
 		/// <param name="channelMessage">The message to send via the channel.</param>
-		Task SendAsync<M>(IChannelMessage<M, T> channelMessage);
+		Task SendMessageAsync<M>(IChannelMessage<M, T> channelMessage);
 	}
 }

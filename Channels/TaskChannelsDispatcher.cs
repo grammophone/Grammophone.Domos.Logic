@@ -42,7 +42,7 @@ namespace Grammophone.Domos.Logic.Channels
 		/// <param name="settings">The settings of the session.</param>
 		/// <param name="channelMessage">The message to send to the available channels.</param>
 		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
-		public Task QueueToChannelsAsync(Settings settings, IChannelMessage<T> channelMessage)
+		public Task QueueMessageToChannelsAsync(Settings settings, IChannelMessage<T> channelMessage)
 		{
 			if (settings == null) throw new ArgumentNullException(nameof(settings));
 
@@ -52,7 +52,7 @@ namespace Grammophone.Domos.Logic.Channels
 			{
 				var channelTask = taskQueuer.QueueAsyncAction(channel, async () =>
 				{
-					await channel.SendAsync(channelMessage);
+					await channel.SendMessageAsync(channelMessage);
 				});
 			}
 
@@ -66,7 +66,7 @@ namespace Grammophone.Domos.Logic.Channels
 		/// <param name="settings">The settings of the session.</param>
 		/// <param name="channelMessage">The message to send to the available channels.</param>
 		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
-		public Task QueueToChannelsAsync<M>(Settings settings, IChannelMessage<M, T> channelMessage)
+		public Task QueueMessageToChannelsAsync<M>(Settings settings, IChannelMessage<M, T> channelMessage)
 		{
 			if (settings == null) throw new ArgumentNullException(nameof(settings));
 
@@ -76,7 +76,7 @@ namespace Grammophone.Domos.Logic.Channels
 			{
 				var channelTask = taskQueuer.QueueAsyncAction(channel, async () =>
 				{
-					await channel.SendAsync(channelMessage);
+					await channel.SendMessageAsync(channelMessage);
 				});
 			}
 
@@ -87,7 +87,7 @@ namespace Grammophone.Domos.Logic.Channels
 		/// Returns a task whose completion marks that all messages to all channels have been sent
 		/// by invoking the respecting <see cref="IChannel{T}"/> methods.
 		/// </summary>
-		public Task WhenAllForwarded() => taskQueuer.WhenAll();
+		public Task WhenAllMessagesForwarded() => taskQueuer.WhenAll();
 
 		#endregion
 	}

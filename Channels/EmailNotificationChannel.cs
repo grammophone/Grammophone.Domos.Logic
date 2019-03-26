@@ -69,7 +69,7 @@ namespace Grammophone.Domos.Logic.Channels
 		/// </summary>
 		/// <typeparam name="M">The type of the model in the message.</typeparam>
 		/// <param name="channelMessage">The message to send to the channel.</param>
-		public async Task SendAsync<M>(IChannelMessage<M, T> channelMessage)
+		public async Task SendMessageAsync<M>(IChannelMessage<M, T> channelMessage)
 		{
 			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
 
@@ -95,7 +95,7 @@ namespace Grammophone.Domos.Logic.Channels
 		/// E-mail a message.
 		/// </summary>
 		/// <param name="channelMessage">The message to send to the channel.</param>
-		public async Task SendAsync(IChannelMessage<T> channelMessage)
+		public async Task SendMessageAsync(IChannelMessage<T> channelMessage)
 		{
 			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
 

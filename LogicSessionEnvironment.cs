@@ -10,6 +10,7 @@ using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.TemplateRendering;
 using Grammophone.Setup;
+using Grammophone.Logging;
 
 namespace Grammophone.Domos.Logic
 {
@@ -34,7 +35,13 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Name of the logger used to record failures while the asynchronous worker for sending e-mails fails. 
 		/// </summary>
-		private const string EmailQueueLoggerName = "EmailQueue";
+		private const string EmailQueueLoggerSuffixName = "EmailQueue";
+
+		/// <summary>
+		/// Name of the logger used to record failures when <see cref="PostMessageToChannelsAsync{T}(IChannelMessage{T})"/>
+		/// or <see cref="PostMessageToChannelsAsync{M, T}(IChannelMessage{M, T})"/> is invoked. 
+		/// </summary>
+		private const string ChannelPostLoggerSuffixName = "ChannelPost";
 
 		#endregion
 
@@ -49,6 +56,8 @@ namespace Grammophone.Domos.Logic
 		private MRUCache<string, Storage.IStorageProvider> storageProvidersCache;
 
 		private AsyncWorkQueue<System.Net.Mail.MailMessage> mailQueue;
+
+		private readonly string channelPostLoggerName;
 
 		#endregion
 
@@ -89,7 +98,9 @@ namespace Grammophone.Domos.Logic
 			mailQueue = new AsyncWorkQueue<System.Net.Mail.MailMessage>(
 				this,
 				SendEmailAsync,
-				$"{EmailQueueLoggerName}[{configurationSectionName}]");
+				$"{configurationSectionName}.{EmailQueueLoggerSuffixName}");
+
+			channelPostLoggerName = $"{configurationSectionName}.{ChannelPostLoggerSuffixName}";
 		}
 
 		#endregion
@@ -127,12 +138,18 @@ namespace Grammophone.Domos.Logic
 
 		#region Public methods
 
+		#region Logging
+
 		/// <summary>
 		/// Get the logger registered under a specified name.
 		/// </summary>
 		/// <param name="loggerName">The name under which the logger is registered.</param>
 		/// <returns>Returns the <see cref="Logging.ILogger"/> requested.</returns>
 		public Logging.ILogger GetLogger(string loggerName) => lazyLoggerRepository.Value.GetLogger(loggerName);
+
+		#endregion
+
+		#region Storage
 
 		/// <summary>
 		/// Get a registered storage provider.
@@ -145,6 +162,10 @@ namespace Grammophone.Domos.Logic
 
 			return storageProvidersCache.Get(providerName);
 		}
+
+		#endregion
+
+		#region E-mail
 
 		/// <summary>
 		/// Create the configured client for sending e-mail.
@@ -270,10 +291,147 @@ namespace Grammophone.Domos.Logic
 			mailQueue.Enqueue(mailMessage);
 		}
 
+		#endregion
+
+		#region Text rendering
+
 		/// <summary>
 		/// Get the configured template rendering provider.
 		/// </summary>
 		public IRenderProvider GetRenderProvider() => this.Settings.Resolve<IRenderProvider>();
+
+		#endregion
+
+		#region Channels messaging
+
+		/// <summary>
+		/// Send a notification to the registered <see cref="IChannel{T}"/>s sequentially.
+		/// </summary>
+		/// <typeparam name="M">The type of the model in the message.</typeparam>
+		/// <typeparam name="T">The type of the topic.</typeparam>
+		/// <param name="channelMessage">The message to send via the channels.</param>
+		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
+		public async Task SendMessageToChannelsAsync<M, T>(IChannelMessage<M, T> channelMessage)
+		{
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
+
+			var channels = this.Settings.ResolveAll<IChannel<T>>();
+
+			foreach (var channel in channels)
+			{
+				await SendMessageToChannelAsync(channel, channelMessage);
+			}
+		}
+
+		/// <summary>
+		/// Send a notification to the registered <see cref="IChannel{T}"/>s sequentially.
+		/// </summary>
+		/// <typeparam name="T">The type of the notification topic.</typeparam>
+		/// <param name="channelMessage">The message to send via the channels.</param>
+		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
+		public async Task SendMessageToChannelsAsync<T>(IChannelMessage<T> channelMessage)
+		{
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
+
+			var channels = this.Settings.ResolveAll<IChannel<T>>();
+
+			foreach (var channel in channels)
+			{
+				await SendMessageToChannelAsync(channel, channelMessage);
+			}
+		}
+
+		/// <summary>
+		/// Post a notification to the registered <see cref="IChannel{T}"/>s in parallel.
+		/// </summary>
+		/// <typeparam name="M">The type of the model in the message.</typeparam>
+		/// <typeparam name="T">The type of the notification topic.</typeparam>
+		/// <param name="channelMessage">The message to send via the channels.</param>
+		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
+		public Task PostMessageToChannelsAsync<M, T>(IChannelMessage<M, T> channelMessage)
+		{
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
+
+			var channels = this.Settings.ResolveAll<IChannel<T>>();
+
+			if (!channels.Any()) return Task.CompletedTask;
+
+			var channelsTasks = new List<Task>(channels.Count());
+
+			foreach (var channel in channels)
+			{
+				var channelTask = Task.Run(async () =>
+				{
+					await SendMessageToChannelAsync(channel, channelMessage);
+				});
+
+				channelsTasks.Add(channelTask);
+			}
+
+			return Task.WhenAll(channelsTasks);
+		}
+
+		/// <summary>
+		/// Post a notification to the registered <see cref="IChannel{T}"/>s in parallel.
+		/// </summary>
+		/// <typeparam name="T">The type of the notification topic.</typeparam>
+		/// <param name="channelMessage">The message to send via the channels.</param>
+		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
+		public Task PostMessageToChannelsAsync<T>(IChannelMessage<T> channelMessage)
+		{
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
+
+			var channels = this.Settings.ResolveAll<IChannel<T>>();
+
+			if (!channels.Any()) return Task.CompletedTask;
+
+			var channelsTasks = new List<Task>(channels.Count());
+
+			foreach (var channel in channels)
+			{
+				var channelTask = Task.Run(async () =>
+				{
+					await SendMessageToChannelAsync(channel, channelMessage);
+				});
+
+				channelsTasks.Add(channelTask);
+			}
+
+			return Task.WhenAll(channelsTasks);
+		}
+
+		/// <summary>
+		/// Queue a message to all available channels.
+		/// </summary>
+		/// <typeparam name="T">The type of the topic in the message.</typeparam>
+		/// <param name="channelMessage">The message to send to the available channels.</param>
+		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
+		public async Task QueueMessageToChannelsAsync<T>(IChannelMessage<T> channelMessage)
+		{
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
+
+			var channelsDispatcher = this.Settings.Resolve<IChannelsDispatcher<T>>();
+
+			await channelsDispatcher.QueueMessageToChannelsAsync(this.Settings, channelMessage);
+		}
+
+		/// <summary>
+		/// Queue a message to all available channels.
+		/// </summary>
+		/// <typeparam name="M">The type of the model in the message.</typeparam>
+		/// <typeparam name="T">The type of the topic in the messages.</typeparam>
+		/// <param name="channelMessage">The message to send to the available channels.</param>
+		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
+		public async Task QueueMessageToChannelsAsync<M, T>(IChannelMessage<M, T> channelMessage)
+		{
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
+
+			var channelsDispatcher = this.Settings.Resolve<IChannelsDispatcher<T>>();
+
+			await channelsDispatcher.QueueMessageToChannelsAsync(this.Settings, channelMessage);
+		}
+
+		#endregion
 
 		/// <summary>
 		/// Dispose the environment.
@@ -340,6 +498,57 @@ namespace Grammophone.Domos.Logic
 			}
 
 			return new Logging.LoggersRepository(loggerProvider);
+		}
+
+		/// <summary>
+		/// Attempt to send a notification to a channel and log any error.
+		/// </summary>
+		/// <typeparam name="M">The type of the model in the message.</typeparam>
+		/// <typeparam name="T">The type of the topic.</typeparam>
+		/// <param name="channel">The channel to send the message to.</param>
+		/// <param name="channelMessage">The message to send to the channel.</param>
+		private async Task SendMessageToChannelAsync<M, T>(IChannel<T> channel, IChannelMessage<M, T> channelMessage)
+		{
+			try
+			{
+				await channel.SendMessageAsync(channelMessage);
+			}
+			catch (Exception e)
+			{
+				var loggersRepository = lazyLoggerRepository.Value;
+
+				var logger = loggersRepository.GetLogger(channelPostLoggerName);
+
+				logger.Log(
+					LogLevel.Error,
+					e,
+					$"Failed to send notification with model {channelMessage.Model.GetType().FullName} via channel of type {channel.GetType().FullName}, subject: '{channelMessage.Subject}'");
+			}
+		}
+
+		/// <summary>
+		/// Attempt to send a notification to a channel and log any error.
+		/// </summary>
+		/// <typeparam name="T">The type of the topic.</typeparam>
+		/// <param name="channel">The Channel to send to.</param>
+		/// <param name="channelMessage">The message to send via the channel.</param>
+		private async Task SendMessageToChannelAsync<T>(IChannel<T> channel, IChannelMessage<T> channelMessage)
+		{
+			try
+			{
+				await channel.SendMessageAsync(channelMessage);
+			}
+			catch (Exception e)
+			{
+				var loggersRepository = lazyLoggerRepository.Value;
+
+				var logger = loggersRepository.GetLogger(channelPostLoggerName);
+
+				logger.Log(
+					LogLevel.Error,
+					e,
+					$"Failed to send via channel of type {channel.GetType().FullName}, subject: '{channelMessage.Subject}'");
+			}
 		}
 
 		#endregion

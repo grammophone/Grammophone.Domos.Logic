@@ -733,16 +733,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="channelMessage">The message to send via the channels.</param>
 		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
 		public async Task SendMessageToChannelsAsync<M, T>(IChannelMessage<M, T> channelMessage)
-		{
-			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
-
-			var channels = this.Settings.ResolveAll<IChannel<T>>();
-
-			foreach (var channel in channels)
-			{
-				await SendMessageToChannelAsync(channel, channelMessage);
-			}
-		}
+			=> await this.Environment.SendMessageToChannelsAsync(channelMessage);
 
 		/// <summary>
 		/// Send a notification to the registered <see cref="IChannel{T}"/>s sequentially.
@@ -751,16 +742,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="channelMessage">The message to send via the channels.</param>
 		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
 		public async Task SendMessageToChannelsAsync<T>(IChannelMessage<T> channelMessage)
-		{
-			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
-
-			var channels = this.Settings.ResolveAll<IChannel<T>>();
-
-			foreach (var channel in channels)
-			{
-				await SendMessageToChannelAsync(channel, channelMessage);
-			}
-		}
+			=> await this.Environment.SendMessageToChannelsAsync(channelMessage);
 
 		/// <summary>
 		/// Post a notification to the registered <see cref="IChannel{T}"/>s in parallel.
@@ -770,27 +752,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="channelMessage">The message to send via the channels.</param>
 		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
 		public Task PostMessageToChannelsAsync<M, T>(IChannelMessage<M, T> channelMessage)
-		{
-			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
-
-			var channels = this.Settings.ResolveAll<IChannel<T>>();
-
-			if (!channels.Any()) return Task.CompletedTask;
-
-			var channelsTasks = new List<Task>(channels.Count());
-
-			foreach (var channel in channels)
-			{
-				var channelTask = Task.Run(async () =>
-				{
-					await SendMessageToChannelAsync(channel, channelMessage);
-				});
-
-				channelsTasks.Add(channelTask);
-			}
-
-			return Task.WhenAll(channelsTasks);
-		}
+			=> this.Environment.PostMessageToChannelsAsync(channelMessage);
 
 		/// <summary>
 		/// Post a notification to the registered <see cref="IChannel{T}"/>s in parallel.
@@ -799,27 +761,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="channelMessage">The message to send via the channels.</param>
 		/// <returns>Returns a task which is completed when all channel notifications have been completed.</returns>
 		public Task PostMessageToChannelsAsync<T>(IChannelMessage<T> channelMessage)
-		{
-			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
-
-			var channels = this.Settings.ResolveAll<IChannel<T>>();
-
-			if (!channels.Any()) return Task.CompletedTask;
-
-			var channelsTasks = new List<Task>(channels.Count());
-
-			foreach (var channel in channels)
-			{
-				var channelTask = Task.Run(async () =>
-				{
-					await SendMessageToChannelAsync(channel, channelMessage);
-				});
-
-				channelsTasks.Add(channelTask);
-			}
-
-			return Task.WhenAll(channelsTasks);
-		}
+			=> this.Environment.PostMessageToChannelsAsync(channelMessage);
 
 		/// <summary>
 		/// Queue a message to all available channels.
@@ -827,14 +769,8 @@ namespace Grammophone.Domos.Logic
 		/// <typeparam name="T">The type of the topic in the message.</typeparam>
 		/// <param name="channelMessage">The message to send to the available channels.</param>
 		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
-		public async Task QueueToChannelsAsync<T>(IChannelMessage<T> channelMessage)
-		{
-			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
-
-			var channelsDispatcher = this.Settings.Resolve<IChannelsDispatcher<T>>();
-
-			await channelsDispatcher.QueueToChannelsAsync(this.Settings, channelMessage);
-		}
+		public async Task QueueMessageToChannelsAsync<T>(IChannelMessage<T> channelMessage)
+			=> await this.Environment.QueueMessageToChannelsAsync(channelMessage);
 
 		/// <summary>
 		/// Queue a message to all available channels.
@@ -843,14 +779,8 @@ namespace Grammophone.Domos.Logic
 		/// <typeparam name="T">The type of the topic in the messages.</typeparam>
 		/// <param name="channelMessage">The message to send to the available channels.</param>
 		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
-		public async Task QueueToChannelsAsync<M, T>(IChannelMessage<M, T> channelMessage)
-		{
-			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
-
-			var channelsDispatcher = this.Settings.Resolve<IChannelsDispatcher<T>>();
-
-			await channelsDispatcher.QueueToChannelsAsync(this.Settings, channelMessage);
-		}
+		public async Task QueueMessageToChannelsAsync<M, T>(IChannelMessage<M, T> channelMessage)
+			=> await this.Environment.QueueMessageToChannelsAsync(channelMessage);
 
 		#endregion
 
@@ -1548,7 +1478,7 @@ namespace Grammophone.Domos.Logic
 		{
 			try
 			{
-				await channel.SendAsync(channelMessage);
+				await channel.SendMessageAsync(channelMessage);
 			}
 			catch (Exception e)
 			{
@@ -1569,7 +1499,7 @@ namespace Grammophone.Domos.Logic
 		{
 			try
 			{
-				await channel.SendAsync(channelMessage);
+				await channel.SendMessageAsync(channelMessage);
 			}
 			catch (Exception e)
 			{
