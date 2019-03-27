@@ -20,17 +20,17 @@ namespace Grammophone.Domos.Logic
 		/// <param name="templateKey">The key of the template.</param>
 		/// <param name="source">The source specifying the sender or system generating the notification.</param>
 		/// <param name="destination">The destination of the notification.</param>
-		/// <param name="topic">The topic which the notification serves.</param>
 		/// <param name="time">The generation date of the notification, in UTC.</param>
 		/// <param name="dynamicProperties">The dynamic properties.</param>
+		/// <param name="topic">The topic which the notification serves.</param>
 		public ChannelMessage(
 			string subject,
 			string templateKey,
 			INotificationIdentity source,
 			object destination,
-			T topic,
 			DateTime time,
-			IReadOnlyDictionary<string, object> dynamicProperties)
+			IReadOnlyDictionary<string, object> dynamicProperties,
+			T topic = default(T))
 		{
 			if (subject == null) throw new ArgumentNullException(nameof(subject));
 			if (templateKey == null) throw new ArgumentNullException(nameof(templateKey));
@@ -99,8 +99,8 @@ namespace Grammophone.Domos.Logic
 		/// <param name="source">The source specifying the sender or system generating the notification.</param>
 		/// <param name="destination">The destination of the notification.</param>
 		/// <param name="model">The model of the notification.</param>
-		/// <param name="topic">The topic which the notification serves.</param>
 		/// <param name="time">The generation date of the notification, in UTC.</param>
+		/// <param name="topic">The topic which the notification serves.</param>
 		/// <param name="dynamicProperties">Optional dynamic properties.</param>
 		public ChannelMessage(
 			string subject,
@@ -108,10 +108,10 @@ namespace Grammophone.Domos.Logic
 			INotificationIdentity source,
 			object destination,
 			M model,
-			T topic,
 			DateTime time,
-			IReadOnlyDictionary<string, object> dynamicProperties)
-			: base(subject, templateKey, source, destination, topic, time, dynamicProperties)
+			T topic = default(T),
+			IReadOnlyDictionary<string, object> dynamicProperties = null)
+			: base(subject, templateKey, source, destination, time, dynamicProperties, topic)
 		{
 			this.Model = model;
 		}
