@@ -422,6 +422,11 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		public Settings Settings => this.Environment.Settings;
 
+		/// <summary>
+		/// The environment of the session.
+		/// </summary>
+		public LogicSessionEnvironment<U, D> Environment { get; private set; }
+
 		#endregion
 
 		#region Protected properties
@@ -453,15 +458,6 @@ namespace Grammophone.Domos.Logic
 		/// In this case, <see cref="User"/> is null but this property contains the anonymous impersonating user.
 		/// </summary>
 		protected U ActingUser => user;
-
-		#endregion
-
-		#region Internal properties
-
-		/// <summary>
-		/// The environment of the session.
-		/// </summary>
-		internal LogicSessionEnvironment<U, D> Environment { get; private set; }
 
 		#endregion
 
