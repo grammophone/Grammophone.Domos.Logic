@@ -25,12 +25,12 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The source of the message.
 		/// </summary>
-		INotificationIdentity Source { get; }
+		IChannelIdentity Source { get; }
 
 		/// <summary>
 		/// The destination message.
 		/// </summary>
-		object Destination { get; }
+		IChannelDestination Destination { get; }
 
 		/// <summary>
 		/// The topic of the message.

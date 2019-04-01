@@ -92,12 +92,13 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>FundsTransferManagerMessages.resx</DependentUpon>
     </Compile>
+    <Compile Include="IChannelDestination.cs" />
     <Compile Include="IChannelMessage.cs" />
     <Compile Include="IChannelsDispatcher.cs" />
     <Compile Include="IFundsTransferFileConverter.cs" />
     <Compile Include="ILogicSessionEnvironment.cs" />
     <Compile Include="IChannel.cs" />
-    <Compile Include="INotificationIdentity.cs" />
+    <Compile Include="IChannelIdentity.cs" />
     <Compile Include="LogicConfigurationException.cs" />
     <Compile Include="Models\FundsTransfer\FundsFileSchemaException.cs" />
     <Compile Include="Models\FundsTransfer\FundsRequestLine.cs" />

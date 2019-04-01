@@ -9,7 +9,7 @@ namespace Grammophone.Domos.Logic
 	/// <summary>
 	/// Source or destination of notifications sent via <see cref="IChannel{T}"/>.
 	/// </summary>
-	public interface INotificationIdentity
+	public interface IChannelIdentity
 	{
 		/// <summary>
 		/// The name of the sender.

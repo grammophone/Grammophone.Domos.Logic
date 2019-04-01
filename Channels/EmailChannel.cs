@@ -10,7 +10,7 @@ namespace Grammophone.Domos.Logic.Channels
 {
 	/// <summary>
 	/// Abstract notification channel for e-mail.
-	/// Override <see cref="GetDestinationIdentities(object)"/> to 
+	/// Override <see cref="GetDestinationIdentities(IChannelDestination)"/> to 
 	/// extract e-mail recepients from a destination object.
 	/// </summary>
 	/// <typeparam name="T">The type of the topic; not used in this implementation.</typeparam>
@@ -123,7 +123,7 @@ namespace Grammophone.Domos.Logic.Channels
 		/// <summary>
 		/// Override to extract e-mail recepients from a destination object.
 		/// </summary>
-		protected abstract IEnumerable<INotificationIdentity> GetDestinationIdentities(object destination);
+		protected abstract IEnumerable<IChannelIdentity> GetDestinationIdentities(IChannelDestination destination);
 
 		#endregion
 
@@ -131,13 +131,13 @@ namespace Grammophone.Domos.Logic.Channels
 
 		private string GetFullTemplateKey(string templateKey) => $"{templateKeyPrefix}{templateKey}";
 
-		private System.Net.Mail.MailAddress GetMailAddress(INotificationIdentity notificationIdentity)
+		private System.Net.Mail.MailAddress GetMailAddress(IChannelIdentity notificationIdentity)
 			=> new System.Net.Mail.MailAddress(notificationIdentity.Email, notificationIdentity.Name, Encoding.UTF8);
 
 		private async Task SendEmailMessageAsync(
 			string subject,
-			INotificationIdentity source,
-			IEnumerable<INotificationIdentity> destinationIdentities,
+			IChannelIdentity source,
+			IEnumerable<IChannelIdentity> destinationIdentities,
 			string messageBody)
 		{
 			var sender = GetMailAddress(source);

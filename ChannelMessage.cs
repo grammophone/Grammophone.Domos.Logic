@@ -26,8 +26,8 @@ namespace Grammophone.Domos.Logic
 		public ChannelMessage(
 			string subject,
 			string templateKey,
-			INotificationIdentity source,
-			object destination,
+			IChannelIdentity source,
+			IChannelDestination destination,
 			DateTime time,
 			IReadOnlyDictionary<string, object> dynamicProperties,
 			T topic = default(T))
@@ -60,12 +60,12 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The source of the message.
 		/// </summary>
-		public INotificationIdentity Source { get; }
+		public IChannelIdentity Source { get; }
 
 		/// <summary>
 		/// The destination message.
 		/// </summary>
-		public object Destination { get; }
+		public IChannelDestination Destination { get; }
 
 		/// <summary>
 		/// The topic of the message.
@@ -105,8 +105,8 @@ namespace Grammophone.Domos.Logic
 		public ChannelMessage(
 			string subject,
 			string templateKey,
-			INotificationIdentity source,
-			object destination,
+			IChannelIdentity source,
+			IChannelDestination destination,
 			M model,
 			DateTime time,
 			T topic = default(T),
