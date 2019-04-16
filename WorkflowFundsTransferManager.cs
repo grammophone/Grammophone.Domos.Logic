@@ -12,6 +12,7 @@ using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Accounting;
 using Grammophone.Domos.Domain.Workflow;
 using Grammophone.Domos.Logic.Models.FundsTransfer;
+using Grammophone.GenericContentModel;
 
 namespace Grammophone.Domos.Logic
 {
@@ -261,20 +262,26 @@ namespace Grammophone.Domos.Logic
 
 			var responseResults = new List<FundsResponseResult>(associations.Length);
 
-			var itemsByLineID = file.Items.ToDictionary(i => i.LineID);
+			var itemsByLineID = 
+				file.Items
+				.OrderBy(i => i.Time)
+				.ToSequentialReadOnlyMultiDictionary(i => i.LineID);
 
 			foreach (var association in associations)
 			{
-				var fundsResponseResult =
-					await AcceptResponseItemAsync(
-						file,
-						itemsByLineID[association.Request.GroupID],
-						association.StatefulObject,
-						association.StateAfterRequest,
-						association.Request,
-						responseBatchMessage);
+				foreach (var item in itemsByLineID[association.Request.GroupID])
+				{
+					var fundsResponseResult =
+						await AcceptResponseItemAsync(
+							file,
+							item,
+							association.StatefulObject,
+							association.StateAfterRequest,
+							association.Request,
+							responseBatchMessage);
 
-				responseResults.Add(fundsResponseResult);
+					responseResults.Add(fundsResponseResult);
+				}
 			}
 
 			return responseResults;
@@ -322,7 +329,7 @@ namespace Grammophone.Domos.Logic
 
 			var eventType = GetEventTypeFromResponseLine(line);
 
-			var previousEvent = fundsTransferRequest.Events.FirstOrDefault(e => e.Type == eventType && e.ExceptionData == null);
+			var previousEvent = TryGetExistingDigestedFundsTransferEvent(fundsTransferRequest, eventType, line.ResponseCode);
 
 			if (previousEvent != null)
 			{

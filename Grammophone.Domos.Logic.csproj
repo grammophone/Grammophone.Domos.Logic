@@ -224,6 +224,10 @@
       <Project>{69e69a59-609b-441d-8e34-650e4d72f177}</Project>
       <Name>Grammophone.Email</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Grammophone.GenericContentModel\Grammophone.GenericContentModel.csproj">
+      <Project>{79d2d4c7-c8de-4f11-93ed-aa4e4d2fc974}</Project>
+      <Name>Grammophone.GenericContentModel</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Grammophone.Logging\Grammophone.Logging.csproj">
       <Project>{c2c480f7-1e78-4d70-b946-e365a9c8f7df}</Project>
       <Name>Grammophone.Logging</Name>

@@ -13,6 +13,7 @@ using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Accounting;
 using Grammophone.Domos.Domain.Workflow;
 using Grammophone.Domos.Logic.Models.FundsTransfer;
+using Grammophone.GenericContentModel;
 
 namespace Grammophone.Domos.Logic
 {
@@ -64,9 +65,9 @@ namespace Grammophone.Domos.Logic
 
 		private static Lazy<XmlSerializer> lazyRequestFileSerializer;
 
-		private Func<D, U, AS> accountingSessionFactory;
+		private readonly Func<D, U, AS> accountingSessionFactory;
 
-		private static IReadOnlyCollection<FundsResponseResult> emptyFundsResponseResults;
+		private static readonly IReadOnlyCollection<FundsResponseResult> emptyFundsResponseResults;
 
 		#endregion
 
@@ -882,16 +883,20 @@ namespace Grammophone.Domos.Logic
 			if (fundsTransferRequests.Length == 0)
 				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
 
-			var itemsByLineID = file.Items.ToDictionary(i => i.LineID);
+			var itemsByLineID = 
+				file.Items
+				.OrderBy(i => i.Time)
+				.ToSequentialReadOnlyMultiDictionary(i => i.LineID);
 
 			foreach (var fundsTransferRequest in fundsTransferRequests)
 			{
-				var item = itemsByLineID[fundsTransferRequest.GroupID];
+				foreach (var item in itemsByLineID[fundsTransferRequest.GroupID])
+				{
+					FundsResponseResult result =
+						await AcceptResponseItemAsync(file, item, fundsTransferRequest, responseBatchMessage);
 
-				FundsResponseResult result =
-					await AcceptResponseItemAsync(file, item, fundsTransferRequest, responseBatchMessage);
-
-				results.Add(result);
+					results.Add(result);
+				}
 			}
 
 			return results;
@@ -1052,6 +1057,30 @@ namespace Grammophone.Domos.Logic
 			}
 		}
 
+		/// <summary>
+		/// Attempt to get an existing event of a given type and response code in
+		/// a funds transfer request.
+		/// </summary>
+		/// <param name="request">The funds transfer request.</param>
+		/// <param name="eventType">The type of the funds transfer event.</param>
+		/// <param name="responseCode">The response code.</param>
+		/// <returns>Returns the event found in the <paramref name="request"/> or null.</returns>
+		protected FundsTransferEvent TryGetExistingDigestedFundsTransferEvent(
+			FundsTransferRequest request,
+			FundsTransferEventType eventType,
+			string responseCode)
+		{
+			var previousEventQuery = from e in request.Events
+															 where e.Type == eventType && e.ExceptionData == null
+															 where String.IsNullOrWhiteSpace(e.ResponseCode) && String.IsNullOrWhiteSpace(responseCode)
+															 || e.ResponseCode == responseCode
+															 select e;
+
+			var previousEvent = previousEventQuery.FirstOrDefault();
+
+			return previousEvent;
+		}
+
 		#endregion
 
 		#region Private methods
@@ -1198,7 +1227,7 @@ namespace Grammophone.Domos.Logic
 
 			// Is there already a successfully digested event for the line?
 
-			var previousEvent = request.Events.FirstOrDefault(e => e.Type == eventType && e.ExceptionData == null);
+			var previousEvent = TryGetExistingDigestedFundsTransferEvent(request, eventType, line.ResponseCode);
 
 			if (previousEvent != null)
 			{
