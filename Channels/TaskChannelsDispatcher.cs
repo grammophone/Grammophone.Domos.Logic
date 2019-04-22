@@ -74,7 +74,7 @@ namespace Grammophone.Domos.Logic.Channels
 
 			foreach (var channel in channels)
 			{
-				var channelTask = taskQueuer.QueueAsyncAction(channel, async () =>
+				var channelTask = taskQueuer.QueueAsyncAction(channel.GetType(), async () =>
 				{
 					await channel.SendMessageAsync(channelMessage);
 				});
