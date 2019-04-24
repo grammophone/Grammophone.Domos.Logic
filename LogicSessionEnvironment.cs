@@ -411,7 +411,7 @@ namespace Grammophone.Domos.Logic
 
 			IChannelsDispatcher<T> channelsDispatcher = GetChannelsDispatcher<T>();
 
-			await channelsDispatcher.QueueMessageToChannelsAsync(this.Settings, channelMessage);
+			await channelsDispatcher.QueueMessageToChannelsAsync(channelMessage);
 		}
 
 		/// <summary>
@@ -427,7 +427,7 @@ namespace Grammophone.Domos.Logic
 
 			var channelsDispatcher = GetChannelsDispatcher<T>();
 
-			await channelsDispatcher.QueueMessageToChannelsAsync(this.Settings, channelMessage);
+			await channelsDispatcher.QueueMessageToChannelsAsync(channelMessage);
 		}
 
 		#endregion

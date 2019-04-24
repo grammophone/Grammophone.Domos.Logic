@@ -17,6 +17,8 @@ namespace Grammophone.Domos.Logic.Channels
 
 		private readonly LogicChannelsTaskQueuer taskQueuer;
 
+		private readonly CollectionFactory<IChannel<T>> channelsFactory;
+
 		#endregion
 
 		#region Construction
@@ -25,11 +27,14 @@ namespace Grammophone.Domos.Logic.Channels
 		/// Create.
 		/// </summary>
 		/// <param name="taskQueuer">The task queuer of channel actions.</param>
-		public TaskChannelsDispatcher(LogicChannelsTaskQueuer taskQueuer)
+		/// <param name="channelsFactory">Factory to obtain the collection of configured channels.</param>
+		public TaskChannelsDispatcher(LogicChannelsTaskQueuer taskQueuer, CollectionFactory<IChannel<T>> channelsFactory)
 		{
 			if (taskQueuer == null) throw new ArgumentNullException(nameof(taskQueuer));
+			if (channelsFactory == null) throw new ArgumentNullException(nameof(channelsFactory));
 
 			this.taskQueuer = taskQueuer;
+			this.channelsFactory = channelsFactory;
 		}
 
 		#endregion
@@ -39,14 +44,13 @@ namespace Grammophone.Domos.Logic.Channels
 		/// <summary>
 		/// Queue a message to all available channels.
 		/// </summary>
-		/// <param name="settings">The settings of the session environment.</param>
 		/// <param name="channelMessage">The message to send to the available channels.</param>
 		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
-		public Task QueueMessageToChannelsAsync(Settings settings, IChannelMessage<T> channelMessage)
+		public Task QueueMessageToChannelsAsync(IChannelMessage<T> channelMessage)
 		{
-			if (settings == null) throw new ArgumentNullException(nameof(settings));
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
 
-			var channels = settings.ResolveAll<IChannel<T>>();
+			var channels = channelsFactory.Get();
 
 			foreach (var channel in channels)
 			{
@@ -63,14 +67,13 @@ namespace Grammophone.Domos.Logic.Channels
 		/// Queue a message to all available channels.
 		/// </summary>
 		/// <typeparam name="M">The type of the model in the message.</typeparam>
-		/// <param name="settings">The settings of the session environment.</param>
 		/// <param name="channelMessage">The message to send to the available channels.</param>
 		/// <returns>Returns a task whose completion is the successful queuing of the <paramref name="channelMessage"/>.</returns>
-		public Task QueueMessageToChannelsAsync<M>(Settings settings, IChannelMessage<M, T> channelMessage)
+		public Task QueueMessageToChannelsAsync<M>(IChannelMessage<M, T> channelMessage)
 		{
-			if (settings == null) throw new ArgumentNullException(nameof(settings));
+			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
 
-			var channels = settings.ResolveAll<IChannel<T>>();
+			var channels = channelsFactory.Get();
 
 			foreach (var channel in channels)
 			{
