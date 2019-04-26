@@ -10,7 +10,7 @@ namespace Grammophone.Domos.Logic.Channels
 {
 	/// <summary>
 	/// Abstract notification channel for e-mail.
-	/// Override <see cref="GetDestinationIdentities(IChannelDestination, T)"/> to 
+	/// Override <see cref="GetDestinationIdentitiesAsync(IChannelDestination, T)"/> to 
 	/// extract e-mail recepients from a destination object.
 	/// </summary>
 	/// <typeparam name="T">The type of the topic; not used in this implementation.</typeparam>
@@ -73,7 +73,7 @@ namespace Grammophone.Domos.Logic.Channels
 		{
 			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
 
-			var destinationIdentities = GetDestinationIdentities(channelMessage.Destination, channelMessage.Topic);
+			var destinationIdentities = await GetDestinationIdentitiesAsync(channelMessage.Destination, channelMessage.Topic);
 
 			if (!destinationIdentities.Any()) return;
 
@@ -99,7 +99,7 @@ namespace Grammophone.Domos.Logic.Channels
 		{
 			if (channelMessage == null) throw new ArgumentNullException(nameof(channelMessage));
 
-			var destinationIdentities = GetDestinationIdentities(channelMessage.Destination, channelMessage.Topic);
+			var destinationIdentities = await GetDestinationIdentitiesAsync(channelMessage.Destination, channelMessage.Topic);
 
 			if (!destinationIdentities.Any()) return;
 
@@ -123,7 +123,7 @@ namespace Grammophone.Domos.Logic.Channels
 		/// <summary>
 		/// Override to extract e-mail recepients from a destination object and a topic.
 		/// </summary>
-		protected abstract IEnumerable<IChannelIdentity> GetDestinationIdentities(IChannelDestination destination, T topic);
+		protected abstract Task<IEnumerable<IChannelIdentity>> GetDestinationIdentitiesAsync(IChannelDestination destination, T topic);
 
 		#endregion
 
