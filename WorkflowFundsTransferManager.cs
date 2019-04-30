@@ -353,8 +353,6 @@ namespace Grammophone.Domos.Logic
 					Line = line
 				};
 
-				string currentStateCodeName = statefulObject.State.CodeName;
-
 				// Attempt to get the next path to be executed. Any exception will be recorded in a funds transfer event with ExceptionData.
 				string nextStatePathCodeName = TryGetNextStatePathCodeName(statefulObject, stateAfterRequest, line);
 
