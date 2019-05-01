@@ -87,7 +87,13 @@ namespace Grammophone.Domos.Logic.Channels
 
 				string messageBody = bodyWriter.ToString();
 
-				await SendEmailMessageAsync(channelMessage.Subject, channelMessage.Source, destinationIdentities, messageBody);
+				await SendEmailMessageAsync(
+					channelMessage.Subject,
+					channelMessage.Source,
+					destinationIdentities,
+					messageBody,
+					channelMessage.Topic,
+					channelMessage.Destination);
 			}
 		}
 
@@ -112,7 +118,13 @@ namespace Grammophone.Domos.Logic.Channels
 
 				string messageBody = bodyWriter.ToString();
 
-				await SendEmailMessageAsync(channelMessage.Subject, channelMessage.Source, destinationIdentities, messageBody);
+				await SendEmailMessageAsync(
+					channelMessage.Subject,
+					channelMessage.Source,
+					destinationIdentities,
+					messageBody,
+					channelMessage.Topic,
+					channelMessage.Destination);
 			}
 		}
 
@@ -124,6 +136,16 @@ namespace Grammophone.Domos.Logic.Channels
 		/// Override to extract e-mail recepients from a destination object and a topic.
 		/// </summary>
 		protected abstract Task<IEnumerable<IChannelIdentity>> GetDestinationIdentitiesAsync(IChannelDestination destination, T topic);
+
+		/// <summary>
+		/// Override to extract e-mail sender from a source object and a topic.
+		/// </summary>
+		protected abstract Task<IChannelIdentity> GetSenderIdentityAsync(IChannelIdentity source, T topic);
+
+		/// <summary>
+		/// If true, send a single e-mail message with multiple recepients, else send one e-mail message per destination.
+		/// </summary>
+		protected abstract bool UseSingleMessageForMultipleRecepients(IChannelDestination destination, T topic);
 
 		#endregion
 
@@ -138,32 +160,66 @@ namespace Grammophone.Domos.Logic.Channels
 			string subject,
 			IChannelIdentity source,
 			IEnumerable<IChannelIdentity> destinationIdentities,
-			string messageBody)
+			string messageBody,
+			T topic,
+			IChannelDestination destination)
 		{
-			var sender = GetMailAddress(source);
+			var senderIdentity = await GetSenderIdentityAsync(source, topic);
 
-			var message = new System.Net.Mail.MailMessage()
+			var sender = GetMailAddress(senderIdentity);
+
+			if (UseSingleMessageForMultipleRecepients(destination, topic))
 			{
-				HeadersEncoding = Encoding.UTF8,
-				From = sender,
-				Sender = sender,
-				Subject = subject,
-				SubjectEncoding = Encoding.UTF8,
-				BodyEncoding = Encoding.UTF8,
-				IsBodyHtml = true,
-				Body = messageBody,
-			};
+				var message = new System.Net.Mail.MailMessage()
+				{
+					HeadersEncoding = Encoding.UTF8,
+					From = sender,
+					Sender = sender,
+					Subject = subject,
+					SubjectEncoding = Encoding.UTF8,
+					BodyEncoding = Encoding.UTF8,
+					IsBodyHtml = true,
+					Body = messageBody,
+				};
 
-			using (message)
+				using (message)
+				{
+					foreach (var destinationIdentity in destinationIdentities)
+					{
+						message.To.Add(GetMailAddress(destinationIdentity));
+					}
+
+					using (var emailClient = new EmailClient(emailSettings))
+					{
+						await emailClient.SendEmailAsync(message);
+					}
+				}
+			}
+			else
 			{
 				foreach (var destinationIdentity in destinationIdentities)
 				{
-					message.To.Add(GetMailAddress(destinationIdentity));
-				}
+					var message = new System.Net.Mail.MailMessage()
+					{
+						HeadersEncoding = Encoding.UTF8,
+						From = sender,
+						Sender = sender,
+						Subject = subject,
+						SubjectEncoding = Encoding.UTF8,
+						BodyEncoding = Encoding.UTF8,
+						IsBodyHtml = true,
+						Body = messageBody,
+					};
 
-				using (var emailClient = new EmailClient(emailSettings))
-				{
-					await emailClient.SendEmailAsync(message);
+					using (message)
+					{
+						message.To.Add(GetMailAddress(destinationIdentity));
+
+						using (var emailClient = new EmailClient(emailSettings))
+						{
+							await emailClient.SendEmailAsync(message);
+						}
+					}
 				}
 			}
 		}
