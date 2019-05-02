@@ -463,8 +463,10 @@ namespace Grammophone.Domos.Logic
 
 		#region Public methods
 
+		#region Entity handling
+
 		/// <summary>
-		/// Create a container proxy for a new object of type <typeparamref name="T"/>.
+		/// Create a proxy for a new object of type <typeparamref name="T"/>.
 		/// </summary>
 		/// <typeparam name="T">The type of the object to be proxied.</typeparam>
 		/// <returns>Returns a proxy for the new object.</returns>
@@ -473,6 +475,22 @@ namespace Grammophone.Domos.Logic
 		{
 			return this.DomainContainer.Create<T>();
 		}
+
+		/// <summary>
+		/// Get the entry providing information and control for an entity tracked by this session.
+		/// </summary>
+		/// <typeparam name="E">The type of the entity.</typeparam>
+		/// <param name="entity">The entity.</param>
+		/// <returns>Returns information and control for the entity.</returns>
+		public IEntityEntry<E> GetEntityEntry<E>(E entity)
+			where E : class
+		{
+			return this.DomainContainer.Entry(entity);
+		}
+
+		#endregion
+
+		#region Environment
 
 		/// <summary>
 		/// Get the session environment which corresponds to a configuration section.
@@ -485,6 +503,8 @@ namespace Grammophone.Domos.Logic
 
 			return sessionEnvironmentsCache.Get(configurationSectionName);
 		}
+
+		#endregion
 
 		#region E-mail sending
 
