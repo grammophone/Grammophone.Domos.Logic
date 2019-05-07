@@ -355,19 +355,32 @@ namespace Grammophone.Domos.Logic
 
 			FundsTransferBatchMessageType messageType = GetMessageTypeForResponseFile(file);
 
+			IReadOnlyCollection<FundsResponseResult> results;
+
+			FundsTransferBatchMessage responseBatchMessage;
+
 			using (var accountingSession = CreateAccountingSession())
 			using (GetElevatedAccessScope())
 			{
-				var responseBatchMessage = await accountingSession.AddFundsTransferBatchMessageAsync(
+				responseBatchMessage = await accountingSession.AddFundsTransferBatchMessageAsync(
 					batch,
 					messageType,
 					file.Time);
 
 				// If there are no items, skip digesting.
-				if (file.Items.Count == 0) return emptyFundsResponseResults;
-
-				return await DigestResponseFileAsync(file, responseBatchMessage);
+				if (file.Items.Count == 0)
+				{
+					results = emptyFundsResponseResults;
+				}
+				else
+				{
+					results = await DigestResponseFileAsync(file, responseBatchMessage);
+				}
 			}
+
+			await OnLinesProcessedAsync(results, responseBatchMessage.ID);
+
+			return results;
 		}
 
 		/// <summary>
@@ -402,6 +415,8 @@ namespace Grammophone.Domos.Logic
 
 				results.Add(result);
 			}
+
+			await OnLinesProcessedAsync(results, line.BatchMessageID);
 
 			return results;
 		}
@@ -1080,6 +1095,17 @@ namespace Grammophone.Domos.Logic
 
 			return previousEvent;
 		}
+
+		/// <summary>
+		/// Called by <see cref="AcceptResponseFileAsync(FundsResponseFile)"/>, <see cref="AcceptResponseFileAsync(System.IO.Stream)"/>,
+		/// <see cref="AcceptResponseLineAsync(FundsResponseLine)"/> methods after processing. Override to hook any post-actions
+		/// such as notifications.
+		/// </summary>
+		/// <param name="results">The funds transfer results produced by the above methods.</param>
+		/// <param name="fundsTransferBatchMessageID">The ID of the batch message, if processed as part of a message, else null.</param>
+		/// <remarks>The default implementation does nothing.</remarks>
+		protected virtual Task OnLinesProcessedAsync(IReadOnlyCollection<FundsResponseResult> results, long? fundsTransferBatchMessageID)
+			=> Task.CompletedTask;
 
 		#endregion
 
