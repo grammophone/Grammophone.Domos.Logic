@@ -378,7 +378,7 @@ namespace Grammophone.Domos.Logic
 				}
 			}
 
-			await OnLinesProcessedAsync(results, responseBatchMessage.ID);
+			await PostProcessLinesAsync(file.BatchID, results, responseBatchMessage.ID);
 
 			return results;
 		}
@@ -416,7 +416,7 @@ namespace Grammophone.Domos.Logic
 				results.Add(result);
 			}
 
-			await OnLinesProcessedAsync(results, line.BatchMessageID);
+			await PostProcessLinesAsync(line.BatchID, results, line.BatchMessageID);
 
 			return results;
 		}
@@ -1101,11 +1101,42 @@ namespace Grammophone.Domos.Logic
 		/// <see cref="AcceptResponseLineAsync(FundsResponseLine)"/> methods after processing. Override to hook any post-actions
 		/// such as notifications.
 		/// </summary>
+		/// <param name="fundsTransferBatchID">The ID of the funds transfer batch.</param>
 		/// <param name="results">The funds transfer results produced by the above methods.</param>
 		/// <param name="fundsTransferBatchMessageID">The ID of the batch message, if processed as part of a message, else null.</param>
 		/// <remarks>The default implementation does nothing.</remarks>
-		protected virtual Task OnLinesProcessedAsync(IReadOnlyCollection<FundsResponseResult> results, long? fundsTransferBatchMessageID)
+		protected virtual Task OnLinesProcessedAsync(long fundsTransferBatchID, IReadOnlyCollection<FundsResponseResult> results, long? fundsTransferBatchMessageID)
 			=> Task.CompletedTask;
+
+		/// <summary>
+		/// Call to post process digested lines.
+		/// </summary>
+		/// <param name="batchID">The ID of the funds transfer batch.</param>
+		/// <param name="results">The results of liens digestion.</param>
+		/// <param name="messageID">The ID of the unds transfer message, if any, else null.</param>
+		/// <returns></returns>
+		protected async Task PostProcessLinesAsync(long batchID, IReadOnlyCollection<FundsResponseResult> results, long? messageID)
+		{
+			try
+			{
+				await OnLinesProcessedAsync(batchID, results, messageID);
+			}
+			catch (Exception exception)
+			{
+				var messageBuilder = new System.Text.StringBuilder();
+
+				messageBuilder.Append($"Failed to post-process the digested lines for funds transfer batch ID {batchID}");
+
+				if (messageID.HasValue)
+				{
+					messageBuilder.Append($" and message ID {messageID}");
+				}
+
+				messageBuilder.Append('.');
+
+				this.ClassLogger.Log(Logging.LogLevel.Error, exception, messageBuilder.ToString());
+			}
+		}
 
 		#endregion
 

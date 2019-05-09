@@ -188,7 +188,7 @@ namespace Grammophone.Domos.Logic
 				responseResults.Add(fundsResponseResult);
 			}
 
-			await OnLinesProcessedAsync(responseResults, line.BatchMessageID);
+			await PostProcessLinesAsync(line.BatchID, responseResults, line.BatchMessageID);
 
 			return responseResults;
 		}
