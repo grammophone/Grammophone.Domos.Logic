@@ -388,6 +388,8 @@ namespace Grammophone.Domos.Logic
 							line.Comments);
 
 						fundsResponseResult.Event = directActionResult.FundsTransferEvent;
+
+						await OnResponseLineDigestionSuccessAsync(line, directActionResult.FundsTransferEvent);
 					}
 				}
 
