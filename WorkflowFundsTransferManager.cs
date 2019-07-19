@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Data.Entity;
 using System.Linq;
 using System.Linq.Expressions;
@@ -17,8 +18,8 @@ using Grammophone.GenericContentModel;
 namespace Grammophone.Domos.Logic
 {
 	/// <summary>
-	/// Base manager for exposrting fund transfer requests and importing
-	/// fund transfer responses bound to a workflow.
+	/// Base manager for exporting fund transfer requests and importing
+	/// fund transfer responses optionally bound to a workflow.
 	/// </summary>
 	/// <typeparam name="U">The type of the user, derived from <see cref="User"/>.</typeparam>
 	/// <typeparam name="BST">
@@ -73,20 +74,21 @@ namespace Grammophone.Domos.Logic
 			/// <summary>
 			/// The funds transfer event.
 			/// </summary>
+			[Required]
 			public FundsTransferEvent Event { get; set; }
 
 			/// <summary>
-			/// The stateful object of type <typeparamref name="SO"/> associated with the <see cref="Event"/>.
+			/// Optional stateful object of type <typeparamref name="SO"/> associated with the <see cref="Event"/>.
 			/// </summary>
 			public SO StatefulObject { get; set; }
 
 			/// <summary>
-			/// The current state of the <see cref="StatefulObject"/>.
+			/// If <see cref="StatefulObject"/> is not null, the current state of the <see cref="StatefulObject"/>.
 			/// </summary>
 			public State CurrentState { get; set; }
 
 			/// <summary>
-			/// The state transition of the <see cref="StatefulObject"/> associated with the <see cref="Event"/>.
+			/// If <see cref="StatefulObject"/> is not null, the state transition of the <see cref="StatefulObject"/> associated with the <see cref="Event"/>.
 			/// </summary>
 			public ST StateTransition { get; set; }
 		}
@@ -111,11 +113,29 @@ namespace Grammophone.Domos.Logic
 			S session,
 			Func<D, U, AS> accountingSessionFactory,
 			WM workflowManager)
-			: base(session, accountingSessionFactory)
+			: this(session, accountingSessionFactory, (s, so) => workflowManager)
 		{
 			if (workflowManager == null) throw new ArgumentNullException(nameof(workflowManager));
+		}
 
-			this.WorkflowManager = workflowManager;
+		/// <summary>
+		/// Create.
+		/// </summary>
+		/// <param name="session">The logic session.</param>
+		/// <param name="accountingSessionFactory">A factory for creating an accounting session.</param>
+		/// <param name="workflowManagerFactory">
+		/// The factory for an associated workflow manager for a stateful object of type <typeparamref name="SO"/>
+		/// under session of type <typeparamref name="S"/>.
+		/// </param>
+		protected WorkflowFundsTransferManager(
+			S session,
+			Func<D, U, AS> accountingSessionFactory,
+			Func<S, SO, WM> workflowManagerFactory)
+			: base(session, accountingSessionFactory)
+		{
+			if (workflowManagerFactory == null) throw new ArgumentNullException(nameof(workflowManagerFactory));
+
+			this.WorkflowManagerFactory = workflowManagerFactory;
 
 			this.statePathsByCodeNameCache =
 				new AsyncSequentialMRUCache<string, StatePath>(LoadStatePathAsync);
@@ -136,9 +156,10 @@ namespace Grammophone.Domos.Logic
 		#region Protected properties
 
 		/// <summary>
-		/// The associated workflow manager.
+		/// The factory for an associated workflow manager for a stateful object of type <typeparamref name="SO"/> under session
+		/// of type <typeparamref name="S"/>.
 		/// </summary>
-		protected WM WorkflowManager { get; private set; }
+		protected Func<S, SO, WM> WorkflowManagerFactory { get; }
 
 		#endregion
 
@@ -166,7 +187,7 @@ namespace Grammophone.Domos.Logic
 																ftr.Events,
 																a.StatefulObject,
 																a.CurrentState,
-																StateAfterRequest = a.StateTransition.Path.NextState
+																StateAfterRequest = a.StateTransition != null ? a.StateTransition.Path.NextState : null
 															};
 
 			var associations = await associationsQuery.ToArrayAsync();
@@ -180,10 +201,10 @@ namespace Grammophone.Domos.Logic
 			{
 				var fundsResponseResult =
 					await AcceptResponseItemAsync(
-						association.StatefulObject,
-						association.StateAfterRequest,
 						association.Request,
-						line);
+						line,
+						association.StatefulObject,
+						association.StateAfterRequest);
 
 				responseResults.Add(fundsResponseResult);
 			}
@@ -254,7 +275,7 @@ namespace Grammophone.Domos.Logic
 																ftr.Events,
 																a.StatefulObject,
 																a.CurrentState,
-																StateAfterRequest = a.StateTransition.Path.NextState
+																StateAfterRequest = a.StateTransition != null ? a.StateTransition.Path.NextState : null
 															};
 
 			var associations = await associationsQuery.ToArrayAsync();
@@ -277,10 +298,10 @@ namespace Grammophone.Domos.Logic
 						await AcceptResponseItemAsync(
 							file,
 							item,
-							association.StatefulObject,
-							association.StateAfterRequest,
 							association.Request,
-							responseBatchMessage);
+							responseBatchMessage,
+							association.StatefulObject,
+							association.StateAfterRequest);
 
 					responseResults.Add(fundsResponseResult);
 				}
@@ -306,10 +327,10 @@ namespace Grammophone.Domos.Logic
 		private async Task<FundsResponseResult> AcceptResponseItemAsync(
 			FundsResponseFile file,
 			FundsResponseFileItem item,
-			SO statefulObject,
-			State stateAfterRequest,
 			FundsTransferRequest fundsTransferRequest,
-			FundsTransferBatchMessage responseBatchMessage)
+			FundsTransferBatchMessage responseBatchMessage,
+			SO statefulObject,
+			State stateAfterRequest)
 		{
 			if (file == null) throw new ArgumentNullException(nameof(file));
 			if (item == null) throw new ArgumentNullException(nameof(item));
@@ -317,17 +338,22 @@ namespace Grammophone.Domos.Logic
 
 			var line = new FundsResponseLine(file, item, responseBatchMessage.ID);
 
-			return await AcceptResponseItemAsync(statefulObject, stateAfterRequest, fundsTransferRequest, line);
+			return await AcceptResponseItemAsync(fundsTransferRequest, line, statefulObject, stateAfterRequest);
 		}
 
 		private async Task<FundsResponseResult> AcceptResponseItemAsync(
-			SO statefulObject,
-			State stateAfterRequest,
 			FundsTransferRequest fundsTransferRequest,
-			FundsResponseLine line)
+			FundsResponseLine line,
+			SO statefulObject,
+			State stateAfterRequest)
 		{
 			if (fundsTransferRequest == null) throw new ArgumentNullException(nameof(fundsTransferRequest));
 			if (line == null) throw new ArgumentNullException(nameof(line));
+
+			if (statefulObject == null || stateAfterRequest == null)
+			{
+				return await AcceptResponseItemAsync(fundsTransferRequest, line);
+			}
 
 			var eventType = GetEventTypeFromResponseLine(line);
 
@@ -362,7 +388,9 @@ namespace Grammophone.Domos.Logic
 				{
 					var statePath = await statePathsByCodeNameCache.Get(nextStatePathCodeName);
 
-					var transition = await WorkflowManager.ExecuteStatePathAsync(
+					var workflowManager = this.WorkflowManagerFactory(this.Session, statefulObject);
+
+					var transition = await workflowManager.ExecuteStatePathAsync(
 						statefulObject,
 						statePath,
 						actionArguments);

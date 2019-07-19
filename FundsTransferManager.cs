@@ -1278,7 +1278,13 @@ namespace Grammophone.Domos.Logic
 			return await AcceptResponseItemAsync(request, line);
 		}
 
-		private async Task<FundsResponseResult> AcceptResponseItemAsync(FundsTransferRequest request, FundsResponseLine line)
+		/// <summary>
+		/// Handle the consumtion of a funds transfer line invoking accounting directly with no involvement of workflow.
+		/// </summary>
+		/// <param name="request">The funds transfer request to handle.</param>
+		/// <param name="line">The funds response line to digest.</param>
+		/// <returns></returns>
+		internal async Task<FundsResponseResult> AcceptResponseItemAsync(FundsTransferRequest request, FundsResponseLine line)
 		{
 			FundsTransferEventType eventType = GetEventTypeFromResponseLine(line);
 
