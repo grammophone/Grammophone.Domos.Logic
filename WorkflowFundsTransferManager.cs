@@ -390,20 +390,26 @@ namespace Grammophone.Domos.Logic
 
 					var workflowManager = this.WorkflowManagerFactory(this.Session, statefulObject);
 
-					var transition = await workflowManager.ExecuteStatePathAsync(
-						statefulObject,
-						statePath,
-						actionArguments);
+					using (var transaction = this.DomainContainer.BeginTransaction())
+					{
+						var transition = await workflowManager.ExecuteStatePathAsync(
+							statefulObject,
+							statePath,
+							actionArguments);
 
-					fundsResponseResult.Event = transition.FundsTransferEvent;
+						fundsResponseResult.Event = transition.FundsTransferEvent;
 
-					if (transition.FundsTransferEvent != null)
-						await OnResponseLineDigestionSuccessAsync(line, transition.FundsTransferEvent);
+						if (transition.FundsTransferEvent != null)
+							await OnResponseLineDigestionSuccessAsync(line, transition.FundsTransferEvent);
+
+						await transaction.CommitAsync();
+					}
 				}
 				else // If no path is specified, record the event directly.
 				{
 					using (var accountingSession = CreateAccountingSession())
 					using (GetElevatedAccessScope())
+					using (var transaction = this.DomainContainer.BeginTransaction())
 					{
 						var directActionResult = await accountingSession.AddFundsTransferEventAsync(
 							fundsTransferRequest,
@@ -418,6 +424,8 @@ namespace Grammophone.Domos.Logic
 						fundsResponseResult.Event = directActionResult.FundsTransferEvent;
 
 						await OnResponseLineDigestionSuccessAsync(line, directActionResult.FundsTransferEvent);
+
+						await transaction.CommitAsync();
 					}
 				}
 
