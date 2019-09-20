@@ -399,8 +399,15 @@ namespace Grammophone.Domos.Logic
 
 						fundsResponseResult.Event = transition.FundsTransferEvent;
 
+						R remittance = null;
+
+						if (transition.FundsTransferEventID.HasValue)
+						{
+							remittance = await this.DomainContainer.Remittances.SingleOrDefaultAsync(r => r.FundsTransferEventID == transition.FundsTransferEventID);
+						}
+
 						if (transition.FundsTransferEvent != null)
-							await OnResponseLineDigestionSuccessAsync(line, transition.FundsTransferEvent);
+							await OnResponseLineDigestionSuccessAsync(line, transition.FundsTransferEvent, remittance);
 
 						await transaction.CommitAsync();
 					}
@@ -423,7 +430,9 @@ namespace Grammophone.Domos.Logic
 
 						fundsResponseResult.Event = directActionResult.FundsTransferEvent;
 
-						await OnResponseLineDigestionSuccessAsync(line, directActionResult.FundsTransferEvent);
+						var remittance = TryGetTransferRemittance(directActionResult);
+
+						await OnResponseLineDigestionSuccessAsync(line, directActionResult.FundsTransferEvent, remittance);
 
 						await transaction.CommitAsync();
 					}

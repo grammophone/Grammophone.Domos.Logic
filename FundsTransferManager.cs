@@ -1138,6 +1138,13 @@ namespace Grammophone.Domos.Logic
 			}
 		}
 
+		/// <summary>
+		/// Get the remittance associated with an action's funds transfer, if any, else return null.
+		/// </summary>
+		/// <param name="actionResult">The funds transfer action result.</param>
+		protected R TryGetTransferRemittance(AccountingSession<U, BST, P, R, J, D>.ActionResult actionResult)
+			=> actionResult.Journal.Remittances.FirstOrDefault(r => r.FundsTransferEvent == actionResult.FundsTransferEvent);
+
 		#endregion
 
 		#region Private methods
@@ -1356,9 +1363,6 @@ namespace Grammophone.Domos.Logic
 
 			return new FundsFileSchemaException(message, invalidOperationException);
 		}
-
-		private R TryGetTransferRemittance(AccountingSession<U, BST, P, R, J, D>.ActionResult actionResult)
-			=> actionResult.Journal.Remittances.FirstOrDefault(r => r.FundsTransferEvent == actionResult.FundsTransferEvent);
 
 		#endregion
 	}
