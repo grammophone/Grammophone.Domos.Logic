@@ -259,10 +259,21 @@ namespace Grammophone.Domos.Logic
 
 			var emailSettings = this.Settings.Resolve<Email.EmailSettings>();
 
+			System.Net.Mail.MailAddress senderAddress;
+
+			if (sender != null)
+			{
+				senderAddress = new System.Net.Mail.MailAddress(sender);
+			}
+			else
+			{
+				senderAddress = new System.Net.Mail.MailAddress(emailSettings.DefaultSenderAddress, emailSettings.DefaultSenderDisplayName);
+			}
+
 			var mailMessage = new System.Net.Mail.MailMessage
 			{
-				Sender = new System.Net.Mail.MailAddress(sender ?? emailSettings.DefaultSenderAddress),
-				From = new System.Net.Mail.MailAddress(sender ?? emailSettings.DefaultSenderAddress),
+				Sender = senderAddress,
+				From = senderAddress,
 				Subject = subject,
 				Body = body,
 				IsBodyHtml = isBodyHTML,
