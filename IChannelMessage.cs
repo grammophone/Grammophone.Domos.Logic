@@ -13,6 +13,11 @@ namespace Grammophone.Domos.Logic
 	public interface IChannelMessage<out T>
 	{
 		/// <summary>
+		/// The unique identifier of the message.
+		/// </summary>
+		Guid Guid { get; }
+
+		/// <summary>
 		/// The subject of the message.
 		/// </summary>
 		string Subject { get; }

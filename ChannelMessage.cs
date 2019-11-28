@@ -38,6 +38,8 @@ namespace Grammophone.Domos.Logic
 			if (destination == null) throw new ArgumentNullException(nameof(destination));
 			if (time.Kind != DateTimeKind.Utc) throw new ArgumentException("Time is not in UTC.", nameof(time));
 
+			this.Guid = Guid.NewGuid();
+
 			this.Subject = subject;
 			this.TemplateKey = templateKey;
 			this.Source = source;
@@ -46,6 +48,11 @@ namespace Grammophone.Domos.Logic
 			this.Time = time;
 			this.Time = time;
 		}
+
+		/// <summary>
+		/// The unique identifier of the message.
+		/// </summary>
+		public Guid Guid { get; }
 
 		/// <summary>
 		/// The subject of the message.
