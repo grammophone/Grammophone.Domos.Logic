@@ -16,6 +16,20 @@ namespace Grammophone.Domos.Logic.Channels
 	/// <typeparam name="T">The type of the topic; not used in this implementation.</typeparam>
 	public abstract class EmailChannel<T> : IChannel<T>
 	{
+		#region Constants
+
+		/// <summary>
+		/// Key for dynamic property to hold the channel message during rendering.
+		/// </summary>
+		public const string ChannelMessagePropertyKey = "__ChannelMessage";
+
+		/// <summary>
+		/// Key for dynamic property to hold the e-mail recepients.
+		/// </summary>
+		public const string DestinationIdentitiesPropertyKey = "__DestinationIdentities";
+
+		#endregion
+
 		#region Private fields
 
 		private readonly EmailSettings emailSettings;
@@ -77,23 +91,38 @@ namespace Grammophone.Domos.Logic.Channels
 
 			if (!destinationIdentities.Any()) return;
 
-			using (var bodyWriter = new System.IO.StringWriter())
+			bool useSingleMessageForMultipleRecepients = UseSingleMessageForMultipleRecepients(channelMessage.Destination, channelMessage.Topic);
+
+			var emailDestinationAddressesCollection = GetEmailDestinationAddressesCollection(destinationIdentities, useSingleMessageForMultipleRecepients);
+
+			var senderIdentity = await GetSenderIdentityAsync(channelMessage.Source, channelMessage.Topic);
+
+			var senderAddress = GetMailAddress(senderIdentity);
+
+			var destinationIdentitiesByEmail = destinationIdentities.ToDictionary(i => i.Email);
+
+			foreach (var emailDestinationAddresses in emailDestinationAddressesCollection)
 			{
-				renderProvider.Render(
-					GetFullTemplateKey(channelMessage.TemplateKey),
-					bodyWriter,
-					channelMessage.Model,
-					channelMessage.DynamicProperties?.ToDictionary(d => d.Key, e => e.Value));
+				using (var bodyWriter = new System.IO.StringWriter())
+				{
+					var messageDestinationIdentities = from address in emailDestinationAddresses
+																						 where destinationIdentitiesByEmail.ContainsKey(address.Address)
+																						 select destinationIdentitiesByEmail[address.Address];
 
-				string messageBody = bodyWriter.ToString();
+					renderProvider.Render(
+						GetFullTemplateKey(channelMessage.TemplateKey),
+						bodyWriter,
+						channelMessage.Model,
+						GetDynamicProperties(channelMessage, messageDestinationIdentities));
 
-				await SendEmailMessageAsync(
-					channelMessage.Subject,
-					channelMessage.Source,
-					destinationIdentities,
-					messageBody,
-					channelMessage.Topic,
-					channelMessage.Destination);
+					string messageBody = bodyWriter.ToString();
+
+					await SendEmailMessageAsync(
+						channelMessage.Subject,
+						senderAddress,
+						emailDestinationAddresses,
+						messageBody);
+				}
 			}
 		}
 
@@ -109,22 +138,37 @@ namespace Grammophone.Domos.Logic.Channels
 
 			if (!destinationIdentities.Any()) return;
 
-			using (var bodyWriter = new System.IO.StringWriter())
+			bool useSingleMessageForMultipleRecepients = UseSingleMessageForMultipleRecepients(channelMessage.Destination, channelMessage.Topic);
+
+			var emailDestinationAddressesCollection = GetEmailDestinationAddressesCollection(destinationIdentities, useSingleMessageForMultipleRecepients);
+
+			var senderIdentity = await GetSenderIdentityAsync(channelMessage.Source, channelMessage.Topic);
+
+			var senderAddress = GetMailAddress(senderIdentity);
+
+			var destinationIdentitiesByEmail = destinationIdentities.ToDictionary(i => i.Email);
+
+			foreach (var emailDestinationAddresses in emailDestinationAddressesCollection)
 			{
-				renderProvider.Render(
-					GetFullTemplateKey(channelMessage.TemplateKey),
-					bodyWriter,
-					channelMessage.DynamicProperties?.ToDictionary(d => d.Key, e => e.Value));
+				using (var bodyWriter = new System.IO.StringWriter())
+				{
+					var messageDestinationIdentities = from address in emailDestinationAddresses
+																						 where destinationIdentitiesByEmail.ContainsKey(address.Address)
+																						 select destinationIdentitiesByEmail[address.Address];
 
-				string messageBody = bodyWriter.ToString();
+					renderProvider.Render(
+						GetFullTemplateKey(channelMessage.TemplateKey),
+						bodyWriter,
+						GetDynamicProperties(channelMessage, messageDestinationIdentities));
 
-				await SendEmailMessageAsync(
-					channelMessage.Subject,
-					channelMessage.Source,
-					destinationIdentities,
-					messageBody,
-					channelMessage.Topic,
-					channelMessage.Destination);
+					string messageBody = bodyWriter.ToString();
+
+					await SendEmailMessageAsync(
+						channelMessage.Subject,
+						senderAddress,
+						emailDestinationAddresses,
+						messageBody);
+				}
 			}
 		}
 
@@ -156,72 +200,79 @@ namespace Grammophone.Domos.Logic.Channels
 		private System.Net.Mail.MailAddress GetMailAddress(IChannelIdentity notificationIdentity)
 			=> new System.Net.Mail.MailAddress(notificationIdentity.Email, notificationIdentity.Name, Encoding.UTF8);
 
-		private async Task SendEmailMessageAsync(
-			string subject,
-			IChannelIdentity source,
+		private IEnumerable<System.Net.Mail.MailAddressCollection> GetEmailDestinationAddressesCollection(
 			IEnumerable<IChannelIdentity> destinationIdentities,
-			string messageBody,
-			T topic,
-			IChannelDestination destination)
+			bool useSingleMessageForMultipleRecepients)
 		{
-			var senderIdentity = await GetSenderIdentityAsync(source, topic);
-
-			var sender = GetMailAddress(senderIdentity);
-
-			if (UseSingleMessageForMultipleRecepients(destination, topic))
+			if (useSingleMessageForMultipleRecepients)
 			{
-				var message = new System.Net.Mail.MailMessage()
-				{
-					HeadersEncoding = Encoding.UTF8,
-					From = sender,
-					Sender = sender,
-					Subject = subject,
-					SubjectEncoding = Encoding.UTF8,
-					BodyEncoding = Encoding.UTF8,
-					IsBodyHtml = true,
-					Body = messageBody,
-				};
+				var mailAddressCollection = new System.Net.Mail.MailAddressCollection();
 
-				using (message)
+				foreach (var destinationIdentity in destinationIdentities)
 				{
-					foreach (var destinationIdentity in destinationIdentities)
-					{
-						message.To.Add(GetMailAddress(destinationIdentity));
-					}
-
-					using (var emailClient = new EmailClient(emailSettings))
-					{
-						await emailClient.SendEmailAsync(message);
-					}
+					mailAddressCollection.Add(GetMailAddress(destinationIdentity));
 				}
+
+				yield return mailAddressCollection;
 			}
 			else
 			{
 				foreach (var destinationIdentity in destinationIdentities)
 				{
-					var message = new System.Net.Mail.MailMessage()
-					{
-						HeadersEncoding = Encoding.UTF8,
-						From = sender,
-						Sender = sender,
-						Subject = subject,
-						SubjectEncoding = Encoding.UTF8,
-						BodyEncoding = Encoding.UTF8,
-						IsBodyHtml = true,
-						Body = messageBody,
-					};
+					var mailAddressCollection = new System.Net.Mail.MailAddressCollection();
 
-					using (message)
-					{
-						message.To.Add(GetMailAddress(destinationIdentity));
+					mailAddressCollection.Add(GetMailAddress(destinationIdentity));
 
-						using (var emailClient = new EmailClient(emailSettings))
-						{
-							await emailClient.SendEmailAsync(message);
-						}
-					}
+					yield return mailAddressCollection;
 				}
 			}
+		}
+
+		private async Task SendEmailMessageAsync(
+			string subject,
+			System.Net.Mail.MailAddress senderAddress,
+			IEnumerable<System.Net.Mail.MailAddress> destinationAddresses,
+			string messageBody)
+		{
+			var message = new System.Net.Mail.MailMessage()
+			{
+				HeadersEncoding = Encoding.UTF8,
+				From = senderAddress,
+				Sender = senderAddress,
+				Subject = subject,
+				SubjectEncoding = Encoding.UTF8,
+				BodyEncoding = Encoding.UTF8,
+				IsBodyHtml = true,
+				Body = messageBody,
+			};
+
+			using (message)
+			{
+				foreach (var destinationAddress in destinationAddresses)
+				{
+					message.To.Add(destinationAddress);
+				}
+
+				using (var emailClient = new EmailClient(emailSettings))
+				{
+					await emailClient.SendEmailAsync(message);
+				}
+			}
+		}
+
+		private static Dictionary<string, object> GetDynamicProperties(IChannelMessage<T> channelMessage, IEnumerable<IChannelIdentity> destinationIdentities)
+		{
+			Dictionary<string, object> dynamicProperties;
+
+			if (channelMessage.DynamicProperties != null)
+				dynamicProperties = new Dictionary<string, object>(channelMessage.DynamicProperties.ToDictionary(e => e.Key, e => e.Value));
+			else
+				dynamicProperties = new Dictionary<string, object>(2);
+
+			dynamicProperties[ChannelMessagePropertyKey] = channelMessage;
+			dynamicProperties[DestinationIdentitiesPropertyKey] = destinationIdentities.ToArray();
+
+			return dynamicProperties;
 		}
 
 		#endregion
