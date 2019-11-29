@@ -47,6 +47,7 @@ namespace Grammophone.Domos.Logic
 			this.Topic = topic;
 			this.Time = time;
 			this.Time = time;
+			this.DynamicProperties = dynamicProperties;
 		}
 
 		/// <summary>
