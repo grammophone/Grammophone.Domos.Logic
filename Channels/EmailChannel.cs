@@ -213,18 +213,22 @@ namespace Grammophone.Domos.Logic.Channels
 					mailAddressCollection.Add(GetMailAddress(destinationIdentity));
 				}
 
-				yield return mailAddressCollection;
+				return new System.Net.Mail.MailAddressCollection[] { mailAddressCollection };
 			}
 			else
 			{
+				var mailAddressesSet = new List<System.Net.Mail.MailAddressCollection>(destinationIdentities.Count());
+
 				foreach (var destinationIdentity in destinationIdentities)
 				{
 					var mailAddressCollection = new System.Net.Mail.MailAddressCollection();
 
 					mailAddressCollection.Add(GetMailAddress(destinationIdentity));
 
-					yield return mailAddressCollection;
+					mailAddressesSet.Add(mailAddressCollection);
 				}
+
+				return mailAddressesSet;
 			}
 		}
 
