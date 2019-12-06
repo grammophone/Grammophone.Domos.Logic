@@ -244,28 +244,20 @@ namespace Grammophone.Domos.Logic
 		public async Task<FundsTransferStatistic> GetTotalStatisticAsync()
 		{
 			var query = from b in this.FundsTransferBatches
-									let lm = b.Messages.OrderByDescending(m => m.Time).FirstOrDefault() // The last message of the batch
-									group lm by 1 into g
+									let t = b.Messages.OrderByDescending(m => m.Time).Select(m => m.Type).FirstOrDefault() // The last message of the batch
+									group t by 1 into g
 									select new FundsTransferStatistic
 									{
-										PendingBatchesCount = g.Count(m => m.Type == FundsTransferBatchMessageType.Pending),
-										SubmittedBatchesCount = g.Count(m => m.Type == FundsTransferBatchMessageType.Submitted),
-										RejectedBatchesCount = g.Count(m => m.Type == FundsTransferBatchMessageType.Rejected),
-										AcceptedBatchesCount = g.Count(m => m.Type == FundsTransferBatchMessageType.Accepted),
-										RespondedBatchesCount = g.Count(m => m.Type == FundsTransferBatchMessageType.Responded),
-										UnbatchedRequestsCount = this.UnbatchedFundsTransferRequests.Count()
+										PendingBatchesCount = g.Count(t => t == FundsTransferBatchMessageType.Pending),
+										SubmittedBatchesCount = g.Count(t => t == FundsTransferBatchMessageType.Submitted),
+										RejectedBatchesCount = g.Count(t => t == FundsTransferBatchMessageType.Rejected),
+										AcceptedBatchesCount = g.Count(t => t == FundsTransferBatchMessageType.Accepted),
+										RespondedBatchesCount = g.Count(t => t == FundsTransferBatchMessageType.Responded)
 									};
 
-			var statistic = await query.FirstOrDefaultAsync();
+			var statistic = await query.FirstOrDefaultAsync() ?? new FundsTransferStatistic();
 
-			if (statistic == null) // Statistic will be null when there are no batches due to batch grouping.
-			{
-				// OK, all batch counts are zero except possibly the unbatched requests count.
-				statistic = new FundsTransferStatistic
-				{
-					UnbatchedRequestsCount = this.UnbatchedFundsTransferRequests.Count()
-				};
-			}
+			statistic.UnbatchedRequestsCount = await this.UnbatchedFundsTransferRequests.CountAsync();
 
 			return statistic;
 		}
