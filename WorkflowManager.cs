@@ -923,7 +923,7 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Find the <see cref="StatePath"/> having the given code name.
+		/// Find the <see cref="StatePath"/> having the given code name among the <see cref="StatePaths"/>.
 		/// </summary>
 		/// <returns>Returns the path found.</returns>
 		/// <exception cref="LogicException">
@@ -934,14 +934,14 @@ namespace Grammophone.Domos.Logic
 		/// </exception>
 		private async Task<StatePath> FindStatePathAsync(string pathCodeName)
 		{
-			var pathQuery = this.DomainContainer.StatePaths
+			var pathQuery = this.StatePaths
 				.Where(sp => sp.CodeName == pathCodeName);
 
 			return await FindStatePathAsync(pathQuery);
 		}
 
 		/// <summary>
-		/// Find the <see cref="StatePath"/> having the given ID.
+		/// Find the <see cref="StatePath"/> among having the given ID among the <see cref="StatePaths"/> .
 		/// </summary>
 		/// <returns>Returns the path found.</returns>
 		/// <exception cref="LogicException">
@@ -952,7 +952,7 @@ namespace Grammophone.Domos.Logic
 		/// </exception>
 		private async Task<StatePath> FindStatePathAsync(long pathID)
 		{
-			var pathQuery = this.DomainContainer.StatePaths
+			var pathQuery = this.StatePaths
 				.Where(sp => sp.ID == pathID);
 
 			return await FindStatePathAsync(pathQuery);
@@ -982,7 +982,7 @@ namespace Grammophone.Domos.Logic
 
 			if (path == null)
 				throw new LogicException(
-					$"The state path does not exist.");
+					$"The state path does not exist among the designated state paths.");
 
 			ValidatePath(path);
 
