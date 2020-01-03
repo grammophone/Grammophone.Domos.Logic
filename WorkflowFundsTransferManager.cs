@@ -97,7 +97,7 @@ namespace Grammophone.Domos.Logic
 
 		#region Private fields
 
-		private AsyncSequentialMRUCache<string, StatePath> statePathsByCodeNameCache;
+		private readonly AsyncSequentialMRUCache<string, StatePath> statePathsByCodeNameCache;
 
 		#endregion
 
@@ -384,7 +384,7 @@ namespace Grammophone.Domos.Logic
 				// Attempt to get the next path to be executed. Any exception will be recorded in a funds transfer event with ExceptionData.
 				string nextStatePathCodeName = TryGetNextStatePathCodeName(statefulObject, stateAfterRequest, line);
 
-				if (nextStatePathCodeName != null) // A path should be executed?
+				if (nextStatePathCodeName != null) // Shpuld a path be executed?
 				{
 					var statePath = await statePathsByCodeNameCache.Get(nextStatePathCodeName);
 

@@ -56,7 +56,7 @@ namespace Grammophone.Domos.Logic
 	{
 		#region Private fields
 
-		private readonly AsyncLazy<IReadOnlyDictionary<long, StatePath>> asyncLazyStatePathsByID;
+		private readonly AsyncLazy<ISet<long>> asyncLazyStatePathIDsSet;
  
 		#endregion
 
@@ -70,7 +70,7 @@ namespace Grammophone.Domos.Logic
 		protected WorkflowManager(S session, string configurationSectionName)
 			: base(session, configurationSectionName)
 		{
-			asyncLazyStatePathsByID = new AsyncLazy<IReadOnlyDictionary<long, StatePath>>(async () => await this.StatePaths.ToDictionaryAsync(sp => sp.ID), false);
+			asyncLazyStatePathIDsSet = new AsyncLazy<ISet<long>>(LoadStatePathIDsSet, false);
 		}
 
 		#endregion
@@ -820,6 +820,12 @@ namespace Grammophone.Domos.Logic
 		#region Private methods
 
 		/// <summary>
+		/// Load the set of IDs of the <see cref="StatePaths"/>.
+		/// </summary>
+		private async Task<ISet<long>> LoadStatePathIDsSet()
+			=> (await this.StatePaths.Select(sp => sp.ID).ToArrayAsync()).ToHashSet();
+
+		/// <summary>
 		/// Execute a collection of workflow actions.
 		/// </summary>
 		/// <param name="actions">The actions to execute.</param>
@@ -1119,9 +1125,9 @@ namespace Grammophone.Domos.Logic
 		/// </exception>
 		private async Task EnsureStatePathIsInSetAsync(long statePathID)
 		{
-			var statePathsByID = await asyncLazyStatePathsByID.Value;
+			var statePathsIDsSet = await asyncLazyStatePathIDsSet.Value;
 
-			if (!statePathsByID.ContainsKey(statePathID))
+			if (!statePathsIDsSet.Contains(statePathID))
 			{
 				throw new LogicException($"The state path with ID {statePathID} does not exist among the designated state paths.");
 			}
