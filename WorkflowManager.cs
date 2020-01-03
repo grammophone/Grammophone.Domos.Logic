@@ -57,6 +57,10 @@ namespace Grammophone.Domos.Logic
 		#region Private fields
 
 		private readonly AsyncLazy<ISet<long>> asyncLazyStatePathIDsSet;
+
+		private readonly AsyncSequentialMRUCache<string, StatePath> asyncStatePathsByCodeNameCache;
+
+		private readonly AsyncSequentialMRUCache<long, StatePath> asyncStatePathsByIDCache;
  
 		#endregion
 
@@ -71,6 +75,9 @@ namespace Grammophone.Domos.Logic
 			: base(session, configurationSectionName)
 		{
 			asyncLazyStatePathIDsSet = new AsyncLazy<ISet<long>>(LoadStatePathIDsSet, false);
+
+			asyncStatePathsByCodeNameCache = new AsyncSequentialMRUCache<string, StatePath>(async codeName => await LoadStatePathAsync(codeName));
+			asyncStatePathsByIDCache = new AsyncSequentialMRUCache<long, StatePath>(async id => await LoadStatePathAsync(id));
 		}
 
 		#endregion
@@ -111,6 +118,32 @@ namespace Grammophone.Domos.Logic
 		{
 			return this.GetManagedStatefulObjects();
 		}
+
+		/// <summary>
+		/// Get the <see cref="StatePath"/> having the given code name among the <see cref="StatePaths"/>.
+		/// </summary>
+		/// <returns>Returns the path found.</returns>
+		/// <exception cref="LogicException">
+		/// Thrown when no <see cref="StatePath"/> exists having the given code name
+		/// or when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		/// <remarks>The results of this call are cached for the life of this manager.</remarks>
+		public async Task<StatePath> GetStatePathAsync(string pathCodeName) => await asyncStatePathsByCodeNameCache.Get(pathCodeName);
+
+		/// <summary>
+		/// Get the <see cref="StatePath"/> among having the given ID among the <see cref="StatePaths"/> .
+		/// </summary>
+		/// <returns>Returns the path found.</returns>
+		/// <exception cref="LogicException">
+		/// Thrown when no <see cref="StatePath"/> exists having the given ID
+		/// or when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		/// <remarks>The results of this call are cached for the life of this manager.</remarks>
+		public async Task<StatePath> GetStatePathAsync(long pathID) => await asyncStatePathsByIDCache.Get(pathID);
 
 		/// <summary>
 		/// Execute a state path against a stateful instance.
@@ -875,7 +908,7 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
-		/// Find the <see cref="StatePath"/> having the given code name among the <see cref="StatePaths"/>.
+		/// Load the <see cref="StatePath"/> having the given code name among the <see cref="StatePaths"/>.
 		/// </summary>
 		/// <returns>Returns the path found.</returns>
 		/// <exception cref="LogicException">
@@ -884,16 +917,16 @@ namespace Grammophone.Domos.Logic
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
-		private async Task<StatePath> GetStatePathAsync(string pathCodeName)
+		private async Task<StatePath> LoadStatePathAsync(string pathCodeName)
 		{
 			var pathQuery = this.StatePaths
 				.Where(sp => sp.CodeName == pathCodeName);
 
-			return await GetStatePathAsync(pathQuery);
+			return await LoadStatePathAsync(pathQuery);
 		}
 
 		/// <summary>
-		/// Find the <see cref="StatePath"/> among having the given ID among the <see cref="StatePaths"/> .
+		/// Load the <see cref="StatePath"/> among having the given ID among the <see cref="StatePaths"/> .
 		/// </summary>
 		/// <returns>Returns the path found.</returns>
 		/// <exception cref="LogicException">
@@ -902,16 +935,16 @@ namespace Grammophone.Domos.Logic
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
-		private async Task<StatePath> GetStatePathAsync(long pathID)
+		private async Task<StatePath> LoadStatePathAsync(long pathID)
 		{
 			var pathQuery = this.StatePaths
 				.Where(sp => sp.ID == pathID);
 
-			return await GetStatePathAsync(pathQuery);
+			return await LoadStatePathAsync(pathQuery);
 		}
 
 		/// <summary>
-		/// Find a <see cref="StatePath"/> via a query.
+		/// Load a <see cref="StatePath"/> via a query.
 		/// </summary>
 		/// <param name="pathQuery">The query to execite.</param>
 		/// <returns>Returns the path found.</returns>
@@ -921,7 +954,7 @@ namespace Grammophone.Domos.Logic
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
-		private async Task<StatePath> GetStatePathAsync(IQueryable<StatePath> pathQuery)
+		private async Task<StatePath> LoadStatePathAsync(IQueryable<StatePath> pathQuery)
 		{
 			if (pathQuery == null) throw new ArgumentNullException(nameof(pathQuery));
 
