@@ -4,6 +4,7 @@ using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Grammophone.Caching;
 using Grammophone.Domos.AccessChecking;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
@@ -53,6 +54,12 @@ namespace Grammophone.Domos.Logic
 		where SO : class, IStateful<U, ST>
 		where C : Configurator, new()
 	{
+		#region Private fields
+
+		private readonly AsyncLazy<IReadOnlyDictionary<long, StatePath>> asyncLazyStatePathsByID;
+ 
+		#endregion
+
 		#region Construction
 
 		/// <summary>
@@ -63,6 +70,7 @@ namespace Grammophone.Domos.Logic
 		protected WorkflowManager(S session, string configurationSectionName)
 			: base(session, configurationSectionName)
 		{
+			asyncLazyStatePathsByID = new AsyncLazy<IReadOnlyDictionary<long, StatePath>>(async () => await this.StatePaths.ToDictionaryAsync(sp => sp.ID), false);
 		}
 
 		#endregion
@@ -93,7 +101,7 @@ namespace Grammophone.Domos.Logic
 		/// The state transitions
 		/// of type <typeparamref name="ST"/> in the system.
 		/// </summary>
-		public IQueryable<ST> StateTransitions => this.DomainContainer.StateTransitions.OfType<ST>();
+		public virtual IQueryable<ST> StateTransitions => this.DomainContainer.StateTransitions.OfType<ST>();
 
 		#endregion
 
@@ -121,7 +129,7 @@ namespace Grammophone.Domos.Logic
 		/// <exception cref="LogicException">
 		/// Thrown when the specified path 
 		/// is not available for the current state of the stateful object,
-		/// or when the path doesn't exist,
+		/// or when the path doesn't exist among <see cref="StatePaths"/>,
 		/// or when the path's workflow is not compatible with transitions 
 		/// of type <typeparamref name="ST"/>.
 		/// </exception>
@@ -136,7 +144,7 @@ namespace Grammophone.Domos.Logic
 
 			var path = await FindStatePathAsync(pathCodeName);
 
-			return await ExecuteStatePathAsync(stateful, path, actionArguments);
+			return await ExecuteStatePathImplementationAsync(stateful, path, actionArguments);
 		}
 
 		/// <summary>
@@ -156,7 +164,7 @@ namespace Grammophone.Domos.Logic
 		/// <exception cref="LogicException">
 		/// Thrown when the specified path 
 		/// is not available for the current state of the stateful object,
-		/// or when the path doesn't exist,
+		/// or when the path doesn't exist among <see cref="StatePaths"/>,
 		/// or when the path's workflow is not compatible with transitions 
 		/// of type <typeparamref name="ST"/>.
 		/// </exception>
@@ -170,7 +178,7 @@ namespace Grammophone.Domos.Logic
 
 			var path = await FindStatePathAsync(pathID);
 
-			return await ExecuteStatePathAsync(stateful, path, actionArguments);
+			return await ExecuteStatePathImplementationAsync(stateful, path, actionArguments);
 		}
 
 		/// <summary>
@@ -190,7 +198,8 @@ namespace Grammophone.Domos.Logic
 		/// <exception cref="LogicException">
 		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
-		/// than <typeparamref name="ST"/>.
+		/// than <typeparamref name="ST"/> or when the <paramref name="statePath"/>
+		/// does not belong in the <see cref="StatePaths"/>.
 		/// </exception>
 		/// <exception cref="UserException">
 		/// Thrown when the specified path 
@@ -212,78 +221,9 @@ namespace Grammophone.Domos.Logic
 
 			ValidatePath(statePath);
 
-			if (!this.AccessResolver.CanUserExecuteStatePath(this.Session.User, stateful, statePath))
-			{
-				string message;
+			await EnsureStatePathIsInSetAsync(statePath.ID);
 
-				if (this.Session.User != null)
-				{
-					message = $"The user with ID {this.Session.User.ID} has no rights " +
-						$"to execute path '{statePath.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.";
-				}
-				else
-				{
-					message = $"The anonymous user has no rights " +
-						$"to execute path '{statePath.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.";
-				}
-
-				this.ClassLogger.Log(Logging.LogLevel.Warn, message);
-
-				throw new StatePathAccessDeniedException(statePath, stateful, message);
-			}
-
-			var validationErrors = ValidateStatePathArguments(statePath.CodeName, actionArguments);
-
-			if (validationErrors.Count > 0)
-				throw new StatePathArgumentsException(validationErrors);
-
-			using (var transaction = this.DomainContainer.BeginTransaction())
-			{
-				var statefulObjectEntry = this.DomainContainer.Entry(stateful);
-
-				switch (statefulObjectEntry.State)
-				{
-					case Grammophone.DataAccess.TrackingState.Unchanged: // Get the most fresh possible contents of the stateful obbject. 
-						await statefulObjectEntry.ReloadAsync();
-						break;
-				}
-
-				if (stateful.State != statePath.PreviousState)
-					throw new UserException(String.Format(WorkflowManagerMessages.INCOMPATIBLE_STATE_PATH, statePath.Name, stateful.State.Name, stateful.ID));
-
-				ST stateTransition = this.DomainContainer.StateTransitions.Create<ST>();
-
-				var statePathConfiguration = GetStatePathConfiguration(statePath.CodeName);
-
-				stateTransition.BindToStateful(stateful);
-
-				var now = DateTime.UtcNow;
-
-				stateTransition.Path = statePath;
-				stateTransition.ChangeStampBefore = stateful.ChangeStamp;
-
-				stateful.LastStateChangeDate = now;
-
-				if (statePath.PreviousState.GroupID != statePath.NextState.GroupID)
-				{
-					stateful.LastStateGroupChangeDate = now;
-				}
-
-				await ExecuteActionsAsync(statePathConfiguration.PreActions, stateful, stateTransition, actionArguments);
-
-				stateful.State = statePath.NextState;
-
-				stateful.ChangeStamp &= statePath.ChangeStampANDMask;
-				stateful.ChangeStamp |= statePath.ChangeStampORMask;
-
-				stateTransition.ChangeStampAfter = stateful.ChangeStamp;
-
-				await ExecuteActionsAsync(statePathConfiguration.PostActions, stateful, stateTransition, actionArguments);
-
-				await transaction.CommitAsync();
-
-				return stateTransition;
-			}
+			return await ExecuteStatePathImplementationAsync(stateful, statePath, actionArguments);
 		}
 
 		/// <summary>
@@ -444,7 +384,7 @@ namespace Grammophone.Domos.Logic
 		/// </returns>
 		public IQueryable<StatePath> GetNextPaths(long statefulID)
 		{
-			return from c in this.GetManagedStatefulObjects()
+			return from c in GetManagedStatefulObjects()
 						 where c.ID == statefulID
 						 from sp in this.StatePaths
 						 where c.State.ID == sp.PreviousStateID
@@ -770,6 +710,10 @@ namespace Grammophone.Domos.Logic
 			if (statePath == null) throw new ArgumentNullException(nameof(statePath));
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
 
+			ValidatePath(statePath);
+
+			await EnsureStatePathIsInSetAsync(statePath.ID);
+
 			var executionResults = new List<ExecutionResult<SO, ST>>(statefulObjects.Count);
 
 			foreach (var statefulObject in statefulObjects)
@@ -781,7 +725,9 @@ namespace Grammophone.Domos.Logic
 
 				try
 				{
-					var transition = await this.ExecuteStatePathAsync(
+					if (statefulObject == null) throw new ArgumentException("There is a null item in the list of stateful objects.", nameof(statefulObjects));
+
+					var transition = await ExecuteStatePathImplementationAsync(
 						statefulObject,
 						statePath,
 						actionArguments);
@@ -991,21 +937,28 @@ namespace Grammophone.Domos.Logic
 
 		/// <summary>
 		/// Ensure that a given path belongs to a workflow
-		/// working with state transitions of type <typeparamref name="ST"/>.
+		/// working with state transitions of type <typeparamref name="ST"/> and that it has been unchanged.
+		/// Any detached, added, modified or deleted state paths are not accepted.
 		/// </summary>
 		/// <param name="path">The path to validate.</param>
 		/// <exception cref="LogicException">
 		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
-		/// than <typeparamref name="ST"/>.
+		/// than <typeparamref name="ST"/> or if it is not unchanged.
 		/// </exception>
-		private static void ValidatePath(StatePath path)
+		private void ValidatePath(StatePath path)
 		{
 			if (path == null) throw new ArgumentNullException(nameof(path));
 
 			if (path.WorkflowGraph.StateTransitionTypeName != typeof(ST).FullName)
 				throw new LogicException(
 					$"The state path must work with transitions of type {path.WorkflowGraph.StateTransitionTypeName}.");
+
+			var pathEntry = this.DomainContainer.Entry(path);
+
+			if (pathEntry.State != Grammophone.DataAccess.TrackingState.Unchanged)
+				throw new LogicException(
+					$"The state path must be unchanged. Any detached, added, modified or deleted state paths are not accepted.");
 		}
 
 		/// <summary>
@@ -1070,6 +1023,108 @@ namespace Grammophone.Domos.Logic
 			}
 
 			return parameterSpecificationsByKey;
+		}
+
+		/// <summary>
+		/// Implementation of execution of a state path.
+		/// The arguments are considered to non-null and validated.
+		/// </summary>
+		/// <param name="stateful"></param>
+		/// <param name="statePath"></param>
+		/// <param name="actionArguments"></param>
+		/// <returns></returns>
+		private async Task<ST> ExecuteStatePathImplementationAsync(SO stateful, StatePath statePath, IDictionary<string, object> actionArguments)
+		{
+			if (!this.AccessResolver.CanUserExecuteStatePath(this.Session.User, stateful, statePath))
+			{
+				string message;
+
+				if (this.Session.User != null)
+				{
+					message = $"The user with ID {this.Session.User.ID} has no rights " +
+						$"to execute path '{statePath.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.";
+				}
+				else
+				{
+					message = $"The anonymous user has no rights " +
+						$"to execute path '{statePath.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.";
+				}
+
+				this.ClassLogger.Log(Logging.LogLevel.Warn, message);
+
+				throw new StatePathAccessDeniedException(statePath, stateful, message);
+			}
+
+			var validationErrors = ValidateStatePathArguments(statePath.CodeName, actionArguments);
+
+			if (validationErrors.Count > 0)
+				throw new StatePathArgumentsException(validationErrors);
+
+			using (var transaction = this.DomainContainer.BeginTransaction())
+			{
+				var statefulObjectEntry = this.DomainContainer.Entry(stateful);
+
+				switch (statefulObjectEntry.State)
+				{
+					case Grammophone.DataAccess.TrackingState.Unchanged: // Get the most fresh possible contents of the stateful obbject. 
+						await statefulObjectEntry.ReloadAsync();
+						break;
+				}
+
+				if (stateful.State != statePath.PreviousState)
+					throw new UserException(String.Format(WorkflowManagerMessages.INCOMPATIBLE_STATE_PATH, statePath.Name, stateful.State.Name, stateful.ID));
+
+				ST stateTransition = this.DomainContainer.StateTransitions.Create<ST>();
+
+				var statePathConfiguration = GetStatePathConfiguration(statePath.CodeName);
+
+				stateTransition.BindToStateful(stateful);
+
+				var now = DateTime.UtcNow;
+
+				stateTransition.Path = statePath;
+				stateTransition.ChangeStampBefore = stateful.ChangeStamp;
+
+				stateful.LastStateChangeDate = now;
+
+				if (statePath.PreviousState.GroupID != statePath.NextState.GroupID)
+				{
+					stateful.LastStateGroupChangeDate = now;
+				}
+
+				await ExecuteActionsAsync(statePathConfiguration.PreActions, stateful, stateTransition, actionArguments);
+
+				stateful.State = statePath.NextState;
+
+				stateful.ChangeStamp &= statePath.ChangeStampANDMask;
+				stateful.ChangeStamp |= statePath.ChangeStampORMask;
+
+				stateTransition.ChangeStampAfter = stateful.ChangeStamp;
+
+				await ExecuteActionsAsync(statePathConfiguration.PostActions, stateful, stateTransition, actionArguments);
+
+				await transaction.CommitAsync();
+
+				return stateTransition;
+			}
+		}
+
+		/// <summary>
+		/// Ensure that a state path belongs to the <see cref="StatePaths"/> set, else
+		/// throw a <see cref="LogicException"/>.
+		/// </summary>
+		/// <param name="statePathID">The ID of the state path.</param>
+		/// <exception cref="LogicException">
+		/// Thrown when the <paramref name="statePathID"/> does not correspond to a path in <see cref="StatePaths"/>.
+		/// </exception>
+		private async Task EnsureStatePathIsInSetAsync(long statePathID)
+		{
+			var statePathsByID = await asyncLazyStatePathsByID.Value;
+
+			if (!statePathsByID.ContainsKey(statePathID))
+			{
+				throw new LogicException($"The state path with ID {statePathID} does not exist among the designated state paths.");
+			}
 		}
 
 		#endregion
