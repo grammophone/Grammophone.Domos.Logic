@@ -142,7 +142,7 @@ namespace Grammophone.Domos.Logic
 			if (pathCodeName == null) throw new ArgumentNullException(nameof(pathCodeName));
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
 
-			var path = await FindStatePathAsync(pathCodeName);
+			var path = await GetStatePathAsync(pathCodeName);
 
 			return await ExecuteStatePathImplementationAsync(stateful, path, actionArguments);
 		}
@@ -176,7 +176,7 @@ namespace Grammophone.Domos.Logic
 			if (stateful == null) throw new ArgumentNullException(nameof(stateful));
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
 
-			var path = await FindStatePathAsync(pathID);
+			var path = await GetStatePathAsync(pathID);
 
 			return await ExecuteStatePathImplementationAsync(stateful, path, actionArguments);
 		}
@@ -290,7 +290,7 @@ namespace Grammophone.Domos.Logic
 		public async Task<IReadOnlyDictionary<string, ParameterSpecification>> GetPathParameterSpecificationsAsync(
 			long statePathID)
 		{
-			var statePath = await FindStatePathAsync(statePathID);
+			var statePath = await GetStatePathAsync(statePathID);
 
 			return GetPathParameterSpecifications(statePath.CodeName);
 		}
@@ -363,7 +363,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
 
-			var statePath = await FindStatePathAsync(statePathID);
+			var statePath = await GetStatePathAsync(statePathID);
 
 			return ValidateStatePathArguments(statePath.CodeName, actionArguments);
 		}
@@ -771,7 +771,7 @@ namespace Grammophone.Domos.Logic
 			if (pathCodeName == null) throw new ArgumentNullException(nameof(pathCodeName));
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
 
-			var statePath = await FindStatePathAsync(pathCodeName);
+			var statePath = await GetStatePathAsync(pathCodeName);
 
 			return await ExecuteStatePathBatchAsync(statefulObjectsQuery, statePath, actionArguments);
 		}
@@ -801,7 +801,7 @@ namespace Grammophone.Domos.Logic
 			if (statefulObjectsQuery == null) throw new ArgumentNullException(nameof(statefulObjectsQuery));
 			if (actionArguments == null) throw new ArgumentNullException(nameof(actionArguments));
 
-			var statePath = await FindStatePathAsync(statePathID);
+			var statePath = await GetStatePathAsync(statePathID);
 
 			return await ExecuteStatePathBatchAsync(statefulObjectsQuery, statePath, actionArguments);
 		}
@@ -884,12 +884,12 @@ namespace Grammophone.Domos.Logic
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
-		private async Task<StatePath> FindStatePathAsync(string pathCodeName)
+		private async Task<StatePath> GetStatePathAsync(string pathCodeName)
 		{
 			var pathQuery = this.StatePaths
 				.Where(sp => sp.CodeName == pathCodeName);
 
-			return await FindStatePathAsync(pathQuery);
+			return await GetStatePathAsync(pathQuery);
 		}
 
 		/// <summary>
@@ -902,12 +902,12 @@ namespace Grammophone.Domos.Logic
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
-		private async Task<StatePath> FindStatePathAsync(long pathID)
+		private async Task<StatePath> GetStatePathAsync(long pathID)
 		{
 			var pathQuery = this.StatePaths
 				.Where(sp => sp.ID == pathID);
 
-			return await FindStatePathAsync(pathQuery);
+			return await GetStatePathAsync(pathQuery);
 		}
 
 		/// <summary>
@@ -921,7 +921,7 @@ namespace Grammophone.Domos.Logic
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
-		private async Task<StatePath> FindStatePathAsync(IQueryable<StatePath> pathQuery)
+		private async Task<StatePath> GetStatePathAsync(IQueryable<StatePath> pathQuery)
 		{
 			if (pathQuery == null) throw new ArgumentNullException(nameof(pathQuery));
 
