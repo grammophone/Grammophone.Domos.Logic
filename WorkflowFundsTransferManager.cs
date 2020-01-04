@@ -67,6 +67,80 @@ namespace Grammophone.Domos.Logic
 		#region Auxilliary classes
 
 		/// <summary>
+		/// Implementations of the <see cref="TrySpecifyNextStatePath(SO, State, FundsResponseLine)"/>
+		/// return an instance of this value type to specify which state path to execute on a stateful object upon line digestion or null
+		/// to invoke non-workflow accounting as inherited from <see cref="FundsTransferManager{U, BST, P, R, J, D, S, AS}"/>.
+		/// </summary>
+		protected struct StatePathExecutionSpecification : IEquatable<StatePathExecutionSpecification>
+		{
+			#region Construction
+
+			/// <summary>
+			/// Create.
+			/// </summary>
+			/// <param name="statePathCodeName">The <see cref="StatePath.CodeName"/> of the <see cref="StatePath"/> to execute.</param>
+			/// <param name="workflowGraphCodeName">The <see cref="WorkflowGraph.CodeName"/> of the <see cref="WorkflowGraph"/> where the path belongs.</param>
+			public StatePathExecutionSpecification(string statePathCodeName, string workflowGraphCodeName)
+			{
+				if (statePathCodeName == null) throw new ArgumentNullException(nameof(statePathCodeName));
+				if (workflowGraphCodeName == null) throw new ArgumentNullException(nameof(workflowGraphCodeName));
+
+				this.StatePathCodeName = statePathCodeName;
+				this.WorkflowGraphCodeName = workflowGraphCodeName;
+			}
+
+			#endregion
+			
+			#region Public properties
+
+			/// <summary>
+			/// The <see cref="StatePath.CodeName"/> of the <see cref="StatePath"/> to execute.
+			/// </summary>
+			public string StatePathCodeName { get; }
+
+			/// <summary>
+			/// The <see cref="WorkflowGraph.CodeName"/> of the <see cref="WorkflowGraph"/> where the path belongs.
+			/// </summary>
+			public string WorkflowGraphCodeName { get; }
+
+			#endregion
+
+			#region IEquatable and related methods implementation
+
+			/// <summary>
+			/// Returns true when the <paramref name="other"/> object has equal <see cref="StatePathCodeName"/>
+			/// and <see cref="WorkflowGraphCodeName"/> properties as this one.
+			/// </summary>
+			/// <param name="other">The other object.</param>
+			public bool Equals(StatePathExecutionSpecification other)
+			{
+				return this.StatePathCodeName == other.StatePathCodeName && this.WorkflowGraphCodeName == other.WorkflowGraphCodeName;
+			}
+
+			/// <summary>
+			/// Returns true when the <paramref name="other"/> object
+			/// is <see cref="StatePathExecutionSpecification"/> and
+			/// has equal <see cref="StatePathCodeName"/>
+			/// and <see cref="WorkflowGraphCodeName"/> properties as this one.
+			/// </summary>
+			/// <param name="other">The other object.</param>
+			public override bool Equals(object other)
+			{
+				if (!(other is StatePathExecutionSpecification)) return false;
+
+				return Equals((StatePathExecutionSpecification)other);
+			}
+
+			/// <summary>
+			/// Take into account <see cref="StatePathCodeName"/> and <see cref="WorkflowGraphCodeName"/>
+			/// prroperties to produce a hash code.
+			/// </summary>
+			public override int GetHashCode() => (this.StatePathCodeName, this.WorkflowGraphCodeName).GetHashCode();
+
+			#endregion
+		}
+
+		/// <summary>
 		/// Association of a funds transfer event to a stateful object.
 		/// </summary>
 		public class FundsTransferEventAssociation
@@ -97,7 +171,7 @@ namespace Grammophone.Domos.Logic
 
 		#region Private fields
 
-		private readonly AsyncSequentialMRUCache<string, StatePath> statePathsByCodeNameCache;
+		private readonly AsyncSequentialMRUCache<StatePathExecutionSpecification, StatePath> statePathsBySpecificationCache;
 
 		#endregion
 
@@ -137,8 +211,7 @@ namespace Grammophone.Domos.Logic
 
 			this.WorkflowManagerFactory = workflowManagerFactory;
 
-			this.statePathsByCodeNameCache =
-				new AsyncSequentialMRUCache<string, StatePath>(LoadStatePathAsync);
+			statePathsBySpecificationCache = new AsyncSequentialMRUCache<StatePathExecutionSpecification, StatePath>(LoadStatePathAsync);
 		}
 
 		#endregion
@@ -228,12 +301,12 @@ namespace Grammophone.Domos.Logic
 		/// <param name="statefulObject">The stateful object for which to decide the state path.</param>
 		/// <param name="stateAfterFundsTransferRequest">The state of the <paramref name="statefulObject"/> right after the funds transfer request.</param>
 		/// <param name="fundsResponseLine">The batch line arriving for the stateful object.</param>
-		/// <returns>Returns the code name of the path to execute or null to execute none.</returns>
+		/// <returns>Returns the code names of the path and the workflow to execute or null to execute none.</returns>
 		/// <exception cref="Exception">
 		/// Thrown to record a funds transfer event with its <see cref="FundsTransferEvent.ExceptionData"/>
 		/// containing the thrown exception.
 		/// </exception>
-		protected abstract string TryGetNextStatePathCodeName(
+		protected abstract StatePathExecutionSpecification? TrySpecifyNextStatePath(
 			SO statefulObject,
 			State stateAfterFundsTransferRequest,
 			FundsResponseLine fundsResponseLine);
@@ -241,7 +314,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Digest a funds transfer response file from a credit system
 		/// and execute the appropriate state paths
-		/// as specified by the <see cref="TryGetNextStatePathCodeName(SO, State, FundsResponseLine)"/> method
+		/// as specified by the <see cref="TrySpecifyNextStatePath(SO, State, FundsResponseLine)"/> method
 		/// on the corresponding stateful objects.
 		/// The existence of the credit system and
 		/// the collation specified in <paramref name="file"/> is assumed.
@@ -315,14 +388,14 @@ namespace Grammophone.Domos.Logic
 		#region Private methods
 
 		/// <summary>
-		/// Supports the cache miss of <see cref="statePathsByCodeNameCache"/>.
+		/// Supports the cache miss of <see cref="statePathsBySpecificationCache"/>.
 		/// </summary>
-		private async Task<StatePath> LoadStatePathAsync(string statePathCodeName)
+		private async Task<StatePath> LoadStatePathAsync(StatePathExecutionSpecification specification)
 			=> await this.DomainContainer.StatePaths
 			.Include(sp => sp.NextState)
 			.Include(sp => sp.PreviousState)
 			.Include(sp => sp.WorkflowGraph)
-			.SingleAsync(sp => sp.CodeName == statePathCodeName);
+			.SingleAsync(sp => sp.CodeName == specification.StatePathCodeName && sp.WorkflowGraph.CodeName == specification.WorkflowGraphCodeName);
 
 		private async Task<FundsResponseResult> AcceptResponseItemAsync(
 			FundsResponseFile file,
@@ -382,11 +455,12 @@ namespace Grammophone.Domos.Logic
 				};
 
 				// Attempt to get the next path to be executed. Any exception will be recorded in a funds transfer event with ExceptionData.
-				string nextStatePathCodeName = TryGetNextStatePathCodeName(statefulObject, stateAfterRequest, line);
 
-				if (nextStatePathCodeName != null) // Shpuld a path be executed?
+				var statePathExecutionSpecification = TrySpecifyNextStatePath(statefulObject, stateAfterRequest, line);
+
+				if (statePathExecutionSpecification != null) // Should a path be executed?
 				{
-					var statePath = await statePathsByCodeNameCache.Get(nextStatePathCodeName);
+					var statePath = await statePathsBySpecificationCache.Get(statePathExecutionSpecification.Value);
 
 					var workflowManager = this.WorkflowManagerFactory(this.Session, statefulObject);
 
