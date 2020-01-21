@@ -121,7 +121,8 @@ namespace Grammophone.Domos.Logic.Channels
 						channelMessage.Subject,
 						senderAddress,
 						emailDestinationAddresses,
-						messageBody);
+						messageBody,
+						channelMessage.Guid);
 				}
 			}
 		}
@@ -167,7 +168,8 @@ namespace Grammophone.Domos.Logic.Channels
 						channelMessage.Subject,
 						senderAddress,
 						emailDestinationAddresses,
-						messageBody);
+						messageBody,
+						channelMessage.Guid);
 				}
 			}
 		}
@@ -236,7 +238,8 @@ namespace Grammophone.Domos.Logic.Channels
 			string subject,
 			System.Net.Mail.MailAddress senderAddress,
 			IEnumerable<System.Net.Mail.MailAddress> destinationAddresses,
-			string messageBody)
+			string messageBody,
+			Guid messageGUID)
 		{
 			var message = new System.Net.Mail.MailMessage()
 			{
@@ -249,6 +252,8 @@ namespace Grammophone.Domos.Logic.Channels
 				IsBodyHtml = true,
 				Body = messageBody,
 			};
+
+			message.Headers.Add("Message-ID", messageGUID.ToString());
 
 			using (message)
 			{
