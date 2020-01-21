@@ -117,12 +117,14 @@ namespace Grammophone.Domos.Logic.Channels
 
 					string messageBody = bodyWriter.ToString();
 
+					string messageID = GetMessageID(channelMessage, messageDestinationIdentities);
+
 					await SendEmailMessageAsync(
 						channelMessage.Subject,
 						senderAddress,
 						emailDestinationAddresses,
 						messageBody,
-						channelMessage.Guid);
+						messageID);
 				}
 			}
 		}
@@ -164,12 +166,14 @@ namespace Grammophone.Domos.Logic.Channels
 
 					string messageBody = bodyWriter.ToString();
 
+					string messageID = GetMessageID(channelMessage, messageDestinationIdentities);
+
 					await SendEmailMessageAsync(
 						channelMessage.Subject,
 						senderAddress,
 						emailDestinationAddresses,
 						messageBody,
-						channelMessage.Guid);
+						messageID);
 				}
 			}
 		}
@@ -239,7 +243,7 @@ namespace Grammophone.Domos.Logic.Channels
 			System.Net.Mail.MailAddress senderAddress,
 			IEnumerable<System.Net.Mail.MailAddress> destinationAddresses,
 			string messageBody,
-			Guid messageGUID)
+			string messageID)
 		{
 			var message = new System.Net.Mail.MailMessage()
 			{
@@ -253,7 +257,7 @@ namespace Grammophone.Domos.Logic.Channels
 				Body = messageBody,
 			};
 
-			message.Headers.Add("Message-ID", messageGUID.ToString());
+			message.Headers.Add("Message-ID", messageID);
 
 			using (message)
 			{
@@ -282,6 +286,35 @@ namespace Grammophone.Domos.Logic.Channels
 			dynamicProperties[DestinationIdentitiesPropertyKey] = destinationIdentities.ToArray();
 
 			return dynamicProperties;
+		}
+
+		/// <summary>
+		/// Builds an e-mail message ID of the format <see cref="ChannelMessage{T}.Guid"/>/<see cref="IChannelIdentity.Guid"/>
+		/// if the destination identities have a single member,
+		/// else returns the <see cref="ChannelMessage{T}.Guid"/>.
+		/// </summary>
+		/// <param name="channelMessage">The channel message.</param>
+		/// <param name="destinationIdentities">The collection of destination identities.</param>
+		/// <returns>
+		/// Returns message-guid/destination guid if the destination identities have a single member,
+		/// else returns message-gruid.
+		/// </returns>
+		private string GetMessageID(IChannelMessage<T> channelMessage, IEnumerable<IChannelIdentity> destinationIdentities)
+		{
+			var messageIdBuilder = new StringBuilder();
+
+			messageIdBuilder.Append(channelMessage.Guid);
+
+			if (destinationIdentities.Count() == 1)
+			{
+				messageIdBuilder.Append("/");
+
+				var singleDestinationIdentity = destinationIdentities.Single();
+
+				messageIdBuilder.Append(singleDestinationIdentity.Guid);
+			}
+
+			return messageIdBuilder.ToString();
 		}
 
 		#endregion

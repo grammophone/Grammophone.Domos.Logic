@@ -12,13 +12,18 @@ namespace Grammophone.Domos.Logic
 	public interface IChannelIdentity
 	{
 		/// <summary>
-		/// The name of the sender.
+		/// The name of the sender or recepient.
 		/// </summary>
 		string Name { get; }
 
 		/// <summary>
-		/// The e-mail of the sender.
+		/// The e-mail of the sender or recepient.
 		/// </summary>
 		string Email { get; }
+
+		/// <summary>
+		/// The unique identifier of the recepient.
+		/// </summary>
+		Guid Guid { get; }
  	}
 }
