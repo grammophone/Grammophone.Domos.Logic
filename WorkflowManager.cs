@@ -114,10 +114,15 @@ namespace Grammophone.Domos.Logic
 
 		#region Public methods
 
-		IQueryable<SO> IWorkflowManager<U, ST, SO>.GetManagedStatefulObjects()
-		{
-			return this.GetManagedStatefulObjects();
-		}
+		/// <summary>
+		/// Get an object managed by this manager.
+		/// </summary>
+		/// <param name="objectID">The ID of the stateful object.</param>
+		/// <returns>Returns the stateful object.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when the <paramref name="objectID"/> doesn't correspond to an object managed by this manager.
+		/// </exception>
+		public abstract Task<SO> GetStatefulObjectAsync(long objectID);
 
 		/// <summary>
 		/// Get the <see cref="StatePath"/> having the given code name among the <see cref="StatePaths"/>.
@@ -403,29 +408,6 @@ namespace Grammophone.Domos.Logic
 
 		/// <summary>
 		/// Get the set of all the possible next state paths which can 
-		/// be executed on a stateful object.
-		/// Use <see cref="FilterAllowedStatePaths(SO, IEnumerable{StatePath})"/>
-		/// to narrow the result to the paths which can be executed by the 
-		/// current session user.
-		/// </summary>
-		/// <param name="statefulID">The ID of the stateful object.</param>
-		/// <returns>
-		/// Returns all the next paths available to the state of a claim,
-		/// irrespective of user rights.
-		/// Use <see cref="FilterAllowedStatePaths(SO, IEnumerable{StatePath})"/>
-		/// to only select the ones allowed by the current session user.
-		/// </returns>
-		public IQueryable<StatePath> GetNextPaths(long statefulID)
-		{
-			return from c in GetManagedStatefulObjects()
-						 where c.ID == statefulID
-						 from sp in this.StatePaths
-						 where c.State.ID == sp.PreviousStateID
-						 select sp;
-		}
-
-		/// <summary>
-		/// Get the set of all the possible next state paths which can 
 		/// be executed on a <paramref name="stateful"/> object.
 		/// Use <see cref="FilterAllowedStatePaths(SO, IEnumerable{StatePath})"/>
 		/// to narrow the result to the paths which can be executed by the 
@@ -494,7 +476,7 @@ namespace Grammophone.Domos.Logic
 		/// </returns>
 		public async Task<IEnumerable<StatePath>> GetAllowedNextPathsAsync(long statefulID)
 		{
-			SO stateful = await this.GetManagedStatefulObjects().SingleAsync(so => so.ID == statefulID);
+			SO stateful = await GetStatefulObjectAsync(statefulID);
 
 			return await GetAllowedNextPathsAsync(stateful);
 		}
@@ -522,13 +504,7 @@ namespace Grammophone.Domos.Logic
 		/// Get the set of state transitions of a stateful object.
 		/// </summary>
 		/// <param name="statefulID">The ID of the stateful object.</param>
-		public IQueryable<ST> GetStateTransitions(long statefulID)
-		{
-			return from s in GetManagedStatefulObjects()
-						 where s.ID == statefulID
-						 from st in s.StateTransitions
-						 select st;
-		}
+		public abstract IQueryable<ST> GetStateTransitions(long statefulID);
 
 		/// <summary>
 		/// Get the set of state transitions of a stateful object.
@@ -538,10 +514,7 @@ namespace Grammophone.Domos.Logic
 		{
 			if (stateful == null) throw new ArgumentNullException(nameof(stateful));
 
-			return from s in GetManagedStatefulObjects()
-						 where s.ID == stateful.ID
-						 from st in s.StateTransitions
-						 select st;
+			return GetStateTransitions(stateful.ID);
 		}
 
 		/// <summary>
@@ -838,15 +811,6 @@ namespace Grammophone.Domos.Logic
 
 			return await ExecuteStatePathBatchAsync(statefulObjectsQuery, statePath, actionArguments);
 		}
-
-		#endregion
-
-		#region Protected methods
-
-		/// <summary>
-		/// Gets the set of stateful objects which can be managed by this manager.
-		/// </summary>
-		protected abstract IQueryable<SO> GetManagedStatefulObjects();
 
 		#endregion
 

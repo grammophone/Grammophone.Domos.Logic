@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Workflow;
 using Grammophone.Domos.Logic.Models.Workflow;
@@ -56,12 +55,17 @@ namespace Grammophone.Domos.Logic
 
 		#endregion
 
-		#region Public methods
+		#region Methods
 
 		/// <summary>
-		/// Gets the set of stateful objects which can be managed by this manager.
+		/// Get an object managed by this manager.
 		/// </summary>
-		IQueryable<SO> GetManagedStatefulObjects();
+		/// <param name="objectID">The ID of the stateful object.</param>
+		/// <returns>Returns the stateful object.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when the <paramref name="objectID"/> doesn't correspond to an object managed by this manager.
+		/// </exception>
+		Task<SO> GetStatefulObjectAsync(long objectID);
 
 		/// <summary>
 		/// Execute a state path against a stateful instance.
@@ -201,22 +205,6 @@ namespace Grammophone.Domos.Logic
 		Task<IDictionary<string, ICollection<string>>> ValidateStatePathArgumentsAsync(
 			long statePathID,
 			IDictionary<string, object> actionArguments);
-
-		/// <summary>
-		/// Get the set of all the possible next state paths which can 
-		/// be executed on a stateful object.
-		/// Use <see cref="FilterAllowedStatePaths(SO, IEnumerable{StatePath})"/>
-		/// to narrow the result to the paths which can be executed by the 
-		/// current session user.
-		/// </summary>
-		/// <param name="statefulID">The ID of the stateful object.</param>
-		/// <returns>
-		/// Returns all the next paths available to the state of a claim,
-		/// irrespective of user rights.
-		/// Use <see cref="FilterAllowedStatePaths(SO, IEnumerable{StatePath})"/>
-		/// to only select the ones allowed by the current session user.
-		/// </returns>
-		IQueryable<StatePath> GetNextPaths(long statefulID);
 
 		/// <summary>
 		/// Get the set of all the possible next state paths which can 
