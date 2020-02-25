@@ -77,6 +77,7 @@
     <Compile Include="Configuration\FilesConfiguration.cs" />
     <Compile Include="ConfiguredManager.cs" />
     <Compile Include="CreditSystemsManager.cs" />
+    <Compile Include="DefaultWorkflowConfigurator.cs" />
     <Compile Include="DomainIntegrityException.cs" />
     <Compile Include="ElevatedAccessScope.cs" />
     <Compile Include="EntityAccessDeniedException.cs" />
@@ -135,6 +136,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>FundsTransferResponseActionResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="WorkflowConfigurator.cs" />
     <Compile Include="WorkflowFundsTransferManager.cs" />
     <Compile Include="FundsTransferManager.cs" />
     <Compile Include="IPublicDomainProvider.cs" />
