@@ -61,6 +61,10 @@ namespace Grammophone.Domos.Logic
 		private readonly AsyncSequentialMRUCache<string, StatePath> asyncStatePathsByCodeNameCache;
 
 		private readonly AsyncSequentialMRUCache<long, StatePath> asyncStatePathsByIDCache;
+
+		private readonly AsyncSequentialMRUCache<string, State> asyncStatesByCodeNameCache;
+
+		private readonly AsyncSequentialMRUCache<long, State> asyncStatesByIDCache;
  
 		#endregion
 
@@ -78,6 +82,9 @@ namespace Grammophone.Domos.Logic
 
 			asyncStatePathsByCodeNameCache = new AsyncSequentialMRUCache<string, StatePath>(async codeName => await LoadStatePathAsync(codeName));
 			asyncStatePathsByIDCache = new AsyncSequentialMRUCache<long, StatePath>(async id => await LoadStatePathAsync(id));
+
+			asyncStatesByCodeNameCache = new AsyncSequentialMRUCache<string, State>(async codeName => await LoadStateAsync(codeName));
+			asyncStatesByIDCache = new AsyncSequentialMRUCache<long, State>(async id => await LoadStateAsync(id));
 		}
 
 		#endregion
@@ -128,9 +135,11 @@ namespace Grammophone.Domos.Logic
 		/// Get the <see cref="StatePath"/> having the given code name among the <see cref="StatePaths"/>.
 		/// </summary>
 		/// <returns>Returns the path found.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when no <see cref="StatePath"/> exists having the given code name among <see cref="StatePaths"/>.
+		/// </exception>
 		/// <exception cref="LogicException">
-		/// Thrown when no <see cref="StatePath"/> exists having the given code name
-		/// or when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
@@ -141,14 +150,48 @@ namespace Grammophone.Domos.Logic
 		/// Get the <see cref="StatePath"/> among having the given ID among the <see cref="StatePaths"/> .
 		/// </summary>
 		/// <returns>Returns the path found.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when no <see cref="StatePath"/> exists having the given ID among <see cref="StatePaths"/>.
+		/// </exception>
 		/// <exception cref="LogicException">
-		/// Thrown when no <see cref="StatePath"/> exists having the given ID
-		/// or when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
 		/// <remarks>The results of this call are cached for the life of this manager.</remarks>
 		public async Task<StatePath> GetStatePathAsync(long pathID) => await asyncStatePathsByIDCache.Get(pathID);
+
+		/// <summary>
+		/// Load the <see cref="State"/> having the given code name among the <see cref="States"/>.
+		/// </summary>
+		/// <param name="stateCodeName">The code name of the state.</param>
+		/// <returns>Returns the path found.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when no <see cref="State"/> exists having the given code name among <see cref="States"/>.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the state belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		/// <remarks>The results of this call are cached for the life of this manager.</remarks>
+		public async Task<State> GetStateAsync(string stateCodeName) => await asyncStatesByCodeNameCache.Get(stateCodeName);
+
+		/// <summary>
+		/// Load the <see cref="State"/> among having the given ID among the <see cref="States"/> .
+		/// </summary>
+		/// <param name="stateID">The ID of the state.</param>
+		/// <returns>Returns the path found.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when no <see cref="State"/> exists having the given ID among <see cref="States"/>.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the state belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		/// <remarks>The results of this call are cached for the life of this manager.</remarks>
+		public async Task<State> GetStateAsync(long stateID) => await asyncStatesByIDCache.Get(stateID);
 
 		/// <summary>
 		/// Execute a state path against a stateful instance.
@@ -875,9 +918,11 @@ namespace Grammophone.Domos.Logic
 		/// Load the <see cref="StatePath"/> having the given code name among the <see cref="StatePaths"/>.
 		/// </summary>
 		/// <returns>Returns the path found.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when no <see cref="StatePath"/> exists having the given ID among <see cref="StatePaths"/>.
+		/// </exception>
 		/// <exception cref="LogicException">
-		/// Thrown when no <see cref="StatePath"/> exists having the given code name
-		/// or when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
@@ -893,9 +938,11 @@ namespace Grammophone.Domos.Logic
 		/// Load the <see cref="StatePath"/> among having the given ID among the <see cref="StatePaths"/> .
 		/// </summary>
 		/// <returns>Returns the path found.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when no <see cref="StatePath"/> exists having the given code name among <see cref="StatePaths"/>.
+		/// </exception>
 		/// <exception cref="LogicException">
-		/// Thrown when no <see cref="StatePath"/> exists having the given ID
-		/// or when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
@@ -910,7 +957,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Load a <see cref="StatePath"/> via a query.
 		/// </summary>
-		/// <param name="pathQuery">The query to execite.</param>
+		/// <param name="pathQuery">The query to execute.</param>
 		/// <returns>Returns the path found.</returns>
 		/// <exception cref="LogicException">
 		/// Thrown when no <see cref="StatePath"/> exists in the query
@@ -927,15 +974,79 @@ namespace Grammophone.Domos.Logic
 				.Include(sp => sp.NextState)
 				.Include(sp => sp.WorkflowGraph);
 
-			var path = await pathQuery.SingleOrDefaultAsync();
-
-			if (path == null)
-				throw new LogicException(
-					$"The state path does not exist among the designated state paths.");
+			var path = await pathQuery.SingleAsync();
 
 			ValidatePath(path);
 
 			return path;
+		}
+
+		/// <summary>
+		/// Load the <see cref="State"/> having the given code name among the <see cref="States"/>.
+		/// </summary>
+		/// <returns>Returns the path found.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when no <see cref="State"/> exists having the given code name among <see cref="States"/>.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the state belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		private async Task<State> LoadStateAsync(string stateCodeName)
+		{
+			if (stateCodeName == null) throw new ArgumentNullException(nameof(stateCodeName));
+
+			var query = from s in this.States
+									where s.CodeName == stateCodeName
+									select s;
+
+			return await LoadStateAsync(query);
+		}
+
+		/// <summary>
+		/// Load the <see cref="State"/> among having the given ID among the <see cref="States"/> .
+		/// </summary>
+		/// <returns>Returns the path found.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when no <see cref="State"/> exists having the given ID among <see cref="States"/>.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the state belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		private async Task<State> LoadStateAsync(long stateID)
+		{
+			var query = from s in this.States
+									where s.ID == stateID
+									select s;
+
+			return await LoadStateAsync(query);
+		}
+
+		/// <summary>
+		/// Load a <see cref="State"/> via a query.
+		/// </summary>
+		/// <param name="stateQuery">The query to execute.</param>
+		/// <returns>Returns the path found.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when the query specified other than one <see cref="State"/> exactly.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the state belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		private async Task<State> LoadStateAsync(IQueryable<State> stateQuery)
+		{
+			stateQuery = stateQuery.Include(s => s.Group.WorkflowGraph);
+
+			var state = await stateQuery.SingleAsync();
+
+			ValidateWorkflowGraph(state.Group.WorkflowGraph);
+
+			return state;
 		}
 
 		/// <summary>
@@ -953,15 +1064,32 @@ namespace Grammophone.Domos.Logic
 		{
 			if (path == null) throw new ArgumentNullException(nameof(path));
 
-			if (path.WorkflowGraph.StateTransitionTypeName != typeof(ST).FullName)
-				throw new LogicException(
-					$"The state path must work with transitions of type {path.WorkflowGraph.StateTransitionTypeName}.");
+			ValidateWorkflowGraph(path.WorkflowGraph);
 
 			var pathEntry = this.DomainContainer.Entry(path);
 
 			if (pathEntry.State != Grammophone.DataAccess.TrackingState.Unchanged)
 				throw new LogicException(
 					$"The state path must be unchanged. Any detached, added, modified or deleted state paths are not accepted.");
+		}
+
+		/// <summary>
+		/// Ensure that a given workflow graph
+		/// works with state transitions of type <typeparamref name="ST"/>.
+		/// </summary>
+		/// <param name="workflowGraph">The workflow graph to validate.</param>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/> or if it is not unchanged.
+		/// </exception>
+		private void ValidateWorkflowGraph(WorkflowGraph workflowGraph)
+		{
+			if (workflowGraph == null) throw new ArgumentNullException(nameof(workflowGraph));
+
+			if (workflowGraph.StateTransitionTypeName != typeof(ST).FullName)
+				throw new LogicException(
+					$"The state path must work with transitions of type {workflowGraph.StateTransitionTypeName}.");
 		}
 
 		/// <summary>
