@@ -356,7 +356,7 @@ namespace Grammophone.Domos.Logic
 		/// For best performance, the <see cref="StatePath.PreviousState"/>,
 		/// <see cref="StatePath.NextState"/> and <see cref="StatePath.WorkflowGraph"/>
 		/// properties of the <paramref name="statePath"/> must be eagerly loaded
-		/// as well as the <see cref="IStateful{U, ST}.State"/> 
+		/// as well as the <see cref="IStateful.State"/> 
 		/// of the <paramref name="statefulObjects"/>.
 		/// </remarks>
 		Task<IReadOnlyCollection<ExecutionResult<SO, ST>>> ExecuteStatePathBatchAsync(
