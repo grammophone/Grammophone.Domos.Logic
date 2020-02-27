@@ -68,6 +68,68 @@ namespace Grammophone.Domos.Logic
 		Task<SO> GetStatefulObjectAsync(long objectID);
 
 		/// <summary>
+		/// Get the <see cref="StatePath"/> having the given code name among the <see cref="StatePaths"/>.
+		/// </summary>
+		/// <returns>Returns the path found.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when no <see cref="StatePath"/> exists having the given code name among <see cref="StatePaths"/>.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		/// <remarks>The results of this call are cached for the life of this manager.</remarks>
+		Task<StatePath> GetStatePathAsync(string pathCodeName);
+
+		/// <summary>
+		/// Get the <see cref="StatePath"/> among having the given ID among the <see cref="StatePaths"/> .
+		/// </summary>
+		/// <returns>Returns the path found.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when no <see cref="StatePath"/> exists having the given ID among <see cref="StatePaths"/>.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the path belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		/// <remarks>The results of this call are cached for the life of this manager.</remarks>
+		Task<StatePath> GetStatePathAsync(long pathID);
+
+		/// <summary>
+		/// Load the <see cref="State"/> having the given code name among the <see cref="States"/>.
+		/// </summary>
+		/// <param name="stateCodeName">The code name of the state.</param>
+		/// <returns>Returns the path found.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when no <see cref="State"/> exists having the given code name among <see cref="States"/>.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the state belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		/// <remarks>The results of this call are cached for the life of this manager.</remarks>
+		Task<State> GetStateAsync(string stateCodeName);
+
+		/// <summary>
+		/// Load the <see cref="State"/> among having the given ID among the <see cref="States"/> .
+		/// </summary>
+		/// <param name="stateID">The ID of the state.</param>
+		/// <returns>Returns the path found.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when no <see cref="State"/> exists having the given ID among <see cref="States"/>.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// Thrown when the <see cref="WorkflowGraph"/> where the state belongs 
+		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
+		/// than <typeparamref name="ST"/>.
+		/// </exception>
+		/// <remarks>The results of this call are cached for the life of this manager.</remarks>
+		Task<State> GetStateAsync(long stateID);
+
+		/// <summary>
 		/// Execute a state path against a stateful instance.
 		/// </summary>
 		/// <param name="stateful">The stateful instance to execute the transition upon.</param>
