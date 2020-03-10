@@ -1193,7 +1193,7 @@ namespace Grammophone.Domos.Logic
 
 			using (var transaction = this.DomainContainer.BeginTransaction())
 			{
-				var statefulObjectEntry = this.DomainContainer.Entry(stateful);
+				var statefulObjectEntry = this.DomainContainer.Entry(stateful.GetBackingDomainEntity());
 
 				switch (statefulObjectEntry.State)
 				{
