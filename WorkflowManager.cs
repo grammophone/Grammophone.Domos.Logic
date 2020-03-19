@@ -568,8 +568,10 @@ namespace Grammophone.Domos.Logic
 		/// <param name="nextStateCodeName">The code name of the next state.</param>
 		public IQueryable<StatePath> GetPathsToState(SO stateful, string nextStateCodeName)
 		{
+			long currentStateID = stateful.State.ID;
+
 			return from sp in this.StatePaths
-						 where sp.PreviousStateID == stateful.State.ID
+						 where sp.PreviousStateID == currentStateID
 						 && sp.NextState.CodeName == nextStateCodeName
 						 select sp;
 		}
@@ -582,8 +584,10 @@ namespace Grammophone.Domos.Logic
 		/// <param name="nextStateID">The ID of the next state.</param>
 		public IQueryable<StatePath> GetPathsToState(SO stateful, long nextStateID)
 		{
+			long currentStateID = stateful.State.ID;
+
 			return from sp in this.StatePaths
-						 where sp.PreviousStateID == stateful.State.ID
+						 where sp.PreviousStateID == currentStateID
 						 && sp.NextStateID == nextStateID
 						 select sp;
 		}
