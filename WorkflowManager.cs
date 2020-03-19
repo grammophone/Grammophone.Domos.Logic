@@ -467,8 +467,10 @@ namespace Grammophone.Domos.Logic
 		{
 			if (stateful == null) throw new ArgumentNullException(nameof(stateful));
 
+			long currentStateID = stateful.State.ID;
+
 			return from sp in this.StatePaths
-						 where stateful.State.ID == sp.PreviousStateID
+						 where currentStateID == sp.PreviousStateID
 						 select sp;
 		}
 
