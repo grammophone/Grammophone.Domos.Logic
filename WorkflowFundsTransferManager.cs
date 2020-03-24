@@ -42,6 +42,10 @@ namespace Grammophone.Domos.Logic
 	/// <typeparam name="SO">
 	/// The type of stateful being managed, derived from <see cref="IStateful{U, ST}"/>.
 	/// </typeparam>
+	/// <typeparam name="SH">
+	/// The type of entity holding the workflow state. This is the same as <typeparamref name="SO"/> if the
+	/// the <see cref="IStateful{U, ST}"/> interface is implemented by the entity itself and not a surrogate/adapter.
+	/// </typeparam>
 	/// <typeparam name="AS">
 	/// The type of accounting session, derived from <see cref="AccountingSession{U, BST, P, R, J, D}"/>.
 	/// </typeparam>
@@ -50,7 +54,7 @@ namespace Grammophone.Domos.Logic
 	/// implementing <see cref="IWorkflowManager{U, ST, SO}"/>.
 	/// Any descendant class from <see cref="WorkflowManager{U, BST, D, S, ST, SO, C}"/> works.
 	/// </typeparam>
-	public abstract class WorkflowFundsTransferManager<U, BST, P, R, J, D, S, ST, SO, AS, WM>
+	public abstract class WorkflowFundsTransferManager<U, BST, P, R, J, D, S, ST, SO, SH, AS, WM>
 		: FundsTransferManager<U, BST, P, R, J, D, S, AS>
 		where U : User
 		where BST : StateTransition<U>
@@ -61,6 +65,7 @@ namespace Grammophone.Domos.Logic
 		where S : LogicSession<U, D>
 		where ST : BST, new()
 		where SO : IStateful<U, ST>
+		where SH : class, new()
 		where AS : AccountingSession<U, BST, P, R, J, D>
 		where WM : IWorkflowManager<U, ST, SO>
 	{
@@ -80,15 +85,15 @@ namespace Grammophone.Domos.Logic
 			/// <summary>
 			/// Optional stateful object of type <typeparamref name="SO"/> associated with the <see cref="Event"/>.
 			/// </summary>
-			public SO StatefulObject { get; set; }
+			public SH StateHolder { get; set; }
 
 			/// <summary>
-			/// If <see cref="StatefulObject"/> is not null, the current state of the <see cref="StatefulObject"/>.
+			/// If <see cref="StateHolder"/> is not null, the current state of the <see cref="StateHolder"/>.
 			/// </summary>
 			public State CurrentState { get; set; }
 
 			/// <summary>
-			/// If <see cref="StatefulObject"/> is not null, the state transition of the <see cref="StatefulObject"/> associated with the <see cref="Event"/>.
+			/// If <see cref="StateHolder"/> is not null, the state transition of the <see cref="StateHolder"/> associated with the <see cref="Event"/>.
 			/// </summary>
 			public ST StateTransition { get; set; }
 		}
@@ -97,7 +102,7 @@ namespace Grammophone.Domos.Logic
 
 		#region Private fields
 
-		private readonly AsyncSequentialMRUCache<StatePathExecutionSpecification, StatePath> statePathsBySpecificationCache;
+		private readonly AsyncSequentialMRUCache<string, StatePath> statePathsBySpecificationCache;
 
 		#endregion
 
@@ -137,7 +142,7 @@ namespace Grammophone.Domos.Logic
 
 			this.WorkflowManagerFactory = workflowManagerFactory;
 
-			statePathsBySpecificationCache = new AsyncSequentialMRUCache<StatePathExecutionSpecification, StatePath>(LoadStatePathAsync);
+			statePathsBySpecificationCache = new AsyncSequentialMRUCache<string, StatePath>(LoadStatePathAsync);
 		}
 
 		#endregion
@@ -184,7 +189,7 @@ namespace Grammophone.Domos.Logic
 															{
 																Request = ftr,
 																ftr.Events,
-																a.StatefulObject,
+																a.StateHolder,
 																a.CurrentState,
 																StateAfterRequest = a.StateTransition != null ? a.StateTransition.Path.NextState : null
 															};
@@ -198,11 +203,13 @@ namespace Grammophone.Domos.Logic
 
 			foreach (var association in associations)
 			{
+				var statefulObject = GetStatefulObject(association.StateHolder);
+
 				var fundsResponseResult =
 					await AcceptResponseItemAsync(
 						association.Request,
 						line,
-						association.StatefulObject,
+						statefulObject,
 						association.StateAfterRequest);
 
 				responseResults.Add(fundsResponseResult);
@@ -218,6 +225,13 @@ namespace Grammophone.Domos.Logic
 		#region Protected methods
 
 		/// <summary>
+		/// Convert a state holder to a stateful object.
+		/// </summary>
+		/// <param name="stateHolder">The stateful object.</param>
+		/// <returns>Returns the <see cref="IStateful{U, ST}"/> implementation.</returns>
+		protected abstract SO GetStatefulObject(SH stateHolder);
+
+		/// <summary>
 		/// Decides the state path to execute on a stateful object
 		/// when a <see cref="FundsResponseLine"/> arrives for it.
 		/// Returns null to indicate that no path should be executed and the that the line should
@@ -227,12 +241,12 @@ namespace Grammophone.Domos.Logic
 		/// <param name="statefulObject">The stateful object for which to decide the state path.</param>
 		/// <param name="stateAfterFundsTransferRequest">The state of the <paramref name="statefulObject"/> right after the funds transfer request.</param>
 		/// <param name="fundsResponseLine">The batch line arriving for the stateful object.</param>
-		/// <returns>Returns the code names of the path and the workflow to execute or null to execute none.</returns>
+		/// <returns>Returns the code name of the path to execute or null to execute none.</returns>
 		/// <exception cref="Exception">
 		/// Thrown to record a funds transfer event with its <see cref="FundsTransferEvent.ExceptionData"/>
 		/// containing the thrown exception.
 		/// </exception>
-		protected abstract StatePathExecutionSpecification? TrySpecifyNextStatePath(
+		protected abstract string TrySpecifyNextStatePath(
 			SO statefulObject,
 			State stateAfterFundsTransferRequest,
 			FundsResponseLine fundsResponseLine);
@@ -272,7 +286,7 @@ namespace Grammophone.Domos.Logic
 															{
 																Request = ftr,
 																ftr.Events,
-																a.StatefulObject,
+																a.StateHolder,
 																a.CurrentState,
 																StateAfterRequest = a.StateTransition != null ? a.StateTransition.Path.NextState : null
 															};
@@ -293,13 +307,15 @@ namespace Grammophone.Domos.Logic
 			{
 				foreach (var item in itemsByLineID[association.Request.GroupID])
 				{
+					var statefulObject = GetStatefulObject(association.StateHolder);
+
 					var fundsResponseResult =
 						await AcceptResponseItemAsync(
 							file,
 							item,
 							association.Request,
 							responseBatchMessage,
-							association.StatefulObject,
+							statefulObject,
 							association.StateAfterRequest);
 
 					responseResults.Add(fundsResponseResult);
@@ -316,12 +332,12 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Supports the cache miss of <see cref="statePathsBySpecificationCache"/>.
 		/// </summary>
-		private async Task<StatePath> LoadStatePathAsync(StatePathExecutionSpecification specification)
+		private async Task<StatePath> LoadStatePathAsync(string statePathCodeName)
 			=> await this.DomainContainer.StatePaths
 			.Include(sp => sp.NextState)
 			.Include(sp => sp.PreviousState)
 			.Include(sp => sp.WorkflowGraph)
-			.SingleAsync(sp => sp.CodeName == specification.StatePathCodeName && sp.WorkflowGraph.CodeName == specification.WorkflowGraphCodeName);
+			.SingleAsync(sp => sp.CodeName == statePathCodeName);
 
 		private async Task<FundsResponseResult> AcceptResponseItemAsync(
 			FundsResponseFile file,
@@ -382,11 +398,11 @@ namespace Grammophone.Domos.Logic
 
 				// Attempt to get the next path to be executed. Any exception will be recorded in a funds transfer event with ExceptionData.
 
-				var statePathExecutionSpecification = TrySpecifyNextStatePath(statefulObject, stateAfterRequest, line);
+				string statePathCodeName = TrySpecifyNextStatePath(statefulObject, stateAfterRequest, line);
 
-				if (statePathExecutionSpecification != null) // Should a path be executed?
+				if (statePathCodeName != null) // Should a path be executed?
 				{
-					var statePath = await statePathsBySpecificationCache.Get(statePathExecutionSpecification.Value);
+					var statePath = await statePathsBySpecificationCache.Get(statePathCodeName);
 
 					var workflowManager = this.WorkflowManagerFactory(this.Session, statefulObject);
 

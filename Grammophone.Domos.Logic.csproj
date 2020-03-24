@@ -129,7 +129,6 @@
     <Compile Include="Models\FundsTransfer\FundsTransferStatistic.cs" />
     <Compile Include="Channels\EmailChannel.cs" />
     <Compile Include="StatePathAccessDeniedException.cs" />
-    <Compile Include="StatePathExecutionSpecification.cs" />
     <Compile Include="WorkflowActions\FundsTransferResponseAction.cs" />
     <Compile Include="WorkflowActions\FundsTransferResponseActionResources.Designer.cs">
       <AutoGen>True</AutoGen>
