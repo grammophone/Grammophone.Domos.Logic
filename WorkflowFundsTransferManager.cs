@@ -49,12 +49,7 @@ namespace Grammophone.Domos.Logic
 	/// <typeparam name="AS">
 	/// The type of accounting session, derived from <see cref="AccountingSession{U, BST, P, R, J, D}"/>.
 	/// </typeparam>
-	/// <typeparam name="WM">
-	/// The type of the associated workflow manager,
-	/// implementing <see cref="IWorkflowManager{U, ST, SO}"/>.
-	/// Any descendant class from <see cref="WorkflowManager{U, BST, D, S, ST, SO, C}"/> works.
-	/// </typeparam>
-	public abstract class WorkflowFundsTransferManager<U, BST, P, R, J, D, S, ST, SO, SH, AS, WM>
+	public abstract class WorkflowFundsTransferManager<U, BST, P, R, J, D, S, ST, SO, SH, AS>
 		: FundsTransferManager<U, BST, P, R, J, D, S, AS>
 		where U : User
 		where BST : StateTransition<U>
@@ -67,7 +62,6 @@ namespace Grammophone.Domos.Logic
 		where SO : IStateful<U, ST>
 		where SH : class, new()
 		where AS : AccountingSession<U, BST, P, R, J, D>
-		where WM : IWorkflowManager<U, ST, SO>
 	{
 		#region Auxilliary classes
 
@@ -102,7 +96,7 @@ namespace Grammophone.Domos.Logic
 
 		#region Private fields
 
-		private readonly AsyncSequentialMRUCache<string, StatePath> statePathsBySpecificationCache;
+		private readonly AsyncSequentialMRUCache<string, StatePath> statePathsByCodeNameCache;
 
 		#endregion
 
@@ -113,36 +107,12 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="session">The logic session.</param>
 		/// <param name="accountingSessionFactory">A factory for creating an accounting session.</param>
-		/// <param name="workflowManager">The associated workflow manager.</param>
 		protected WorkflowFundsTransferManager(
 			S session,
-			Func<D, U, AS> accountingSessionFactory,
-			WM workflowManager)
-			: this(session, accountingSessionFactory, (s, so) => workflowManager)
-		{
-			if (workflowManager == null) throw new ArgumentNullException(nameof(workflowManager));
-		}
-
-		/// <summary>
-		/// Create.
-		/// </summary>
-		/// <param name="session">The logic session.</param>
-		/// <param name="accountingSessionFactory">A factory for creating an accounting session.</param>
-		/// <param name="workflowManagerFactory">
-		/// The factory for an associated workflow manager for a stateful object of type <typeparamref name="SO"/>
-		/// under session of type <typeparamref name="S"/>.
-		/// </param>
-		protected WorkflowFundsTransferManager(
-			S session,
-			Func<D, U, AS> accountingSessionFactory,
-			Func<S, SO, WM> workflowManagerFactory)
+			Func<D, U, AS> accountingSessionFactory)
 			: base(session, accountingSessionFactory)
 		{
-			if (workflowManagerFactory == null) throw new ArgumentNullException(nameof(workflowManagerFactory));
-
-			this.WorkflowManagerFactory = workflowManagerFactory;
-
-			statePathsBySpecificationCache = new AsyncSequentialMRUCache<string, StatePath>(LoadStatePathAsync);
+			statePathsByCodeNameCache = new AsyncSequentialMRUCache<string, StatePath>(LoadStatePathAsync);
 		}
 
 		#endregion
@@ -154,16 +124,6 @@ namespace Grammophone.Domos.Logic
 		/// of type <typeparamref name="SO"/>.
 		/// </summary>
 		public abstract IQueryable<FundsTransferEventAssociation> FundsTransferEventAssociations { get; }
-
-		#endregion
-
-		#region Protected properties
-
-		/// <summary>
-		/// The factory for an associated workflow manager for a stateful object of type <typeparamref name="SO"/> under session
-		/// of type <typeparamref name="S"/>.
-		/// </summary>
-		protected Func<S, SO, WM> WorkflowManagerFactory { get; }
 
 		#endregion
 
@@ -223,6 +183,15 @@ namespace Grammophone.Domos.Logic
 		#endregion
 
 		#region Protected methods
+
+		/// <summary>
+		/// Override to execute 
+		/// </summary>
+		/// <param name="statefulObject"></param>
+		/// <param name="statePath"></param>
+		/// <param name="actionArguments"></param>
+		/// <returns></returns>
+		protected abstract Task<ST> ExecuteStatePathAsync(SO statefulObject, StatePath statePath, Dictionary<string, object> actionArguments);
 
 		/// <summary>
 		/// Convert a state holder to a stateful object.
@@ -330,7 +299,7 @@ namespace Grammophone.Domos.Logic
 		#region Private methods
 
 		/// <summary>
-		/// Supports the cache miss of <see cref="statePathsBySpecificationCache"/>.
+		/// Supports the cache miss of <see cref="statePathsByCodeNameCache"/>.
 		/// </summary>
 		private async Task<StatePath> LoadStatePathAsync(string statePathCodeName)
 			=> await this.DomainContainer.StatePaths
@@ -402,13 +371,11 @@ namespace Grammophone.Domos.Logic
 
 				if (statePathCodeName != null) // Should a path be executed?
 				{
-					var statePath = await statePathsBySpecificationCache.Get(statePathCodeName);
-
-					var workflowManager = this.WorkflowManagerFactory(this.Session, statefulObject);
+					var statePath = await statePathsByCodeNameCache.Get(statePathCodeName);
 
 					using (var transaction = this.DomainContainer.BeginTransaction())
 					{
-						var transition = await workflowManager.ExecuteStatePathAsync(
+						var transition = await ExecuteStatePathAsync(
 							statefulObject,
 							statePath,
 							actionArguments);
