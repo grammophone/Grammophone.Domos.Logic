@@ -255,6 +255,8 @@ namespace Grammophone.Domos.Logic
 															{
 																Request = ftr,
 																ftr.Events,
+																ftr.MainAccount,
+																ftr.TransferAccount,
 																a.StateHolder,
 																a.CurrentState,
 																StateAfterRequest = a.StateTransition != null ? a.StateTransition.Path.NextState : null

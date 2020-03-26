@@ -394,7 +394,12 @@ namespace Grammophone.Domos.Logic
 													where r.BatchID == line.BatchID && r.GroupID == line.LineID
 													select r;
 
-			var requests = await requestsQuery.Include(r => r.Batch).ToArrayAsync();
+			var requests = await requestsQuery
+				.Include(r => r.Batch)
+				.Include(r => r.MainAccount)
+				.Include(r => r.TransferAccount)
+				.Include(r => r.Events)
+				.ToArrayAsync();
 
 			if (requests.Length == 0) throw new UserException(FundsTransferManagerMessages.LINE_NOT_APPLICABLE);
 
@@ -885,7 +890,11 @@ namespace Grammophone.Domos.Logic
 																			 where r.BatchID == file.BatchID && lineIDs.Contains(r.GroupID)
 																			 select r;
 
-			var fundsTransferRequests = await fundsTransferRequestsQuery.Include(r => r.Events).ToArrayAsync();
+			var fundsTransferRequests = await fundsTransferRequestsQuery
+				.Include(r => r.Events)
+				.Include(r => r.MainAccount)
+				.Include(r => r.TransferAccount)
+				.ToArrayAsync();
 
 			if (fundsTransferRequests.Length == 0)
 				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
