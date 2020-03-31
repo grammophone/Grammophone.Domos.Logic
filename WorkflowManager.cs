@@ -94,12 +94,16 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The states handled by the manager. The default implementation yields all states.
 		/// </summary>
-		public virtual IQueryable<State> States => this.DomainContainer.States;
+		public virtual IQueryable<State> States => from s in this.DomainContainer.States
+																							 where this.StateGroups.Any(sg => sg.ID == s.GroupID)
+																							 select s;
 
 		/// <summary>
 		/// The state groups handled by the manager. The default implementation yields all state groups.
 		/// </summary>
-		public virtual IQueryable<StateGroup> StateGroups => this.DomainContainer.StateGroups;
+		public virtual IQueryable<StateGroup> StateGroups => from sg in this.DomainContainer.StateGroups
+																												 where this.WorkflowGraphs.Any(wg => wg.ID == sg.WorkflowGraphID)
+																												 select sg;
 
 		/// <summary>
 		/// The workflow graphs handled by the manager. The default implementation yields all graphs.
@@ -109,7 +113,9 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The state paths handled by the manager. The default implementation yields all state paths.
 		/// </summary>
-		public virtual IQueryable<StatePath> StatePaths => this.DomainContainer.StatePaths;
+		public virtual IQueryable<StatePath> StatePaths => from sp in this.DomainContainer.StatePaths
+																											 where this.WorkflowGraphs.Any(wg => wg.ID == sp.WorkflowGraphID)
+																											 select sp;
 
 		/// <summary>
 		/// The state transitions
