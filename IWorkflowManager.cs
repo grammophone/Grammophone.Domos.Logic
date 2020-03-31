@@ -381,29 +381,6 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Execute a path on a batch of stateful objects.
 		/// </summary>
-		/// <param name="statefulObjectsQuery">The query defining the stateful objects.</param>
-		/// <param name="statePath">The state path to be executed.</param>
-		/// <param name="actionArguments">
-		/// The common arguments to be passed to all path actions. If "batchID" key is missing
-		/// from the arguments, it will be added with a new GUID.
-		/// </param>
-		/// <returns>
-		/// Returns a collection of <see cref="ExecutionResult{SO, ST}"/> items
-		/// for each stateful object.
-		/// </returns>
-		/// <remarks>
-		/// For best performance, the <see cref="StatePath.PreviousState"/>,
-		/// <see cref="StatePath.NextState"/> and <see cref="StatePath.WorkflowGraph"/>
-		/// properties of the <paramref name="statePath"/> must be eagerly loaded.
-		/// </remarks>
-		Task<IReadOnlyCollection<ExecutionResult<SO, ST>>> ExecuteStatePathBatchAsync(
-			IQueryable<SO> statefulObjectsQuery,
-			StatePath statePath,
-			IDictionary<string, object> actionArguments);
-
-		/// <summary>
-		/// Execute a path on a batch of stateful objects.
-		/// </summary>
 		/// <param name="statefulObjects">The stateful objects.</param>
 		/// <param name="statePath">The state path to be executed.</param>
 		/// <param name="actionArguments">
@@ -422,14 +399,14 @@ namespace Grammophone.Domos.Logic
 		/// of the <paramref name="statefulObjects"/>.
 		/// </remarks>
 		Task<IReadOnlyCollection<ExecutionResult<SO, ST>>> ExecuteStatePathBatchAsync(
-			IReadOnlyList<SO> statefulObjects,
+			IEnumerable<SO> statefulObjects,
 			StatePath statePath,
 			IDictionary<string, object> actionArguments);
 
 		/// <summary>
 		/// Execute a path on a batch of stateful objects.
 		/// </summary>
-		/// <param name="statefulObjectsQuery">The query defining the stateful objects.</param>
+		/// <param name="statefulObjects">The stateful objects.</param>
 		/// <param name="pathCodeName">The <see cref="StatePath.CodeName"/> of the path.</param>
 		/// <param name="actionArguments">
 		/// The common arguments to be passed to all path actions. If "batchID" key is missing
@@ -444,14 +421,14 @@ namespace Grammophone.Domos.Logic
 		/// the given <paramref name="pathCodeName"/>.
 		/// </exception>
 		Task<IReadOnlyCollection<ExecutionResult<SO, ST>>> ExecuteStatePathBatchAsync(
-			IQueryable<SO> statefulObjectsQuery,
+			IEnumerable<SO> statefulObjects,
 			string pathCodeName,
 			IDictionary<string, object> actionArguments);
 
 		/// <summary>
 		/// Execute a path on a batch of stateful objects.
 		/// </summary>
-		/// <param name="statefulObjectsQuery">The query defining the stateful objects.</param>
+		/// <param name="statefulObjects">The stateful objects.</param>
 		/// <param name="statePathID">The ID of the state path.</param>
 		/// <param name="actionArguments">
 		/// The common arguments to be passed to all path actions. If "batchID" key is missing
@@ -466,7 +443,7 @@ namespace Grammophone.Domos.Logic
 		/// the given <paramref name="statePathID"/>.
 		/// </exception>
 		Task<IReadOnlyCollection<ExecutionResult<SO, ST>>> ExecuteStatePathBatchAsync(
-			IQueryable<SO> statefulObjectsQuery,
+			IEnumerable<SO> statefulObjects,
 			long statePathID,
 			IDictionary<string, object> actionArguments);
 

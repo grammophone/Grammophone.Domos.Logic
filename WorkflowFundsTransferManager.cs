@@ -185,12 +185,12 @@ namespace Grammophone.Domos.Logic
 		#region Protected methods
 
 		/// <summary>
-		/// Override to execute 
+		/// Override to execute a state path on a stateful object.
 		/// </summary>
-		/// <param name="statefulObject"></param>
-		/// <param name="statePath"></param>
-		/// <param name="actionArguments"></param>
-		/// <returns></returns>
+		/// <param name="statefulObject">The stateful object.</param>
+		/// <param name="statePath">The state path to execute.</param>
+		/// <param name="actionArguments">The arguments to the actions of the state path.</param>
+		/// <returns>Returns the state transition produced.</returns>
 		protected abstract Task<ST> ExecuteStatePathAsync(SO statefulObject, StatePath statePath, Dictionary<string, object> actionArguments);
 
 		/// <summary>
