@@ -335,7 +335,7 @@ namespace Grammophone.Domos.Logic
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
-		Task<StatePath> GetPathToStateAsync(SO stateful, string nextStateCodeName);
+		Task<StatePath> TryGetPathToStateAsync(SO stateful, string nextStateCodeName);
 
 		/// <summary>
 		/// Get the first <see cref="StatePath"/> which leads to a given state.
@@ -348,7 +348,7 @@ namespace Grammophone.Domos.Logic
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
-		Task<StatePath> GetPathToStateAsync(SO stateful, long nextStateID);
+		Task<StatePath> TryGetPathToStateAsync(SO stateful, long nextStateID);
 
 		/// <summary>
 		/// Get the first <see cref="StatePath"/> which leads to a given state 
@@ -362,7 +362,7 @@ namespace Grammophone.Domos.Logic
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
-		Task<StatePath> GetAllowedPathToStateAsync(SO stateful, string nextStateCodeName);
+		Task<StatePath> TryGetAllowedPathToStateAsync(SO stateful, string nextStateCodeName);
 
 		/// <summary>
 		/// Get the first <see cref="StatePath"/> which leads to a given state 
@@ -376,7 +376,7 @@ namespace Grammophone.Domos.Logic
 		/// works with a different <see cref="WorkflowGraph.StateTransitionTypeName"/>
 		/// than <typeparamref name="ST"/>.
 		/// </exception>
-		Task<StatePath> GetAllowedPathToStateAsync(SO stateful, long nextStateID);
+		Task<StatePath> TryGetAllowedPathToStateAsync(SO stateful, long nextStateID);
 
 		/// <summary>
 		/// Execute a path on a batch of stateful objects.
