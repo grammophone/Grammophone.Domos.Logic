@@ -135,7 +135,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="line">The line to accept.</param>
 		/// <returns>
 		/// Returns the collection of the results which correspond to the 
-		/// funds transfer requests grouped in the line.
+		/// funds transfer requests grouped in the line or an empty collection if the file is not relevant to this manager.
 		/// </returns>
 		public override async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseLineAsync(FundsResponseLine line)
 		{
@@ -156,8 +156,7 @@ namespace Grammophone.Domos.Logic
 
 			var associations = await associationsQuery.ToArrayAsync();
 
-			if (associations.Length == 0)
-				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
+			if (associations.Length == 0) return emptyFundsResponseResults;
 
 			var responseResults = new List<FundsResponseResult>(associations.Length);
 
@@ -232,7 +231,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="responseBatchMessage">The batch message where the generated funds transfer events will be assigned.</param>
 		/// <returns>
 		/// Returns a collection of results describing the execution outcome of the
-		/// contents of the <paramref name="file"/>.
+		/// contents of the <paramref name="file"/> or an empty collection if the file is not relevant to this manager.
 		/// </returns>
 		/// <remarks>
 		/// Each action in paths being executed will receive an arguments dictionary
@@ -264,8 +263,7 @@ namespace Grammophone.Domos.Logic
 
 			var associations = await associationsQuery.ToArrayAsync();
 
-			if (associations.Length == 0)
-				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
+			if (associations.Length == 0) return emptyFundsResponseResults;
 
 			var responseResults = new List<FundsResponseResult>(associations.Length);
 

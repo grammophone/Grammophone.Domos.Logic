@@ -55,6 +55,15 @@ namespace Grammophone.Domos.Logic
 		where S : LogicSession<U, D>
 		where AS : AccountingSession<U, BST, P, R, J, D>
 	{
+		#region Protected fields
+
+		/// <summary>
+		/// Singleton empty collection of funds response results.
+		/// </summary>
+		protected static readonly IReadOnlyCollection<FundsResponseResult> emptyFundsResponseResults;
+
+		#endregion
+
 		#region Private fields
 
 		private static Lazy<XmlSchemaSet> lazyResponseSchemaSet;
@@ -66,8 +75,6 @@ namespace Grammophone.Domos.Logic
 		private static Lazy<XmlSerializer> lazyRequestFileSerializer;
 
 		private readonly Func<D, U, AS> accountingSessionFactory;
-
-		private static readonly IReadOnlyCollection<FundsResponseResult> emptyFundsResponseResults;
 
 		#endregion
 
@@ -324,11 +331,8 @@ namespace Grammophone.Domos.Logic
 		/// <param name="file">The file to digest.</param>
 		/// <returns>
 		/// Returns a collection of results describing the execution outcome of the
-		/// contents of the <paramref name="file"/>.
+		/// contents of the <paramref name="file"/> or an empty collection if the file is not relevant to this manager.
 		/// </returns>
-		/// <exception cref="UserException">
-		/// Thrown if the <paramref name="file"/> is not relevant to this manager.
-		/// </exception>
 		public virtual async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseFileAsync(
 			FundsResponseFile file)
 		{
@@ -343,7 +347,7 @@ namespace Grammophone.Domos.Logic
 
 			var batch = await batchQuery.Include(b => b.Messages).SingleOrDefaultAsync();
 
-			if (batch == null) throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
+			if (batch == null) return emptyFundsResponseResults;
 
 			FundsTransferBatchMessageType messageType = GetMessageTypeForResponseFile(file);
 
@@ -401,7 +405,7 @@ namespace Grammophone.Domos.Logic
 				.Include(r => r.Events)
 				.ToArrayAsync();
 
-			if (requests.Length == 0) throw new UserException(FundsTransferManagerMessages.LINE_NOT_APPLICABLE);
+			if (requests.Length == 0) return emptyFundsResponseResults;
 
 			var results = new List<FundsResponseResult>(requests.Length);
 
@@ -873,7 +877,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="responseBatchMessage">The batch message where the generated funds transfer events will be assigned.</param>
 		/// <returns>
 		/// Returns a collection of results describing the execution outcome of the
-		/// contents of the <paramref name="file"/>.
+		/// contents of the <paramref name="file"/> or an empty collection if the file is not relevant to this manager.
 		/// </returns>
 		protected virtual async Task<IReadOnlyCollection<FundsResponseResult>> DigestResponseFileAsync(
 			FundsResponseFile file,
@@ -896,8 +900,7 @@ namespace Grammophone.Domos.Logic
 				.Include(r => r.TransferAccount)
 				.ToArrayAsync();
 
-			if (fundsTransferRequests.Length == 0)
-				throw new UserException(FundsTransferManagerMessages.FILE_NOT_APPLICABLE);
+			if (fundsTransferRequests.Length == 0) return emptyFundsResponseResults;
 
 			var itemsByLineID = 
 				file.Items
