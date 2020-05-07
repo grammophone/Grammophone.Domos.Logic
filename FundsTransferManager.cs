@@ -45,8 +45,7 @@ namespace Grammophone.Domos.Logic
 	/// <typeparam name="AS">
 	/// The type of accounting session, derived from <see cref="AccountingSession{U, BST, P, R, J, D}"/>.
 	/// </typeparam>
-	public abstract class FundsTransferManager<U, BST, P, R, J, D, S, AS> : Manager<U, D, S>
-		where U : User
+	public abstract class FundsTransferManager<U, BST, P, R, J, D, S, AS> : Manager<U, D, S>, IFundsTransferManager<U, BST, P, R, J> where U : User
 		where BST : StateTransition<U>
 		where P : Posting<U>
 		where R : Remittance<U>
@@ -66,13 +65,13 @@ namespace Grammophone.Domos.Logic
 
 		#region Private fields
 
-		private static Lazy<XmlSchemaSet> lazyResponseSchemaSet;
+		private static readonly Lazy<XmlSchemaSet> lazyResponseSchemaSet;
 
-		private static Lazy<XmlSchemaSet> lazyRequestSchemaSet;
+		private static readonly Lazy<XmlSchemaSet> lazyRequestSchemaSet;
 
-		private static Lazy<XmlSerializer> lazyResponseFileSerializer;
+		private static readonly Lazy<XmlSerializer> lazyResponseFileSerializer;
 
-		private static Lazy<XmlSerializer> lazyRequestFileSerializer;
+		private static readonly Lazy<XmlSerializer> lazyRequestFileSerializer;
 
 		private readonly Func<D, U, AS> accountingSessionFactory;
 
@@ -132,7 +131,7 @@ namespace Grammophone.Domos.Logic
 																																					select b;
 
 		/// <summary>
-		/// The funds transfer batch messages collations in the system.
+		/// The funds transfer batch messages in the system.
 		/// </summary>
 		/// <remarks>
 		/// The default implementation is implied from the <see cref="FundsTransferBatches"/> property.
@@ -210,12 +209,12 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="creditSystem">The credit system.</param>
 		/// <returns>Returns the converter associated with the credit system or null.</returns>
-		public IFundsTransferFileConverter GetFundsTransferFileConverter(CreditSystem creditSystem)
+		public IFundsTransferFileConverter TryGetFundsTransferFileConverter(CreditSystem creditSystem)
 		{
 			if (creditSystem == null) throw new ArgumentNullException(nameof(creditSystem));
 
-			return creditSystem.FundsTransferFileConverterName != null ? 
-				GetFundsTransferFileConverter(creditSystem.FundsTransferFileConverterName) : 
+			return creditSystem.FundsTransferFileConverterName != null ?
+				GetFundsTransferFileConverter(creditSystem.FundsTransferFileConverterName) :
 				null;
 		}
 
@@ -229,7 +228,6 @@ namespace Grammophone.Domos.Logic
 		/// Get all the names under which the available <see cref="IFundsTransferFileConverter"/>
 		/// implementations are registered in the system.
 		/// </summary>
-		/// <returns></returns>
 		public IEnumerable<string> GetFundsTransferFileConvertersNames()
 			=> this.SessionSettings.GetRegistrationNames<IFundsTransferFileConverter>();
 
@@ -902,7 +900,7 @@ namespace Grammophone.Domos.Logic
 
 			if (fundsTransferRequests.Length == 0) return emptyFundsResponseResults;
 
-			var itemsByLineID = 
+			var itemsByLineID =
 				file.Items
 				.OrderBy(i => i.Time)
 				.ToSequentialReadOnlyMultiDictionary(i => i.LineID);

@@ -97,6 +97,7 @@
     <Compile Include="IChannelMessage.cs" />
     <Compile Include="IChannelsDispatcher.cs" />
     <Compile Include="IFundsTransferFileConverter.cs" />
+    <Compile Include="IFundsTransferManager.cs" />
     <Compile Include="ILogicSessionEnvironment.cs" />
     <Compile Include="IChannel.cs" />
     <Compile Include="IChannelIdentity.cs" />
