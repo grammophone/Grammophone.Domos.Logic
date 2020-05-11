@@ -1293,7 +1293,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="request">The funds transfer request to handle.</param>
 		/// <param name="line">The funds response line to digest.</param>
 		/// <returns></returns>
-		internal async Task<FundsResponseResult> AcceptResponseItemAsync(FundsTransferRequest request, FundsResponseLine line)
+		private protected async Task<FundsResponseResult> AcceptResponseItemAsync(FundsTransferRequest request, FundsResponseLine line)
 		{
 			FundsTransferEventType eventType = GetEventTypeFromResponseLine(line);
 
