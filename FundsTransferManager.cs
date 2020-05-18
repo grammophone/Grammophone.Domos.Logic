@@ -45,7 +45,8 @@ namespace Grammophone.Domos.Logic
 	/// <typeparam name="AS">
 	/// The type of accounting session, derived from <see cref="AccountingSession{U, BST, P, R, J, D}"/>.
 	/// </typeparam>
-	public abstract class FundsTransferManager<U, BST, P, R, J, D, S, AS> : Manager<U, D, S>, IFundsTransferManager<U, BST, P, R, J> where U : User
+	public abstract class FundsTransferManager<U, BST, P, R, J, D, S, AS> : Manager<U, D, S>, IFundsTransferManager<U, BST, P, R, J>
+		where U : User
 		where BST : StateTransition<U>
 		where P : Posting<U>
 		where R : Remittance<U>
@@ -331,11 +332,10 @@ namespace Grammophone.Domos.Logic
 		/// Returns a collection of results describing the execution outcome of the
 		/// contents of the <paramref name="file"/> or an empty collection if the file is not relevant to this manager.
 		/// </returns>
-		public virtual async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseFileAsync(
+		public async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseFileAsync(
 			FundsResponseFile file)
 		{
 			if (file == null) throw new ArgumentNullException(nameof(file));
-
 
 			var firstItem = file.Items.FirstOrDefault();
 
@@ -385,35 +385,11 @@ namespace Grammophone.Domos.Logic
 		/// Returns the collection of the results which correspond to the 
 		/// funds transfer requests grouped in the line.
 		/// </returns>
-		/// <exception cref="UserException">
-		/// Thrown if the <paramref name="line"/> is not relevant to this manager.
-		/// </exception>
-		public virtual async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseLineAsync(FundsResponseLine line)
+		public async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseLineAsync(FundsResponseLine line)
 		{
 			if (line == null) throw new ArgumentNullException(nameof(line));
 
-			var requestsQuery = from r in this.FundsTransferRequests
-													where r.BatchID == line.BatchID && r.GroupID == line.LineID
-													select r;
-
-			var requests = await requestsQuery
-				.Include(r => r.Batch)
-				.Include(r => r.MainAccount)
-				.Include(r => r.TransferAccount)
-				.Include(r => r.Events)
-				.ToArrayAsync();
-
-			if (requests.Length == 0) return emptyFundsResponseResults;
-
-			var results = new List<FundsResponseResult>(requests.Length);
-
-			foreach (var fundsTransferRequest in requests)
-			{
-				FundsResponseResult result =
-					await AcceptResponseItemAsync(fundsTransferRequest, line);
-
-				results.Add(result);
-			}
+			var results = await DigestResponseLineAsync(line);
 
 			await PostProcessLinesAsync(line.BatchID, results, line.BatchMessageID);
 
@@ -877,7 +853,7 @@ namespace Grammophone.Domos.Logic
 		/// Returns a collection of results describing the execution outcome of the
 		/// contents of the <paramref name="file"/> or an empty collection if the file is not relevant to this manager.
 		/// </returns>
-		protected virtual async Task<IReadOnlyCollection<FundsResponseResult>> DigestResponseFileAsync(
+		protected internal virtual async Task<IReadOnlyCollection<FundsResponseResult>> DigestResponseFileAsync(
 			FundsResponseFile file,
 			FundsTransferBatchMessage responseBatchMessage)
 		{
@@ -910,10 +886,48 @@ namespace Grammophone.Domos.Logic
 				foreach (var item in itemsByLineID[fundsTransferRequest.GroupID])
 				{
 					FundsResponseResult result =
-						await AcceptResponseItemAsync(file, item, fundsTransferRequest, responseBatchMessage);
+						await DigestResponseItemAsync(file, item, fundsTransferRequest, responseBatchMessage);
 
 					results.Add(result);
 				}
+			}
+
+			return results;
+		}
+
+		/// <summary>
+		/// Digestion of a manual line in a batch.
+		/// </summary>
+		/// <param name="line">The line to accept.</param>
+		/// <returns>
+		/// Returns the collection of the results which correspond to the 
+		/// funds transfer requests grouped in the line.
+		/// </returns>
+		protected internal virtual async Task<IReadOnlyCollection<FundsResponseResult>> DigestResponseLineAsync(FundsResponseLine line)
+		{
+			if (line == null) throw new ArgumentNullException(nameof(line));
+
+			var requestsQuery = from r in this.FundsTransferRequests
+													where r.BatchID == line.BatchID && r.GroupID == line.LineID
+													select r;
+
+			var requests = await requestsQuery
+				.Include(r => r.Batch)
+				.Include(r => r.MainAccount)
+				.Include(r => r.TransferAccount)
+				.Include(r => r.Events)
+				.ToArrayAsync();
+
+			if (requests.Length == 0) return emptyFundsResponseResults;
+
+			var results = new List<FundsResponseResult>(requests.Length);
+
+			foreach (var fundsTransferRequest in requests)
+			{
+				FundsResponseResult result =
+					await DigestResponseLineAsync(fundsTransferRequest, line);
+
+				results.Add(result);
 			}
 
 			return results;
@@ -1117,7 +1131,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="results">The results of liens digestion.</param>
 		/// <param name="messageID">The ID of the unds transfer message, if any, else null.</param>
 		/// <returns></returns>
-		protected async Task PostProcessLinesAsync(long batchID, IReadOnlyCollection<FundsResponseResult> results, long? messageID)
+		protected internal async Task PostProcessLinesAsync(long batchID, IReadOnlyCollection<FundsResponseResult> results, long? messageID)
 		{
 			try
 			{
@@ -1271,7 +1285,7 @@ namespace Grammophone.Domos.Logic
 			return schemaSet;
 		}
 
-		private async Task<FundsResponseResult> AcceptResponseItemAsync(
+		private async Task<FundsResponseResult> DigestResponseItemAsync(
 			FundsResponseFile file,
 			FundsResponseFileItem item,
 			FundsTransferRequest request,
@@ -1284,7 +1298,7 @@ namespace Grammophone.Domos.Logic
 
 			var line = new FundsResponseLine(file, item, responseBatchMessage.ID);
 
-			return await AcceptResponseItemAsync(request, line);
+			return await DigestResponseLineAsync(request, line);
 		}
 
 		/// <summary>
@@ -1293,7 +1307,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="request">The funds transfer request to handle.</param>
 		/// <param name="line">The funds response line to digest.</param>
 		/// <returns></returns>
-		private protected async Task<FundsResponseResult> AcceptResponseItemAsync(FundsTransferRequest request, FundsResponseLine line)
+		private protected async Task<FundsResponseResult> DigestResponseLineAsync(FundsTransferRequest request, FundsResponseLine line)
 		{
 			FundsTransferEventType eventType = GetEventTypeFromResponseLine(line);
 

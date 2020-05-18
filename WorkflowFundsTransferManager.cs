@@ -127,60 +127,6 @@ namespace Grammophone.Domos.Logic
 
 		#endregion
 
-		#region Public methods
-
-		/// <summary>
-		/// Manual acceptance of a line in a batch.
-		/// </summary>
-		/// <param name="line">The line to accept.</param>
-		/// <returns>
-		/// Returns the collection of the results which correspond to the 
-		/// funds transfer requests grouped in the line or an empty collection if the file is not relevant to this manager.
-		/// </returns>
-		public override async Task<IReadOnlyCollection<FundsResponseResult>> AcceptResponseLineAsync(FundsResponseLine line)
-		{
-			if (line == null) throw new ArgumentNullException(nameof(line));
-
-			var associationsQuery = from a in this.FundsTransferEventAssociations
-															where a.Event.Type == FundsTransferEventType.Pending
-															let ftr = a.Event.Request
-															where ftr.GroupID == line.LineID && ftr.BatchID == line.BatchID
-															select new
-															{
-																Request = ftr,
-																ftr.Events,
-																a.StateHolder,
-																a.CurrentState,
-																StateAfterRequest = a.StateTransition != null ? a.StateTransition.Path.NextState : null
-															};
-
-			var associations = await associationsQuery.ToArrayAsync();
-
-			if (associations.Length == 0) return emptyFundsResponseResults;
-
-			var responseResults = new List<FundsResponseResult>(associations.Length);
-
-			foreach (var association in associations)
-			{
-				var statefulObject = GetStatefulObject(association.StateHolder);
-
-				var fundsResponseResult =
-					await AcceptResponseItemAsync(
-						association.Request,
-						line,
-						statefulObject,
-						association.StateAfterRequest);
-
-				responseResults.Add(fundsResponseResult);
-			}
-
-			await PostProcessLinesAsync(line.BatchID, responseResults, line.BatchMessageID);
-
-			return responseResults;
-		}
-
-		#endregion
-
 		#region Protected methods
 
 		/// <summary>
@@ -238,7 +184,7 @@ namespace Grammophone.Domos.Logic
 		/// containing at least the key <see cref="StandardArgumentKeys.BillingItem"/> set with value
 		/// of type <see cref="FundsResponseLine"/>.
 		/// </remarks>
-		protected override async Task<IReadOnlyCollection<FundsResponseResult>> DigestResponseFileAsync(
+		protected internal override async Task<IReadOnlyCollection<FundsResponseResult>> DigestResponseFileAsync(
 			FundsResponseFile file,
 			FundsTransferBatchMessage responseBatchMessage)
 		{
@@ -279,7 +225,7 @@ namespace Grammophone.Domos.Logic
 					var statefulObject = GetStatefulObject(association.StateHolder);
 
 					var fundsResponseResult =
-						await AcceptResponseItemAsync(
+						await DigestResponseItemAsync(
 							file,
 							item,
 							association.Request,
@@ -289,6 +235,54 @@ namespace Grammophone.Domos.Logic
 
 					responseResults.Add(fundsResponseResult);
 				}
+			}
+
+			return responseResults;
+		}
+
+		/// <summary>
+		/// Digestion of a manual line in a batch.
+		/// </summary>
+		/// <param name="line">The line to accept.</param>
+		/// <returns>
+		/// Returns the collection of the results which correspond to the 
+		/// funds transfer requests grouped in the line or an empty collection if the file is not relevant to this manager.
+		/// </returns>
+		protected internal override async Task<IReadOnlyCollection<FundsResponseResult>> DigestResponseLineAsync(FundsResponseLine line)
+		{
+			if (line == null) throw new ArgumentNullException(nameof(line));
+
+			var associationsQuery = from a in this.FundsTransferEventAssociations
+															where a.Event.Type == FundsTransferEventType.Pending
+															let ftr = a.Event.Request
+															where ftr.GroupID == line.LineID && ftr.BatchID == line.BatchID
+															select new
+															{
+																Request = ftr,
+																ftr.Events,
+																a.StateHolder,
+																a.CurrentState,
+																StateAfterRequest = a.StateTransition != null ? a.StateTransition.Path.NextState : null
+															};
+
+			var associations = await associationsQuery.ToArrayAsync();
+
+			if (associations.Length == 0) return emptyFundsResponseResults;
+
+			var responseResults = new List<FundsResponseResult>(associations.Length);
+
+			foreach (var association in associations)
+			{
+				var statefulObject = GetStatefulObject(association.StateHolder);
+
+				var fundsResponseResult =
+					await DigestResponseLineAsync(
+						association.Request,
+						line,
+						statefulObject,
+						association.StateAfterRequest);
+
+				responseResults.Add(fundsResponseResult);
 			}
 
 			return responseResults;
@@ -308,7 +302,7 @@ namespace Grammophone.Domos.Logic
 			.Include(sp => sp.WorkflowGraph)
 			.SingleAsync(sp => sp.CodeName == statePathCodeName);
 
-		private async Task<FundsResponseResult> AcceptResponseItemAsync(
+		private async Task<FundsResponseResult> DigestResponseItemAsync(
 			FundsResponseFile file,
 			FundsResponseFileItem item,
 			FundsTransferRequest fundsTransferRequest,
@@ -322,10 +316,10 @@ namespace Grammophone.Domos.Logic
 
 			var line = new FundsResponseLine(file, item, responseBatchMessage.ID);
 
-			return await AcceptResponseItemAsync(fundsTransferRequest, line, statefulObject, stateAfterRequest);
+			return await DigestResponseLineAsync(fundsTransferRequest, line, statefulObject, stateAfterRequest);
 		}
 
-		private async Task<FundsResponseResult> AcceptResponseItemAsync(
+		private async Task<FundsResponseResult> DigestResponseLineAsync(
 			FundsTransferRequest fundsTransferRequest,
 			FundsResponseLine line,
 			SO statefulObject,
@@ -336,7 +330,7 @@ namespace Grammophone.Domos.Logic
 
 			if (statefulObject == null || stateAfterRequest == null)
 			{
-				return await AcceptResponseItemAsync(fundsTransferRequest, line);
+				return await DigestResponseLineAsync(fundsTransferRequest, line);
 			}
 
 			var eventType = GetEventTypeFromResponseLine(line);

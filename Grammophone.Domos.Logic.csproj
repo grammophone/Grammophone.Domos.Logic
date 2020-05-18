@@ -72,6 +72,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>CommonMessages.resx</DependentUpon>
     </Compile>
+    <Compile Include="CompositeFundsTransferManager.cs" />
     <Compile Include="Configuration\ContentTypeAssociation.cs" />
     <Compile Include="Configuration\ContentTypeAssociations.cs" />
     <Compile Include="Configuration\FilesConfiguration.cs" />
