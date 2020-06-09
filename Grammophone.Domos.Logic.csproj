@@ -1,38 +1,24 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\..\packages\EntityFramework.6.4.4\build\EntityFramework.props" Condition="Exists('..\..\packages\EntityFramework.6.4.4\build\EntityFramework.props')" />
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{6CE10B14-AD08-4F7D-BDB4-D443ECE3C36D}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Grammophone.Domos.Logic</RootNamespace>
-    <AssemblyName>Grammophone.Domos.Logic</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyTitle>Grammophone.Domos.Logic</AssemblyTitle>
+    <Product>Grammophone.Domos.Logic</Product>
+    <Copyright>Copyright ©  2016</Copyright>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <DocumentationFile>bin\$(Configuration)\Grammophone.Domos.Logic.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\Grammophone.Domos.Logic.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\Grammophone.Domos.Logic.XML</DocumentationFile>
   </PropertyGroup>
+  <Import Project="..\..\packages\EntityFramework.6.4.4\build\EntityFramework.props" Condition="Exists('..\..\packages\EntityFramework.6.4.4\build\EntityFramework.props')" />
+  <ItemGroup>
+    <PackageReference Include="EntityFramework" Version="6.4.4" />
+    <PackageReference Include="Unity" Version="3.5.1404.0" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.dll</HintPath>
@@ -52,207 +38,90 @@
       <HintPath>..\..\packages\Unity.3.5.1404.0\lib\net45\Microsoft.Practices.Unity.RegistrationByConvention.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AccessDeniedException.cs" />
-    <Compile Include="ChannelMessage.cs" />
-    <Compile Include="Channels\LogicChannelsTaskQueuer.cs" />
-    <Compile Include="Channels\TaskChannelsDispatcher.cs" />
-    <Compile Include="CommonMessages.Designer.cs">
+    <Compile Update="CommonMessages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>CommonMessages.resx</DependentUpon>
     </Compile>
-    <Compile Include="CompositeFundsTransferManager.cs" />
-    <Compile Include="Configuration\ContentTypeAssociation.cs" />
-    <Compile Include="Configuration\ContentTypeAssociations.cs" />
-    <Compile Include="Configuration\FilesConfiguration.cs" />
-    <Compile Include="ConfiguredManager.cs" />
-    <Compile Include="CreditSystemsManager.cs" />
-    <Compile Include="DefaultWorkflowConfigurator.cs" />
-    <Compile Include="DomainIntegrityException.cs" />
-    <Compile Include="ElevatedAccessScope.cs" />
-    <Compile Include="EntityAccessDeniedException.cs" />
-    <Compile Include="FileException.cs" />
-    <Compile Include="FilesManager.cs" />
-    <Compile Include="FilesManagerMessages.Designer.cs">
+    <Compile Update="FilesManagerMessages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FilesManagerMessages.resx</DependentUpon>
     </Compile>
-    <Compile Include="FundsTransferManagerMessages.Designer.cs">
+    <Compile Update="FundsTransferManagerMessages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FundsTransferManagerMessages.resx</DependentUpon>
     </Compile>
-    <Compile Include="IChannelDestination.cs" />
-    <Compile Include="IChannelMessage.cs" />
-    <Compile Include="IChannelsDispatcher.cs" />
-    <Compile Include="IFundsTransferFileConverter.cs" />
-    <Compile Include="IFundsTransferManager.cs" />
-    <Compile Include="ILogicSessionEnvironment.cs" />
-    <Compile Include="IChannel.cs" />
-    <Compile Include="IChannelIdentity.cs" />
-    <Compile Include="LogicConfigurationException.cs" />
-    <Compile Include="Models\FundsTransfer\FundsFileSchemaException.cs" />
-    <Compile Include="Models\FundsTransfer\FundsRequestLine.cs" />
-    <Compile Include="Models\FundsTransfer\FundsRequestLineResources.Designer.cs">
+    <Compile Update="Models\FundsTransfer\FundsRequestLineResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FundsRequestLineResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Models\FundsTransfer\FundsResponseFileType.cs" />
-    <Compile Include="Models\FundsTransfer\FundsResponseFileTypeResources.Designer.cs">
+    <Compile Update="Models\FundsTransfer\FundsResponseFileTypeResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FundsResponseFileTypeResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Models\FundsTransfer\FundsResponseLine.cs" />
-    <Compile Include="Models\FundsTransfer\FundsResponseLineResources.Designer.cs">
+    <Compile Update="Models\FundsTransfer\FundsResponseLineResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FundsResponseLineResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Models\FundsTransfer\FundsResponseStatus.cs" />
-    <Compile Include="Models\FundsTransfer\FundsResponseStatusResources.Designer.cs">
+    <Compile Update="Models\FundsTransfer\FundsResponseStatusResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FundsResponseStatusResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Models\FundsTransfer\FundsTransferStatistic.cs" />
-    <Compile Include="Channels\EmailChannel.cs" />
-    <Compile Include="StatePathAccessDeniedException.cs" />
-    <Compile Include="WorkflowActions\FundsTransferResponseAction.cs" />
-    <Compile Include="WorkflowActions\FundsTransferResponseActionResources.Designer.cs">
+    <Compile Update="WorkflowActions\FundsTransferResponseActionResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FundsTransferResponseActionResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="WorkflowConfigurator.cs" />
-    <Compile Include="WorkflowFundsTransferManager.cs" />
-    <Compile Include="FundsTransferManager.cs" />
-    <Compile Include="IPublicDomainProvider.cs" />
-    <Compile Include="IWorkflowAction.cs" />
-    <Compile Include="IWorkflowManager.cs" />
-    <Compile Include="Loggable.cs" />
-    <Compile Include="LogicException.cs" />
-    <Compile Include="Manager.cs" />
-    <Compile Include="ManagerAccessDeniedException.cs" />
-    <Compile Include="Models\FundsTransfer\FundsRequestFileItemResources.Designer.cs">
+    <Compile Update="Models\FundsTransfer\FundsRequestFileItemResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FundsRequestFileItemResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Models\FundsTransfer\FundsResponseFileItemResources.Designer.cs">
+    <Compile Update="Models\FundsTransfer\FundsResponseFileItemResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FundsResponseFileItemResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Models\FundsTransfer\FundsResponseResult.cs" />
-    <Compile Include="Models\FundsTransfer\FundsRequestFile.cs" />
-    <Compile Include="Models\FundsTransfer\FundsRequestFileItem.cs" />
-    <Compile Include="Models\FundsTransfer\FundsRequestFileItems.cs" />
-    <Compile Include="Models\FundsTransfer\FundsResponseFile.cs" />
-    <Compile Include="Models\FundsTransfer\FundsResponseFileItem.cs" />
-    <Compile Include="Models\FundsTransfer\FundsResponseFileItems.cs" />
-    <Compile Include="Models\Workflow\ExecutionResult.cs" />
-    <Compile Include="ParameterSpecification.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Configuration\StatePathConfiguration.cs" />
-    <Compile Include="PublicDomain.cs" />
-    <Compile Include="LogicSessionEnvironment.cs" />
-    <Compile Include="StandardArgumentKeys.cs" />
-    <Compile Include="UserException.cs" />
-    <Compile Include="LogicSession.cs" />
-    <Compile Include="UsersPublicDomain.cs" />
-    <Compile Include="WorkflowActions\WorkflowAction.cs" />
-    <Compile Include="WorkflowActions\AccountingAction.cs" />
-    <Compile Include="WorkflowActions\AccountingActionResources.Designer.cs">
+    <Compile Update="WorkflowActions\AccountingActionResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>AccountingActionResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="StatePathArgumentsException.cs" />
-    <Compile Include="WorkflowManager.cs" />
-    <Compile Include="WorkflowManagerMessages.Designer.cs">
+    <Compile Update="WorkflowManagerMessages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>WorkflowManagerMessages.resx</DependentUpon>
     </Compile>
-    <Compile Include="WorkflowPublicDomain.cs" />
-    <Compile Include="AsyncWorkQueue.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Grammophone.Caching\Grammophone.Caching.csproj">
-      <Project>{2c834c5b-aa21-43fa-826e-398ab4de25ac}</Project>
-      <Name>Grammophone.Caching</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Grammophone.Configuration\Grammophone.Configuration.csproj">
-      <Project>{0f7811fd-6162-4813-9c55-6c43e67308b0}</Project>
-      <Name>Grammophone.Configuration</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Grammophone.DataAccess\Grammophone.DataAccess.csproj">
-      <Project>{c9030969-1247-4ee9-bf68-782c1d676c8f}</Project>
-      <Name>Grammophone.DataAccess</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Grammophone.Domos.AccessChecking\Grammophone.Domos.AccessChecking.csproj">
-      <Project>{6a1fb39a-f476-48ba-8a58-c398e7e0c558}</Project>
-      <Name>Grammophone.Domos.AccessChecking</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Grammophone.Domos.Accounting\Grammophone.Domos.Accounting.csproj">
-      <Project>{9c4e7187-4243-4fb3-a0db-d9347828ff40}</Project>
-      <Name>Grammophone.Domos.Accounting</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Grammophone.Domos.DataAccess\Grammophone.Domos.DataAccess.csproj">
-      <Project>{02d58dc8-ab2f-4120-88d7-358b2456f58f}</Project>
-      <Name>Grammophone.Domos.DataAccess</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Grammophone.Domos.Domain\Grammophone.Domos.Domain.csproj">
-      <Project>{d758ee48-75df-42d6-b6d4-9fabdae41f1c}</Project>
-      <Name>Grammophone.Domos.Domain</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Grammophone.Domos.Environment\Grammophone.Domos.Environment.csproj">
-      <Project>{2c981885-79db-49ee-bc62-429a6164807d}</Project>
-      <Name>Grammophone.Domos.Environment</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Grammophone.Email\Grammophone.Email.csproj">
-      <Project>{69e69a59-609b-441d-8e34-650e4d72f177}</Project>
-      <Name>Grammophone.Email</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Grammophone.GenericContentModel\Grammophone.GenericContentModel.csproj">
-      <Project>{79d2d4c7-c8de-4f11-93ed-aa4e4d2fc974}</Project>
-      <Name>Grammophone.GenericContentModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Grammophone.Logging\Grammophone.Logging.csproj">
-      <Project>{c2c480f7-1e78-4d70-b946-e365a9c8f7df}</Project>
-      <Name>Grammophone.Logging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Grammophone.Setup\Grammophone.Setup.csproj">
-      <Project>{acd1f5c9-a8b1-46d1-a6be-f6027fe91017}</Project>
-      <Name>Grammophone.Setup</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Grammophone.Storage\Grammophone.Storage.csproj">
-      <Project>{5ecd757e-e8e8-4cd2-9e01-f0fb946980da}</Project>
-      <Name>Grammophone.Storage</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Grammophone.Tasks\Grammophone.Tasks.csproj">
-      <Project>{e5c0aae1-b3ee-4965-8561-0ccfe46d7775}</Project>
-      <Name>Grammophone.Tasks</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Grammophone.TemplateRendering\Grammophone.TemplateRendering.csproj">
-      <Project>{dfa670c7-e136-4a48-b5ec-d7bd0adffb6f}</Project>
-      <Name>Grammophone.TemplateRendering</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\Grammophone.Caching\Grammophone.Caching.csproj" />
+    <ProjectReference Include="..\Grammophone.Configuration\Grammophone.Configuration.csproj" />
+    <ProjectReference Include="..\Grammophone.DataAccess\Grammophone.DataAccess.csproj" />
+    <ProjectReference Include="..\Grammophone.Domos.AccessChecking\Grammophone.Domos.AccessChecking.csproj" />
+    <ProjectReference Include="..\Grammophone.Domos.Accounting\Grammophone.Domos.Accounting.csproj" />
+    <ProjectReference Include="..\Grammophone.Domos.DataAccess\Grammophone.Domos.DataAccess.csproj" />
+    <ProjectReference Include="..\Grammophone.Domos.Domain\Grammophone.Domos.Domain.csproj" />
+    <ProjectReference Include="..\Grammophone.Domos.Environment\Grammophone.Domos.Environment.csproj" />
+    <ProjectReference Include="..\Grammophone.Email\Grammophone.Email.csproj" />
+    <ProjectReference Include="..\Grammophone.GenericContentModel\Grammophone.GenericContentModel.csproj" />
+    <ProjectReference Include="..\Grammophone.Logging\Grammophone.Logging.csproj" />
+    <ProjectReference Include="..\Grammophone.Setup\Grammophone.Setup.csproj" />
+    <ProjectReference Include="..\Grammophone.Storage\Grammophone.Storage.csproj" />
+    <ProjectReference Include="..\Grammophone.Tasks\Grammophone.Tasks.csproj" />
+    <ProjectReference Include="..\Grammophone.TemplateRendering\Grammophone.TemplateRendering.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Models\FundsTransfer\FundsRequestFile.xsd">
@@ -261,77 +130,35 @@
     <EmbeddedResource Include="Models\FundsTransfer\FundsResponseFile.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="CommonMessages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>CommonMessages.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CommonMessages.fr.resx" />
-    <EmbeddedResource Include="FilesManagerMessages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>FilesManagerMessages.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FilesManagerMessages.fr.resx" />
-    <EmbeddedResource Include="FundsTransferManagerMessages.fr.resx" />
-    <EmbeddedResource Include="FundsTransferManagerMessages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>FundsTransferManagerMessages.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Models\FundsTransfer\FundsRequestFileItemResources.fr.resx" />
-    <EmbeddedResource Include="Models\FundsTransfer\FundsRequestFileItemResources.resx">
+    <EmbeddedResource Update="Models\FundsTransfer\FundsRequestFileItemResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>FundsRequestFileItemResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Models\FundsTransfer\FundsRequestLineResources.fr.resx" />
-    <EmbeddedResource Include="Models\FundsTransfer\FundsRequestLineResources.resx">
+    <EmbeddedResource Update="Models\FundsTransfer\FundsRequestLineResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>FundsRequestLineResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseFileItemResources.fr.resx" />
-    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseFileItemResources.resx">
+    <EmbeddedResource Update="Models\FundsTransfer\FundsResponseFileItemResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>FundsResponseFileItemResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseFileTypeResources.fr.resx" />
-    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseFileTypeResources.resx">
+    <EmbeddedResource Update="Models\FundsTransfer\FundsResponseFileTypeResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>FundsResponseFileTypeResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseLineResources.fr.resx" />
-    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseLineResources.resx">
+    <EmbeddedResource Update="Models\FundsTransfer\FundsResponseLineResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>FundsResponseLineResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseStatusResources.fr.resx" />
-    <EmbeddedResource Include="Models\FundsTransfer\FundsResponseStatusResources.resx">
+    <EmbeddedResource Update="Models\FundsTransfer\FundsResponseStatusResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>FundsResponseStatusResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="WorkflowActions\AccountingActionResources.fr.resx" />
-    <EmbeddedResource Include="WorkflowActions\AccountingActionResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>AccountingActionResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WorkflowActions\FundsTransferResponseActionResources.fr.resx" />
-    <EmbeddedResource Include="WorkflowActions\FundsTransferResponseActionResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>FundsTransferResponseActionResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WorkflowManagerMessages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>WorkflowManagerMessages.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WorkflowManagerMessages.fr.resx" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+	<ItemGroup>
+		<None Remove=".git" />
+		<None Remove=".gitignore" />
+	</ItemGroup>
 </Project>
