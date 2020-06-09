@@ -8,7 +8,7 @@ using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Workflow;
 using Grammophone.Domos.Logic.Configuration;
 using Grammophone.Setup;
-using Microsoft.Practices.Unity;
+using Unity;
 
 namespace Grammophone.Domos.Logic
 {

@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{6CE10B14-AD08-4F7D-BDB4-D443ECE3C36D}</ProjectGuid>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFrameworks>net472;netstandard2.1</TargetFrameworks>
     <AssemblyTitle>Grammophone.Domos.Logic</AssemblyTitle>
     <Product>Grammophone.Domos.Logic</Product>
     <Copyright>Copyright ©  2016</Copyright>
-    <OutputPath>bin\$(Configuration)\</OutputPath>
-    <DocumentationFile>bin\$(Configuration)\Grammophone.Domos.Logic.XML</DocumentationFile>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Grammophone.Domos.Logic.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -18,7 +17,7 @@
     <PackageReference Include="EntityFramework" Version="6.4.4" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.7.0" />
-    <PackageReference Include="Unity" Version="3.5.1404.0" />
+		<PackageReference Include="Unity.Abstractions" Version="5.11.6" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="CommonMessages.Designer.cs">
