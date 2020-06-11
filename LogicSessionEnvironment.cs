@@ -91,7 +91,7 @@ namespace Grammophone.Domos.Logic
 				true);
 
 			storageProvidersCache = new MRUCache<string, Storage.IStorageProvider>(
-				name => this.Settings.Resolve<Storage.IStorageProvider>(name),
+				name => name != String.Empty ? this.Settings.Resolve<Storage.IStorageProvider>(name) : this.Settings.Resolve<Storage.IStorageProvider>(),
 				StorageProvidersCacheSize);
 
 			mailQueue = new AsyncWorkQueue<System.Net.Mail.MailMessage>(
