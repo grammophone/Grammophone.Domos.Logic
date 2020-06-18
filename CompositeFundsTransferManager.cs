@@ -50,6 +50,12 @@ namespace Grammophone.Domos.Logic
 		where S : LogicSession<U, D>
 		where AS : AccountingSession<U, BST, P, R, J, D>
 	{
+		#region Private fields
+
+		private readonly Lazy<IEnumerable<FundsTransferManager<U, BST, P, R, J, D, S, AS>>> lazyFundsTransferManagers;
+
+		#endregion
+
 		#region Construction
 
 		/// <summary>
@@ -57,16 +63,12 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="session">The logic session.</param>
 		/// <param name="accountingSessionFactory">A factory for creating an accounting session.</param>
-		/// <param name="fundsTransferManagers">The funds transfer managers to compose.</param>
 		protected CompositeFundsTransferManager(
 			S session,
-			Func<D, U, AS> accountingSessionFactory,
-			IEnumerable<FundsTransferManager<U, BST, P, R, J, D, S, AS>> fundsTransferManagers)
+			Func<D, U, AS> accountingSessionFactory)
 			: base(session, accountingSessionFactory)
 		{
-			if (fundsTransferManagers == null) throw new ArgumentNullException(nameof(fundsTransferManagers));
-
-			this.FundsTransferManagers = fundsTransferManagers;
+			lazyFundsTransferManagers = new Lazy<IEnumerable<FundsTransferManager<U, BST, P, R, J, D, S, AS>>>(CreateFundsTransferManagers, false);
 		}
 
 		#endregion
@@ -76,7 +78,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The funds transfer managers being composed.
 		/// </summary>
-		public IEnumerable<FundsTransferManager<U, BST, P, R, J, D, S, AS>> FundsTransferManagers { get; }
+		public IEnumerable<FundsTransferManager<U, BST, P, R, J, D, S, AS>> FundsTransferManagers => lazyFundsTransferManagers.Value;
 
 		/// <summary>
 		/// A union of funds transfer requests
@@ -108,6 +110,11 @@ namespace Grammophone.Domos.Logic
 		#endregion
 
 		#region Protected methods
+
+		/// <summary>
+		/// Implementations define the content of <see cref="FundsTransferManagers"/> by specifying this method.
+		/// </summary>
+		protected abstract IEnumerable<FundsTransferManager<U, BST, P, R, J, D, S, AS>> CreateFundsTransferManagers();
 
 		/// <summary>
 		/// Digest a funds response file by feeding it to all <see cref="FundsTransferManagers"/>

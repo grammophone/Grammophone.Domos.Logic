@@ -62,6 +62,11 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		protected static readonly IReadOnlyCollection<FundsResponseResult> emptyFundsResponseResults;
 
+		/// <summary>
+		/// Used by <see cref="CreateAccountingSession"/> method to create an accounting session.
+		/// </summary>
+		protected readonly Func<D, U, AS> accountingSessionFactory;
+
 		#endregion
 
 		#region Private fields
@@ -73,8 +78,6 @@ namespace Grammophone.Domos.Logic
 		private static readonly Lazy<XmlSerializer> lazyResponseFileSerializer;
 
 		private static readonly Lazy<XmlSerializer> lazyRequestFileSerializer;
-
-		private readonly Func<D, U, AS> accountingSessionFactory;
 
 		#endregion
 
