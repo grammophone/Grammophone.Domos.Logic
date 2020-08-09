@@ -313,20 +313,36 @@ namespace Grammophone.Domos.Logic
 
 			var userContext = this.Settings.Resolve<IUserContext>();
 
-			long? userID = userContext.UserID;
+			LoginByUserContext(userContext);
+		}
 
-			IQueryable<U> userQuery = this.DomainContainer.Users;
+		/// <summary>
+		/// Create a session impersonating the user specified
+		/// in the registered <see cref="IUserContext"/>
+		/// inside the configuration
+		/// section specified by <paramref name="configurationSectionName"/>.
+		/// </summary>
+		/// <param name="configurationSectionName">The element name of a Unity configuration section.</param>
+		/// <param name="userContext">The context providing the current user.</param>
+		/// <exception cref="LogicException">
+		/// Thrown when the resolved <see cref="IUserContext"/> fails to specify an existing user.
+		/// </exception>
+		/// <remarks>
+		/// Each session depends on a Unity DI container defined in a configuration section.
+		/// This container must at least provide resolutions for the following:
+		/// <list>
+		/// <item><typeparamref name="D"/></item>
+		/// <item><see cref="IPermissionsSetupProvider"/></item>
+		/// </list>
+		/// </remarks>
+		public LogicSession(string configurationSectionName, IUserContext userContext)
+		{
+			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
+			if (userContext == null) throw new ArgumentNullException(nameof(userContext));
 
-			if (userID.HasValue)
-			{
-				userQuery = userQuery.Where(u => u.ID == userID.Value);
-			}
-			else
-			{
-				userQuery = userQuery.Where(u => u.IsAnonymous);
-			}
+			Initialize(configurationSectionName);
 
-			Login(userQuery);
+			LoginByUserContext(userContext);
 		}
 
 		/// <summary>
@@ -1368,6 +1384,29 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Establish the current user and install
+		/// entity access control on behalf of her.
+		/// </summary>
+		/// <param name="userContext">The context supplying the current user.</param>
+		private void LoginByUserContext(IUserContext userContext)
+		{
+			long? userID = userContext.UserID;
+
+			IQueryable<U> userQuery = this.DomainContainer.Users;
+
+			if (userID.HasValue)
+			{
+				userQuery = userQuery.Where(u => u.ID == userID.Value);
+			}
+			else
+			{
+				userQuery = userQuery.Where(u => u.IsAnonymous);
+			}
+
+			Login(userQuery);
+		}
+
+		/// <summary>
 		/// Creates a domain container ready for use.
 		/// It is the caller's responsibility to dispose the object.
 		/// </summary>
@@ -1625,6 +1664,31 @@ namespace Grammophone.Domos.Logic
 
 		/// <summary>
 		/// Create a session impersonating the user specified
+		/// in the registered <see cref="IUserContext"/>
+		/// inside the configuration
+		/// section specified by <paramref name="configurationSectionName"/>.
+		/// </summary>
+		/// <param name="configurationSectionName">The element name of a Unity configuration section.</param>
+		/// <param name="userContext">The context providing the current user.</param>
+		/// <exception cref="LogicException">
+		/// Thrown when the resolved <see cref="IUserContext"/> fails to specify an existing user.
+		/// </exception>
+		/// <remarks>
+		/// Each session depends on a Unity DI container defined in a configuration section.
+		/// This container must at least provide resolutions for the following:
+		/// <list>
+		/// <item><typeparamref name="D"/></item>
+		/// <item><see cref="IUserContext"/></item>
+		/// <item><see cref="IPermissionsSetupProvider"/></item>
+		/// </list>
+		/// </remarks>
+		public LogicSession(string configurationSectionName, IUserContext userContext)
+			: base(configurationSectionName, userContext)
+		{
+		}
+
+		/// <summary>
+		/// Create a session impersonating the user specified
 		/// using a predicate.
 		/// </summary>
 		/// <param name="configurationSectionName">The element name of a Unity configuration section.</param>
@@ -1802,6 +1866,31 @@ namespace Grammophone.Domos.Logic
 		/// </remarks>
 		public LogicSession(string configurationSectionName) 
 			: base(configurationSectionName)
+		{
+		}
+
+		/// <summary>
+		/// Create a session impersonating the user specified
+		/// in the registered <see cref="IUserContext"/>
+		/// inside the configuration
+		/// section specified by <paramref name="configurationSectionName"/>.
+		/// </summary>
+		/// <param name="configurationSectionName">The element name of a Unity configuration section.</param>
+		/// <param name="userContext">The context providing the current user.</param>
+		/// <exception cref="LogicException">
+		/// Thrown when the resolved <see cref="IUserContext"/> fails to specify an existing user.
+		/// </exception>
+		/// <remarks>
+		/// Each session depends on a Unity DI container defined in a configuration section.
+		/// This container must at least provide resolutions for the following:
+		/// <list>
+		/// <item><typeparamref name="D"/></item>
+		/// <item><see cref="IUserContext"/></item>
+		/// <item><see cref="IPermissionsSetupProvider"/></item>
+		/// </list>
+		/// </remarks>
+		public LogicSession(string configurationSectionName, IUserContext userContext)
+			: base(configurationSectionName, userContext)
 		{
 		}
 
