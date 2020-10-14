@@ -60,7 +60,7 @@ namespace Grammophone.Domos.Logic
 		where S : LogicSession<U, D>
 		where ST : BST, new()
 		where SO : IStateful<U, ST>
-		where SH : class, new()
+		where SH : class
 		where AS : AccountingSession<U, BST, P, R, J, D>
 	{
 		#region Auxilliary classes
