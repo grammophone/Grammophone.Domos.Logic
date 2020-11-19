@@ -835,6 +835,109 @@ namespace Grammophone.Domos.Logic
 
 		#endregion
 
+		#region Protected methods
+
+		/// <summary>
+		/// Implementation of execution of a state path.
+		/// The arguments are considered to non-null and validated.
+		/// </summary>
+		/// <param name="stateful">The stateful instance to execute the transition upon.</param>
+		/// <param name="statePath">The state path.</param>
+		/// <param name="actionArguments">A dictinary of arguments to be passed to the path actions.</param>
+		/// <returns>Returns the state transition created.</returns>
+		/// <exception cref="AccessDeniedDomainException">
+		/// Thrown when the session user has no right to execute the state path.
+		/// </exception>
+		/// <exception cref="StatePathArgumentsException">
+		/// Thrown when the <paramref name="actionArguments"/> are not valid
+		/// against the parameter specifications of the path actions.
+		/// </exception>
+		/// <exception cref="LogicException">
+		/// Thrown when the specified path 
+		/// is not available for the current state of the stateful object,
+		/// or when the path doesn't exist among <see cref="StatePaths"/>,
+		/// or when the path's workflow is not compatible with transitions 
+		/// of type <typeparamref name="ST"/>.
+		/// </exception>
+		/// <returns>Returns the state transition created.</returns>
+		protected virtual async Task<ST> ExecuteStatePathImplementationAsync(SO stateful, StatePath statePath, IDictionary<string, object> actionArguments)
+		{
+			if (!this.AccessResolver.CanUserExecuteStatePath(this.Session.User, stateful, statePath))
+			{
+				string message;
+
+				if (this.Session.User != null)
+				{
+					message = $"The user with ID {this.Session.User.ID} has no rights " +
+						$"to execute path '{statePath.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.";
+				}
+				else
+				{
+					message = $"The anonymous user has no rights " +
+						$"to execute path '{statePath.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.";
+				}
+
+				this.ClassLogger.Log(Logging.LogLevel.Warn, message);
+
+				throw new StatePathAccessDeniedException(statePath, stateful, message);
+			}
+
+			var validationErrors = ValidateStatePathArguments(statePath.CodeName, actionArguments);
+
+			if (validationErrors.Count > 0)
+				throw new StatePathArgumentsException(validationErrors);
+
+			using (var transaction = this.DomainContainer.BeginTransaction())
+			{
+				var statefulObjectEntry = this.DomainContainer.Entry(stateful.GetBackingDomainEntity());
+
+				switch (statefulObjectEntry.State)
+				{
+					case Grammophone.DataAccess.TrackingState.Unchanged: // Get the most fresh possible contents of the stateful obbject. 
+						await statefulObjectEntry.ReloadAsync();
+						break;
+				}
+
+				if (stateful.State != statePath.PreviousState)
+					throw new UserException(String.Format(WorkflowManagerMessages.INCOMPATIBLE_STATE_PATH, statePath.Name, stateful.State.Name, stateful.ID));
+
+				ST stateTransition = this.DomainContainer.StateTransitions.Create<ST>();
+
+				var statePathConfiguration = GetStatePathConfiguration(statePath.CodeName);
+
+				stateTransition.BindToStateful(stateful);
+
+				var now = DateTime.UtcNow;
+
+				stateTransition.Path = statePath;
+				stateTransition.ChangeStampBefore = stateful.ChangeStamp;
+
+				stateful.LastStateChangeDate = now;
+
+				if (statePath.PreviousState.GroupID != statePath.NextState.GroupID)
+				{
+					stateful.LastStateGroupChangeDate = now;
+				}
+
+				await ExecuteActionsAsync(statePathConfiguration.PreActions, stateful, stateTransition, actionArguments);
+
+				stateful.State = statePath.NextState;
+
+				stateful.ChangeStamp &= statePath.ChangeStampANDMask;
+				stateful.ChangeStamp |= statePath.ChangeStampORMask;
+
+				stateTransition.ChangeStampAfter = stateful.ChangeStamp;
+
+				await ExecuteActionsAsync(statePathConfiguration.PostActions, stateful, stateTransition, actionArguments);
+
+				await transaction.CommitAsync();
+
+				return stateTransition;
+			}
+		}
+
+		#endregion
+
 		#region Private methods
 
 		/// <summary>
@@ -1132,90 +1235,6 @@ namespace Grammophone.Domos.Logic
 			}
 
 			return parameterSpecificationsByKey;
-		}
-
-		/// <summary>
-		/// Implementation of execution of a state path.
-		/// The arguments are considered to non-null and validated.
-		/// </summary>
-		/// <param name="stateful"></param>
-		/// <param name="statePath"></param>
-		/// <param name="actionArguments"></param>
-		/// <returns></returns>
-		private async Task<ST> ExecuteStatePathImplementationAsync(SO stateful, StatePath statePath, IDictionary<string, object> actionArguments)
-		{
-			if (!this.AccessResolver.CanUserExecuteStatePath(this.Session.User, stateful, statePath))
-			{
-				string message;
-
-				if (this.Session.User != null)
-				{
-					message = $"The user with ID {this.Session.User.ID} has no rights " +
-						$"to execute path '{statePath.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.";
-				}
-				else
-				{
-					message = $"The anonymous user has no rights " +
-						$"to execute path '{statePath.CodeName}' against the {AccessRight.GetEntityTypeName(stateful)} with ID {stateful.ID}.";
-				}
-
-				this.ClassLogger.Log(Logging.LogLevel.Warn, message);
-
-				throw new StatePathAccessDeniedException(statePath, stateful, message);
-			}
-
-			var validationErrors = ValidateStatePathArguments(statePath.CodeName, actionArguments);
-
-			if (validationErrors.Count > 0)
-				throw new StatePathArgumentsException(validationErrors);
-
-			using (var transaction = this.DomainContainer.BeginTransaction())
-			{
-				var statefulObjectEntry = this.DomainContainer.Entry(stateful.GetBackingDomainEntity());
-
-				switch (statefulObjectEntry.State)
-				{
-					case Grammophone.DataAccess.TrackingState.Unchanged: // Get the most fresh possible contents of the stateful obbject. 
-						await statefulObjectEntry.ReloadAsync();
-						break;
-				}
-
-				if (stateful.State != statePath.PreviousState)
-					throw new UserException(String.Format(WorkflowManagerMessages.INCOMPATIBLE_STATE_PATH, statePath.Name, stateful.State.Name, stateful.ID));
-
-				ST stateTransition = this.DomainContainer.StateTransitions.Create<ST>();
-
-				var statePathConfiguration = GetStatePathConfiguration(statePath.CodeName);
-
-				stateTransition.BindToStateful(stateful);
-
-				var now = DateTime.UtcNow;
-
-				stateTransition.Path = statePath;
-				stateTransition.ChangeStampBefore = stateful.ChangeStamp;
-
-				stateful.LastStateChangeDate = now;
-
-				if (statePath.PreviousState.GroupID != statePath.NextState.GroupID)
-				{
-					stateful.LastStateGroupChangeDate = now;
-				}
-
-				await ExecuteActionsAsync(statePathConfiguration.PreActions, stateful, stateTransition, actionArguments);
-
-				stateful.State = statePath.NextState;
-
-				stateful.ChangeStamp &= statePath.ChangeStampANDMask;
-				stateful.ChangeStamp |= statePath.ChangeStampORMask;
-
-				stateTransition.ChangeStampAfter = stateful.ChangeStamp;
-
-				await ExecuteActionsAsync(statePathConfiguration.PostActions, stateful, stateTransition, actionArguments);
-
-				await transaction.CommitAsync();
-
-				return stateTransition;
-			}
 		}
 
 		/// <summary>
