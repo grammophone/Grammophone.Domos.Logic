@@ -297,6 +297,19 @@ namespace Grammophone.Domos.Logic
 		IEnumerable<StatePath> FilterAllowedStatePaths(SO stateful, IEnumerable<StatePath> statePaths);
 
 		/// <summary>
+		/// Filter the state paths which can be executed on a
+		/// stateful object by the current session user.
+		/// The user must alse have read and write access rights on the stateful object to be allowed path execution.
+		/// </summary>
+		/// <param name="statePaths">The paths to filter.</param>
+		/// <param name="segregation">Optional segregation where a stateful object may belong.</param>
+		/// <returns>
+		/// Returns the filtered list containing only the paths which can be executed 
+		/// by the current session user.
+		/// </returns>
+		IEnumerable<StatePath> FilterAllowedStatePaths(IEnumerable<StatePath> statePaths, Segregation<U> segregation = null);
+
+		/// <summary>
 		/// Get the set of state transitions of a stateful object.
 		/// </summary>
 		/// <param name="statefulID">The ID of the stateful object.</param>
