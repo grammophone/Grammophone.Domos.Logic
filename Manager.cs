@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -140,6 +141,32 @@ namespace Grammophone.Domos.Logic
 				if (attachAsModified) this.DomainContainer.AttachGraphAsModified(objectGraphRoot);
 
 				await transaction.CommitAsync();
+			}
+		}
+
+		#endregion
+
+		#region Model validation
+
+		/// <summary>
+		/// Attempt to validate a model in a method argument. If the model is valid, it does nothing, else throws an <see cref="ArgumentException"/>.
+		/// </summary>
+		/// <param name="model">The model to validate.</param>
+		/// <param name="modelArgumentName">The name of the argument holding the model.</param>
+		protected void EnsureValidModelArgument(object model, string modelArgumentName)
+		{
+			if (modelArgumentName == null) throw new ArgumentNullException(nameof(modelArgumentName));
+
+			if (model == null) return;
+
+			try
+			{
+				var validationContext = new ValidationContext(model);
+				Validator.ValidateObject(model, validationContext, true);
+			}
+			catch (ValidationException vex)
+			{
+				throw new ArgumentException($"The validation of argument '{modelArgumentName}' failed. See inner exception for details.", modelArgumentName, vex);
 			}
 		}
 
