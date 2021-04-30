@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Grammophone.Email;
+using Grammophone.GenericContentModel;
 using Grammophone.TemplateRendering;
 
 namespace Grammophone.Domos.Logic.Channels
@@ -27,6 +28,17 @@ namespace Grammophone.Domos.Logic.Channels
 		/// Key for dynamic property to hold the e-mail recepients.
 		/// </summary>
 		public const string DestinationIdentitiesPropertyKey = "__DestinationIdentities";
+
+		#endregion
+
+		#region Auxilliary types
+
+		private class IdentitiesToMailAddresses
+		{
+			public IEnumerable<IChannelIdentity> ChannelIdentities { get; set; }
+
+			public System.Net.Mail.MailAddressCollection MailAddresses { get; set; }
+		}
 
 		#endregion
 
@@ -99,7 +111,7 @@ namespace Grammophone.Domos.Logic.Channels
 
 			var senderAddress = GetMailAddress(senderIdentity);
 
-			var destinationIdentitiesByEmail = destinationIdentities.ToDictionary(i => i.Email);
+			var destinationIdentitiesByEmail = destinationIdentities.ToReadOnlyMultiDictionary(i => i.Email);
 
 			foreach (var emailDestinationAddresses in emailDestinationAddressesCollection)
 			{
@@ -107,7 +119,8 @@ namespace Grammophone.Domos.Logic.Channels
 				{
 					var messageDestinationIdentities = from address in emailDestinationAddresses
 																						 where destinationIdentitiesByEmail.ContainsKey(address.Address)
-																						 select destinationIdentitiesByEmail[address.Address];
+																						 from identity in destinationIdentitiesByEmail[address.Address]
+																						 select identity;
 
 					renderProvider.Render(
 						GetFullTemplateKey(channelMessage.TemplateKey),
@@ -149,7 +162,7 @@ namespace Grammophone.Domos.Logic.Channels
 
 			var senderAddress = GetMailAddress(senderIdentity);
 
-			var destinationIdentitiesByEmail = destinationIdentities.ToDictionary(i => i.Email);
+			var destinationIdentitiesByEmail = destinationIdentities.ToReadOnlyMultiDictionary(i => i.Email);
 
 			foreach (var emailDestinationAddresses in emailDestinationAddressesCollection)
 			{
@@ -157,7 +170,8 @@ namespace Grammophone.Domos.Logic.Channels
 				{
 					var messageDestinationIdentities = from address in emailDestinationAddresses
 																						 where destinationIdentitiesByEmail.ContainsKey(address.Address)
-																						 select destinationIdentitiesByEmail[address.Address];
+																						 from identity in destinationIdentitiesByEmail[address.Address]
+																						 select identity;
 
 					renderProvider.Render(
 						GetFullTemplateKey(channelMessage.TemplateKey),
@@ -235,6 +249,45 @@ namespace Grammophone.Domos.Logic.Channels
 				}
 
 				return mailAddressesSet;
+			}
+		}
+
+		private IEnumerable<IdentitiesToMailAddresses> GetIdentitiesToMailAddressesAssociations(
+			IEnumerable<IChannelIdentity> destinationIdentities,
+			bool useSingleMessageForMultipleRecepients)
+		{
+			if (useSingleMessageForMultipleRecepients)
+			{
+				var mailAddressCollection = new System.Net.Mail.MailAddressCollection();
+
+				foreach (var destinationIdentity in destinationIdentities)
+				{
+					mailAddressCollection.Add(GetMailAddress(destinationIdentity));
+				}
+
+				return new IdentitiesToMailAddresses[]
+				{
+					new IdentitiesToMailAddresses { ChannelIdentities = destinationIdentities, MailAddresses = mailAddressCollection }
+				};
+			}
+			else
+			{
+				var identitiesToMailAddressesSet = new List<IdentitiesToMailAddresses>(destinationIdentities.Count());
+
+				foreach (var destinationIdentity in destinationIdentities)
+				{
+					var mailAddressCollection = new System.Net.Mail.MailAddressCollection();
+
+					mailAddressCollection.Add(GetMailAddress(destinationIdentity));
+
+					identitiesToMailAddressesSet.Add(new IdentitiesToMailAddresses
+					{
+						MailAddresses = mailAddressCollection,
+						ChannelIdentities = new IChannelIdentity[] { destinationIdentity }
+					});
+				}
+
+				return identitiesToMailAddressesSet;
 			}
 		}
 
