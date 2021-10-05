@@ -740,6 +740,24 @@ namespace Grammophone.Domos.Logic
 			=> await AddBatchMessageAsync(batchID, FundsTransferBatchMessageType.Rejected, comments, messageCode, utcTime);
 
 		/// <summary>
+		/// Add a submission failure message to a batch.
+		/// </summary>
+		/// <param name="batchID">The ID of the batch.</param>
+		/// <param name="comments">Optional comments to record in the message. Maximum length is <see cref="FundsTransferBatchMessage.CommentsLength"/>.</param>
+		/// <param name="messageCode">Optional code to record inthe message. Maximum length is <see cref="FundsTransferBatchMessage.MessageCodeLength"/>.</param>
+		/// <param name="utcTime">Optional time in UTC, else the current time is implied.</param>
+		/// <returns>returns the created message.</returns>
+		/// <exception cref="AccountingException">
+		/// Thrown when a more recent message than <paramref name="utcTime"/> exists.
+		/// </exception>
+		public async Task<FundsTransferBatchMessage> AddBatchSubmissionFailedMessageAsync(
+			long batchID,
+			String comments = null,
+			String messageCode = null,
+			DateTime? utcTime = null)
+			=> await AddBatchMessageAsync(batchID, FundsTransferBatchMessageType.SubmissionFailed, comments, messageCode, utcTime);
+
+		/// <summary>
 		/// Attempt to set the batch as submitted, if is not already set, else do nothing.
 		/// </summary>
 		/// <param name="batchID">The ID of the batch.</param>
@@ -751,6 +769,19 @@ namespace Grammophone.Domos.Logic
 		/// </exception>
 		public async Task<FundsTransferBatchMessage> TrySetBatchAsSubmittedAsync(long batchID, DateTime? utcTime = null)
 			=> await TryAddBatchMessageAsync(batchID, FundsTransferBatchMessageType.Submitted, utcTime);
+
+		/// <summary>
+		/// Attempt to set the batch as submission failed, if ti is not already set, else do nothing.
+		/// </summary>
+		/// <param name="batchID">The ID of the batch.</param>
+		/// <param name="utcTime">>Optional time in UTC, else the current time is implied.</param>
+		/// <returns>If the batch is not failed, returns the submission event, else null.</returns>
+		/// <exception cref="AccountingException">
+		/// Thrown when the batch is not already set as submitted
+		/// and a more recent message than <paramref name="utcTime"/> exists.
+		/// </exception>
+		public async Task<FundsTransferBatchMessage> TrySetBatchAsSubmissionFailedAsync(long batchID, DateTime? utcTime = null)
+			=> await TryAddBatchMessageAsync(batchID, FundsTransferBatchMessageType.SubmissionFailed, utcTime);
 
 		/// <summary>
 		/// Attempt to set the batch as accepted, if is not already set, else do nothing.
