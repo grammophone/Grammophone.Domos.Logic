@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{6CE10B14-AD08-4F7D-BDB4-D443ECE3C36D}</ProjectGuid>
-    <TargetFrameworks>net472;netcoreapp3.1;</TargetFrameworks>
+    <TargetFrameworks>net472;netstandard2.1;</TargetFrameworks>
     <AssemblyTitle>Grammophone.Domos.Logic</AssemblyTitle>
     <Product>Grammophone.Domos.Logic</Product>
     <Copyright>Copyright ©  2016</Copyright>

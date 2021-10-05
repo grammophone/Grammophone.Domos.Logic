@@ -60,7 +60,7 @@ namespace Grammophone.Domos.Logic
 		where S : LogicSession<U, D>
 		where ST : BST, new()
 		where SO : IStateful<U, ST>
-		where SH : class, new()
+		where SH : class
 		where AS : AccountingSession<U, BST, P, R, J, D>
 	{
 		#region Auxilliary classes
@@ -166,6 +166,12 @@ namespace Grammophone.Domos.Logic
 			FundsResponseLine fundsResponseLine);
 
 		/// <summary>
+		/// Eager fetch any objects related to the state holder objects in order to avoid lazy loading during workflow execution.
+		/// </summary>
+		/// <param name="stateHolders">The set of entities which will undergo workflow execution.</param>
+		protected virtual Task EagerFetchStateHoldersAsync(IQueryable<SH> stateHolders) => Task.CompletedTask;
+
+		/// <summary>
 		/// Digest a funds transfer response file from a credit system
 		/// and execute the appropriate state paths
 		/// as specified by the <see cref="TrySpecifyNextStatePath(SO, State, FundsResponseLine)"/> method
@@ -192,7 +198,15 @@ namespace Grammophone.Domos.Logic
 
 			long[] lineIDs = file.Items.Select(i => i.LineID).ToArray();
 
-			var associationsQuery = from a in this.FundsTransferEventAssociations
+			var fundsTransferEventAssociations = this.FundsTransferEventAssociations;
+
+			var stateHolders = from a in fundsTransferEventAssociations
+												 where a != null
+												 select a.StateHolder;
+
+			await EagerFetchStateHoldersAsync(stateHolders);
+
+			var associationsQuery = from a in fundsTransferEventAssociations
 															where a.Event.Type == FundsTransferEventType.Pending
 															let ftr = a.Event.Request
 															where lineIDs.Contains(ftr.GroupID) && ftr.BatchID == file.BatchID
