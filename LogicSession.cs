@@ -473,7 +473,7 @@ namespace Grammophone.Domos.Logic
 		/// The acting user. Differs from property <see cref="User"/> when the acting user is anonymous.
 		/// In this case, <see cref="User"/> is null but this property contains the anonymous impersonating user.
 		/// </summary>
-		protected U ActingUser => user;
+		protected internal U ActingUser => user;
 
 		#endregion
 
