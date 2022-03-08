@@ -448,6 +448,12 @@ namespace Grammophone.Domos.Logic
 		#region Protected properties
 
 		/// <summary>
+		/// If true, then entity and workflow path access chacking is suppressed because of <see cref="GetElevatedAccessScope"/>
+		/// or <see cref="ElevateTransactionAccessRights(ITransaction)"/> being active.
+		/// </summary>
+		protected internal bool IsAccessCheckSuppressed => entityListener.SupressAccessCheck;
+
+		/// <summary>
 		/// References the domain model. Do not dispose, because the owner
 		/// is the session object.
 		/// </summary>
