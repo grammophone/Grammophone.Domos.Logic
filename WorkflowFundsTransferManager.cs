@@ -155,6 +155,7 @@ namespace Grammophone.Domos.Logic
 		/// <param name="statefulObject">The stateful object for which to decide the state path.</param>
 		/// <param name="stateAfterFundsTransferRequest">The state of the <paramref name="statefulObject"/> right after the funds transfer request.</param>
 		/// <param name="fundsResponseLine">The batch line arriving for the stateful object.</param>
+		/// <param name="fundsTransferRequest">The funds transfer request being handled.</param>
 		/// <returns>Returns the code name of the path to execute or null to execute none.</returns>
 		/// <exception cref="Exception">
 		/// Thrown to record a funds transfer event with its <see cref="FundsTransferEvent.ExceptionData"/>
@@ -163,7 +164,8 @@ namespace Grammophone.Domos.Logic
 		protected abstract string TrySpecifyNextStatePath(
 			SO statefulObject,
 			State stateAfterFundsTransferRequest,
-			FundsResponseLine fundsResponseLine);
+			FundsResponseLine fundsResponseLine,
+			FundsTransferRequest fundsTransferRequest);
 
 		/// <summary>
 		/// Eager fetch any objects related to the state holder objects in order to avoid lazy loading during workflow execution.
@@ -375,7 +377,7 @@ namespace Grammophone.Domos.Logic
 
 				// Attempt to get the next path to be executed. Any exception will be recorded in a funds transfer event with ExceptionData.
 
-				string statePathCodeName = TrySpecifyNextStatePath(statefulObject, stateAfterRequest, line);
+				string statePathCodeName = TrySpecifyNextStatePath(statefulObject, stateAfterRequest, line, fundsTransferRequest);
 
 				if (statePathCodeName != null) // Should a path be executed?
 				{
