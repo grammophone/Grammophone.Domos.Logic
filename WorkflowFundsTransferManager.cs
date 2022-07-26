@@ -176,7 +176,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Digest a funds transfer response file from a credit system
 		/// and execute the appropriate state paths
-		/// as specified by the <see cref="TrySpecifyNextStatePath(SO, State, FundsResponseLine)"/> method
+		/// as specified by the <see cref="TrySpecifyNextStatePath(SO, State, FundsResponseLine, FundsTransferRequest)"/> method
 		/// on the corresponding stateful objects.
 		/// The existence of the credit system and
 		/// the collation specified in <paramref name="file"/> is assumed.
