@@ -578,7 +578,8 @@ namespace Grammophone.Domos.Logic
 										LineID = g.Key.ID,
 										BankAccountInfo = g.Key.EncryptedBankAccountInfo.Decrypt(),
 										AccountHolderName = g.Key.AccountHolderName,
-										AccountHolderToken = g.Key.AccountHolderToken
+										AccountHolderToken = g.Key.AccountHolderToken,
+										EffectiveDate = g.Key.EffectiveDate
 									};
 
 			return new FundsRequestFile
