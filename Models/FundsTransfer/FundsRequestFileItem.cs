@@ -95,6 +95,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			ResourceType = typeof(FundsRequestFileItemResources))]
 		public string AccountHolderToken { get; set; }
 
+		/// <summary>
+		/// Optional effective date in UTC for the request, or null to be executed as soon as possible.
+		/// </summary>
+		[Display(
+			Name = nameof(FundsRequestFileItemResources.EffectiveDate_Name),
+			Description = nameof(FundsRequestFileItemResources.EffectiveDate_Description),
+			ResourceType = typeof(FundsRequestFileItemResources))]
+		public DateTime? EffectiveDate { get; set; }
+
 		#endregion
 	}
 }

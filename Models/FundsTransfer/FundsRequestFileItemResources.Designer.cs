@@ -19,7 +19,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class FundsRequestFileItemResources {
@@ -93,6 +93,24 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         public static string BankAccountInfo_Name {
             get {
                 return ResourceManager.GetString("BankAccountInfo_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional effective date in UTC for the request, or left blank in order to be executed as soon as possible..
+        /// </summary>
+        public static string EffectiveDate_Description {
+            get {
+                return ResourceManager.GetString("EffectiveDate_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Effective Date.
+        /// </summary>
+        public static string EffectiveDate_Name {
+            get {
+                return ResourceManager.GetString("EffectiveDate_Name", resourceCulture);
             }
         }
         

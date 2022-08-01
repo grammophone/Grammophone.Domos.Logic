@@ -129,6 +129,12 @@
   <data name="BankAccountInfo_Name" xml:space="preserve">
     <value>Compte Bancaire</value>
   </data>
+  <data name="EffectiveDate_Description" xml:space="preserve">
+    <value>Date d’entrée en vigueur facultative en UTC pour la demande, ou laissée vide afin d’être exécutée dès que possible.</value>
+  </data>
+  <data name="EffectiveDate_Name" xml:space="preserve">
+    <value>Date d’Entrée en Vigueur</value>
+  </data>
   <data name="LineID_Name" xml:space="preserve">
     <value>ID de Ligne</value>
   </data>
