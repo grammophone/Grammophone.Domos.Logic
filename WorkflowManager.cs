@@ -974,14 +974,8 @@ namespace Grammophone.Domos.Logic
 					this.DomainContainer,
 					stateful,
 					stateTransition,
-
-/* Unmerged change from project 'Grammophone.Domos.Logic (netstandard2.1)'
-Before:
-					actionArguments);
-After:
-					actionArguments, TODO);
-*/
-					actionArguments, context);
+					actionArguments,
+					context);
 			}
 		}
 

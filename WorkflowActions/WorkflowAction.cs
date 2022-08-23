@@ -225,6 +225,44 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 			}
 		}
 
+		/// <summary>
+		/// Follow a state path for a stateful object, without executing the configured actions for the state path.
+		/// </summary>
+		/// <param name="domainContainer">The domain container.</param>
+		/// <param name="stateful">The stateful object to follow the state path on.</param>
+		/// <param name="statePath">The state path to be followed.</param>
+		/// <returns>The created <see cref="StateTransition{U}"/>.</returns>
+		/// <exception cref="UserException">
+		/// Thrown when the currrent state of the <paramref name="stateful"/> is incompatible with the <paramref name="statePath"/>.
+		/// </exception>
+		protected ST FollowStatePath(D domainContainer, SO stateful, StatePath statePath)
+		{
+			if (domainContainer == null) throw new ArgumentNullException(nameof(domainContainer));
+			if (stateful == null) throw new ArgumentNullException(nameof(stateful));
+			if (statePath == null) throw new ArgumentNullException(nameof(statePath));
+
+			if (stateful.State != statePath.PreviousState)
+			{
+				throw new UserException(String.Format(WorkflowManagerMessages.INCOMPATIBLE_STATE_PATH, statePath.Name, stateful.State.Name, stateful.ID));
+			}
+
+			ST stateTransition = domainContainer.Create<ST>();
+
+			stateTransition.BindToStateful(stateful);
+
+			stateTransition.Path = statePath;
+			stateTransition.ChangeStampBefore = stateful.ChangeStamp;
+
+			stateful.State = statePath.NextState;
+
+			stateful.ChangeStamp &= statePath.ChangeStampANDMask;
+			stateful.ChangeStamp |= statePath.ChangeStampORMask;
+
+			stateTransition.ChangeStampAfter = stateful.ChangeStamp;
+
+			return stateTransition;
+		}
+
 		#endregion
 
 		#region Private methods
