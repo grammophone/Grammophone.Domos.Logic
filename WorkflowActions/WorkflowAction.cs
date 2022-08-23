@@ -231,7 +231,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// <param name="domainContainer">The domain container.</param>
 		/// <param name="stateful">The stateful object to follow the state path on.</param>
 		/// <param name="statePath">The state path to be followed.</param>
-		/// <returns>The created <see cref="StateTransition{U}"/>.</returns>
+		/// <returns>The created state transition of type <typeparamref name="ST"/>.</returns>
 		/// <exception cref="UserException">
 		/// Thrown when the currrent state of the <paramref name="stateful"/> is incompatible with the <paramref name="statePath"/>.
 		/// </exception>
@@ -246,12 +246,21 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 				throw new UserException(String.Format(WorkflowManagerMessages.INCOMPATIBLE_STATE_PATH, statePath.Name, stateful.State.Name, stateful.ID));
 			}
 
+			var now = DateTime.UtcNow;
+
 			ST stateTransition = domainContainer.Create<ST>();
 
 			stateTransition.BindToStateful(stateful);
 
 			stateTransition.Path = statePath;
 			stateTransition.ChangeStampBefore = stateful.ChangeStamp;
+
+			stateful.LastStateChangeDate = now;
+
+			if (statePath.PreviousState.GroupID != statePath.NextState.GroupID)
+			{
+				stateful.LastStateGroupChangeDate = now;
+			}
 
 			stateful.State = statePath.NextState;
 
