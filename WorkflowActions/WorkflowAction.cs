@@ -65,17 +65,19 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// <param name="stateTransition">The state transition being executed.</param>
 		/// <param name="actionArguments">The arguments to the action.</param>
 		/// <returns>Returns a task completing the operation.</returns>
+		/// <param name="context"></param>
 		public abstract Task ExecuteAsync(
-			S session, 
-			D domainContainer, 
-			SO stateful, 
-			ST stateTransition, 
-			IDictionary<string, object> actionArguments);
+			S session,
+			D domainContainer,
+			SO stateful,
+			ST stateTransition,
+			IDictionary<string, object> actionArguments,
+			IDictionary<string, object> context);
 
 		/// <summary>
 		/// Get the specifications of parameters expected in the
 		/// parameters dictionary used 
-		/// by <see cref="ExecuteAsync(S, D, SO, ST, IDictionary{string, object})"/>
+		/// by <see cref="ExecuteAsync(S, D, SO, ST, IDictionary{string, object}, IDictionary{string, object})"/>
 		/// method.
 		/// </summary>
 		/// <returns>Returns a collection of parameter specifications.</returns>
@@ -144,7 +146,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 						$"The required parameter '{parameterKey}' does not exist in the action arguments.",
 						nameof(actionArguments));
 
-				return default(T);
+				return default;
 			}
 		}
 
@@ -181,7 +183,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 						$"The required parameter '{parameterKey}' does not exist in the action arguments.",
 						nameof(actionArguments));
 
-				return default(T);
+				return default;
 			}
 		}
 

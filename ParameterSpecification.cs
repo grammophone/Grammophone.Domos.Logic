@@ -9,7 +9,7 @@ namespace Grammophone.Domos.Logic
 {
 	/// <summary>
 	/// Specification of a parameter in the parameters dictionary used 
-	/// in <see cref="IWorkflowAction{U, D, S, ST, SO}.ExecuteAsync(S, D, SO, ST, IDictionary{string, object})"/>
+	/// in <see cref="IWorkflowAction{U, D, S, ST, SO}.ExecuteAsync(S, D, SO, ST, IDictionary{string, object}, IDictionary{String,Object})"/>
 	/// method. The collection of the parameter specifications for the dictionary is provided 
 	/// by <see cref="IWorkflowAction{U, D, S, ST, SO}.GetParameterSpecifications"/> method.
 	/// </summary>
@@ -17,7 +17,7 @@ namespace Grammophone.Domos.Logic
 	{
 		#region Private fields
 
-		private Func<object> defaultValueFunction;
+		private readonly Func<object> defaultValueFunction;
 
 		#endregion
 

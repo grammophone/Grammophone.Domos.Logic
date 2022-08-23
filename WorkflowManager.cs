@@ -905,6 +905,8 @@ namespace Grammophone.Domos.Logic
 
 				var statePathConfiguration = GetStatePathConfiguration(statePath.CodeName);
 
+				var context = new Dictionary<string, object>();
+
 				stateTransition.BindToStateful(stateful);
 
 				var now = DateTime.UtcNow;
@@ -919,7 +921,7 @@ namespace Grammophone.Domos.Logic
 					stateful.LastStateGroupChangeDate = now;
 				}
 
-				await ExecuteActionsAsync(statePathConfiguration.PreActions, stateful, stateTransition, actionArguments);
+				await ExecuteActionsAsync(statePathConfiguration.PreActions, stateful, stateTransition, actionArguments, context);
 
 				stateful.State = statePath.NextState;
 
@@ -928,7 +930,7 @@ namespace Grammophone.Domos.Logic
 
 				stateTransition.ChangeStampAfter = stateful.ChangeStamp;
 
-				await ExecuteActionsAsync(statePathConfiguration.PostActions, stateful, stateTransition, actionArguments);
+				await ExecuteActionsAsync(statePathConfiguration.PostActions, stateful, stateTransition, actionArguments, context);
 
 				await transaction.CommitAsync();
 
@@ -953,23 +955,33 @@ namespace Grammophone.Domos.Logic
 		/// <param name="stateful">The stateful instance against which the actions are executed.</param>
 		/// <param name="stateTransition">The state transition.</param>
 		/// <param name="actionArguments">The arguments to the actions.</param>
+		/// <param name="context">The context dictionary for the state path being executed.</param>
 		/// <returns>Returns a task completing the actions.</returns>
 		private async Task ExecuteActionsAsync(
 			IEnumerable<IWorkflowAction<U, D, S, ST, SO>> actions, 
 			SO stateful,
 			ST stateTransition, 
-			IDictionary<string, object> actionArguments)
+			IDictionary<string, object> actionArguments,
+			IDictionary<string, object> context)
 		{
 			if (actions == null) throw new ArgumentNullException(nameof(actions));
+			if (context == null) throw new ArgumentNullException(nameof(context));
 
 			foreach (var action in actions)
 			{
 				await action.ExecuteAsync(
-					this.Session, 
-					this.DomainContainer, 
-					stateful, 
-					stateTransition, 
+					this.Session,
+					this.DomainContainer,
+					stateful,
+					stateTransition,
+
+/* Unmerged change from project 'Grammophone.Domos.Logic (netstandard2.1)'
+Before:
 					actionArguments);
+After:
+					actionArguments, TODO);
+*/
+					actionArguments, context);
 			}
 		}
 

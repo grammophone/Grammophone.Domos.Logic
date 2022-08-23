@@ -33,7 +33,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 	/// This action expects a billing item of type <typeparamref name="B"/> in arguments
 	/// key <see cref="StandardArgumentKeys.BillingItem"/>.
 	/// If the latter is missing, the current UTC time is used.
-	/// Warning: The <see cref="ExecuteAsync(S, D, SO, ST, IDictionary{string, object})"/> method implementation
+	/// Warning: The <see cref="ExecuteAsync(S, D, SO, ST, IDictionary{string, object}, IDictionary{string, object})"/> method implementation
 	/// elevates the rights of any existing outer transaction.
 	/// </remarks>
 	public abstract class AccountingAction<U, BST, P, R, J, D, S, ST, SO, AS, B>
@@ -61,7 +61,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 			D domainContainer,
 			SO stateful,
 			ST stateTransition,
-			IDictionary<string, object> actionArguments)
+			IDictionary<string, object> actionArguments, IDictionary<string, object> context)
 		{
 			if (session == null) throw new ArgumentNullException(nameof(session));
 			if (domainContainer == null) throw new ArgumentNullException(nameof(domainContainer));
