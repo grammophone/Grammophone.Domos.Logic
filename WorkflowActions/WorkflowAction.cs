@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,20 +16,33 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 	/// with additional access rights elevation methods.
 	/// </summary>
 	/// <typeparam name="U">The type of the user, derived from <see cref="User"/>.</typeparam>
+	/// <typeparam name="BST">The base class for the state transitions in the system.</typeparam>
 	/// <typeparam name="D">The type of domain container, derived from <see cref="IWorkflowUsersDomainContainer{U, ST}"/>.</typeparam>
 	/// <typeparam name="S">The type of session, derived from <see cref="LogicSession{U, D}"/>.</typeparam>
-	/// <typeparam name="ST">The type of state transition, derived from <see cref="StateTransition{U}"/>.</typeparam>
+	/// <typeparam name="ST">The type of state transition, derived from <typeparamref name="BST"/>.</typeparam>
 	/// <typeparam name="SO">The type of stateful object, derived from <see cref="IStateful{U, ST}"/>.</typeparam>
-	public abstract class WorkflowAction<U, D, S, ST, SO> : IWorkflowAction<U, D, S, ST, SO>
+	public abstract class WorkflowAction<U, BST, D, S, ST, SO> : IWorkflowAction<U, D, S, ST, SO>
 		where U : User
-		where D : IUsersDomainContainer<U>
+		where BST : StateTransition<U>
+		where D : class, IWorkflowUsersDomainContainer<U, BST>
 		where S : LogicSession<U, D>
-		where ST : StateTransition<U>
+		where ST : BST
 		where SO : IStateful<U, ST>
 	{
 		#region Private fields
 
+		private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<D, IDictionary<string, StatePath>> statePathsByCodeNameTable;
+
 		private IReadOnlyDictionary<string, ParameterSpecification> parameterSpecificationsByKey;
+
+		#endregion
+
+		#region Construction
+
+		static WorkflowAction()
+		{
+			statePathsByCodeNameTable = new System.Runtime.CompilerServices.ConditionalWeakTable<D, IDictionary<string, StatePath>>();
+		}
 
 		#endregion
 
@@ -226,6 +240,45 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		}
 
 		/// <summary>
+		/// Get a state path by code name efficiently.
+		/// </summary>
+		/// <param name="domainContainer">The domain container to load the state path from.</param>
+		/// <param name="statePathCodeName">The <see cref="StatePath.CodeName"/> of the state path.</param>
+		/// <returns>Returns the state path found.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown if no state path with the given <paramref name="statePathCodeName"/> exists in <paramref name="domainContainer"/>.
+		/// </exception>
+		protected async Task<StatePath> GetStatePathAsync(D domainContainer, string statePathCodeName)
+		{
+			if (domainContainer == null) throw new ArgumentNullException(nameof(domainContainer));
+			if (statePathCodeName == null) throw new ArgumentNullException(nameof(statePathCodeName));
+
+			IDictionary<string, StatePath> statePathsByCodeName;
+
+			if (!statePathsByCodeNameTable.TryGetValue(domainContainer, out statePathsByCodeName))
+			{
+				statePathsByCodeName = new Dictionary<string, StatePath>();
+
+				statePathsByCodeNameTable.Add(domainContainer, statePathsByCodeName);
+			}
+
+			StatePath statePath;
+
+			if (!statePathsByCodeName.TryGetValue(statePathCodeName, out statePath))
+			{
+				statePath = await
+					domainContainer.StatePaths
+					.Include(sp => sp.PreviousState)
+					.Include(sp => sp.NextState)
+					.SingleAsync(sp => sp.CodeName == statePathCodeName);
+
+				statePathsByCodeName[statePathCodeName] = statePath;
+			}
+
+			return statePath;
+		}
+
+		/// <summary>
 		/// Follow a state path for a stateful object, without executing the configured actions for the state path.
 		/// </summary>
 		/// <param name="domainContainer">The domain container.</param>
@@ -270,6 +323,27 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 			stateTransition.ChangeStampAfter = stateful.ChangeStamp;
 
 			return stateTransition;
+		}
+
+		/// <summary>
+		/// Follow a state path for a stateful object, without executing the configured actions for the state path.
+		/// </summary>
+		/// <param name="domainContainer">The domain container.</param>
+		/// <param name="stateful">The stateful object to follow the state path on.</param>
+		/// <param name="statePathCodeName">The <see cref="StatePath.CodeName"/> of the state path.</param>
+		/// <returns>The created state transition of type <typeparamref name="ST"/>.</returns>
+		/// <exception cref="UserException">
+		/// Thrown when the currrent state of the <paramref name="stateful"/> is incompatible with the specified state path.
+		/// </exception>
+		protected async Task<ST> FollowStatePathAsync(D domainContainer, SO stateful, string statePathCodeName)
+		{
+			if (domainContainer == null) throw new ArgumentNullException(nameof(domainContainer));
+			if (stateful == null) throw new ArgumentNullException(nameof(stateful));
+			if (statePathCodeName == null) throw new ArgumentNullException(nameof(statePathCodeName));
+
+			var statePath = await GetStatePathAsync(domainContainer, statePathCodeName);
+
+			return FollowStatePath(domainContainer, stateful, statePath);
 		}
 
 		#endregion

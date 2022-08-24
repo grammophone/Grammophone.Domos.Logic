@@ -36,7 +36,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		where P : Posting<U>
 		where R : Remittance<U>
 		where J : Journal<U, BST, P, R>
-		where D : IDomosDomainContainer<U, BST, P, R, J>
+		where D : class, IDomosDomainContainer<U, BST, P, R, J>
 		where S : LogicSession<U, D>
 		where ST : BST
 		where SO : IStateful<U, ST>

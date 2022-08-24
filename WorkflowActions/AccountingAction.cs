@@ -37,13 +37,13 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 	/// elevates the rights of any existing outer transaction.
 	/// </remarks>
 	public abstract class AccountingAction<U, BST, P, R, J, D, S, ST, SO, AS, B>
-		: WorkflowAction<U, D, S, ST, SO>
+		: WorkflowAction<U, BST, D, S, ST, SO>
 		where U : User
 		where BST : StateTransition<U>
 		where P : Posting<U>
 		where R : Remittance<U>
 		where J : Journal<U, BST, P, R>
-		where D : IDomosDomainContainer<U, BST, P, R, J>
+		where D : class, IDomosDomainContainer<U, BST, P, R, J>
 		where S : LogicSession<U, D>
 		where ST : BST
 		where AS : AccountingSession<U, BST, P, R, J, D>
