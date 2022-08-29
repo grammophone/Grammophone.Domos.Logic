@@ -20,7 +20,8 @@
 			<xs:element minOccurs="1" maxOccurs="1" name="BankAccountInfo" type="tns:BankAccountInfo" />
 			<xs:element minOccurs="1" maxOccurs="1" name="AccountHolderName" type="xs:string" />
 			<xs:element minOccurs="0" maxOccurs="1" name="AccountHolderToken" type="xs:string" />
-			<xs:element minOccurs="0" maxOccurs="1" name="EffectiveDate" type="xs:dateTime" />
+			<xs:element minOccurs="0" maxOccurs="1" name="EffectiveDate" type="xs:dateTime" nillable="true" >
+			</xs:element>
 		</xs:sequence>
 		<xs:attribute name="LineID" type="xs:long" use="required" />
 		<xs:attribute name="Amount" type="xs:decimal" use="required" />
