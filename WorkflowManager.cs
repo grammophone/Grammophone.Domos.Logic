@@ -928,7 +928,7 @@ namespace Grammophone.Domos.Logic
 				stateful.ChangeStamp &= statePath.ChangeStampANDMask;
 				stateful.ChangeStamp |= statePath.ChangeStampORMask;
 
-				stateTransition.ChangeStampAfter = stateful.ChangeStamp;
+				//stateTransition.ChangeStampAfter = stateful.ChangeStamp;
 
 				await ExecuteActionsAsync(statePathConfiguration.PostActions, stateful, stateTransition, actionArguments, context);
 

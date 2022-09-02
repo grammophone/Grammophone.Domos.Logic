@@ -71,9 +71,10 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 			B billingItem = GetBillingItem(actionArguments);
 
+			using (GetElevatedAccessScope(session)) // Needed because accounting touches private data.
 			using (var transaction = domainContainer.BeginTransaction())
 			{
-				ElevateTransactionAccessRights(session, transaction); // Needed because accounting touches private data.
+				//ElevateTransactionAccessRights(session, transaction); // Needed because accounting touches private data.
 
 				using (var accountingSession = CreateAccountingSession(domainContainer, session.User))
 				{
@@ -92,6 +93,16 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 					{
 						stateTransition.FundsTransferEvent = result.FundsTransferEvent;
 					}
+
+					await OnAccountingActionExecutedAsync(
+						result,
+						session,
+						domainContainer,
+						stateful,
+						stateTransition,
+						billingItem,
+						actionArguments,
+						context);
 
 					await transaction.CommitAsync();
 				}
@@ -150,6 +161,22 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// </exception>
 		protected B GetBillingItem(IDictionary<string, object> actionArguments)
 			=> GetParameterValue<B>(actionArguments, StandardArgumentKeys.BillingItem);
+
+		/// <summary>
+		/// This method gets called when <see cref="ExecuteAccountingAsync(AS, SO, ST, B)"/> method is invoked successfully.
+		/// </summary>
+		/// <remarks>
+		/// Default implementation does nothing.
+		/// </remarks>
+		protected virtual Task OnAccountingActionExecutedAsync(
+			AccountingSession<U, BST, P, R, J, D>.ActionResult actionResult,
+			S session,
+			D domainContainer,
+			SO stateful,
+			ST stateTransition,
+			B billingItem,
+			IDictionary<string, object> actionArguments,
+			IDictionary<string, object> context) => Task.CompletedTask;
 
 		#endregion
 	}

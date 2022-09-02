@@ -4,6 +4,7 @@ using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Grammophone.Caching;
 using Grammophone.DataAccess;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
@@ -31,7 +32,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 	{
 		#region Private fields
 
-		private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<D, IDictionary<string, StatePath>> statePathsByCodeNameTable;
+		private static readonly WeakCache<D, IDictionary<string, StatePath>> statePathsByCodeNameCache;
 
 		private IReadOnlyDictionary<string, ParameterSpecification> parameterSpecificationsByKey;
 
@@ -41,7 +42,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 		static WorkflowAction()
 		{
-			statePathsByCodeNameTable = new System.Runtime.CompilerServices.ConditionalWeakTable<D, IDictionary<string, StatePath>>();
+			statePathsByCodeNameCache = new WeakCache<D, IDictionary<string, StatePath>>(dc => new Dictionary<string, StatePath>());
 		}
 
 		#endregion
@@ -253,14 +254,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 			if (domainContainer == null) throw new ArgumentNullException(nameof(domainContainer));
 			if (statePathCodeName == null) throw new ArgumentNullException(nameof(statePathCodeName));
 
-			IDictionary<string, StatePath> statePathsByCodeName;
-
-			if (!statePathsByCodeNameTable.TryGetValue(domainContainer, out statePathsByCodeName))
-			{
-				statePathsByCodeName = new Dictionary<string, StatePath>();
-
-				statePathsByCodeNameTable.Add(domainContainer, statePathsByCodeName);
-			}
+			IDictionary<string, StatePath> statePathsByCodeName = statePathsByCodeNameCache.Get(domainContainer);
 
 			StatePath statePath;
 
