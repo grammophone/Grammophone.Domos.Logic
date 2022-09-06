@@ -32,7 +32,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 	{
 		#region Private fields
 
-		private static readonly WeakCache<D, IDictionary<string, StatePath>> statePathsByCodeNameCache;
+		private static readonly AsyncWeakRepositoryCache<D, string, StatePath> statePathsByCodeNameCache;
 
 		private IReadOnlyDictionary<string, ParameterSpecification> parameterSpecificationsByKey;
 
@@ -42,7 +42,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 		static WorkflowAction()
 		{
-			statePathsByCodeNameCache = new WeakCache<D, IDictionary<string, StatePath>>(dc => new Dictionary<string, StatePath>());
+			statePathsByCodeNameCache = new AsyncWeakRepositoryCache<D, string, StatePath>(LoadStatePathAsync, false, 4096);
 		}
 
 		#endregion
@@ -250,27 +250,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// Thrown if no state path with the given <paramref name="statePathCodeName"/> exists in <paramref name="domainContainer"/>.
 		/// </exception>
 		protected async Task<StatePath> GetStatePathAsync(D domainContainer, string statePathCodeName)
-		{
-			if (domainContainer == null) throw new ArgumentNullException(nameof(domainContainer));
-			if (statePathCodeName == null) throw new ArgumentNullException(nameof(statePathCodeName));
-
-			IDictionary<string, StatePath> statePathsByCodeName = statePathsByCodeNameCache.Get(domainContainer);
-
-			StatePath statePath;
-
-			if (!statePathsByCodeName.TryGetValue(statePathCodeName, out statePath))
-			{
-				statePath = await
-					domainContainer.StatePaths
-					.Include(sp => sp.PreviousState)
-					.Include(sp => sp.NextState)
-					.SingleAsync(sp => sp.CodeName == statePathCodeName);
-
-				statePathsByCodeName[statePathCodeName] = statePath;
-			}
-
-			return statePath;
-		}
+			=> await statePathsByCodeNameCache.Get(domainContainer, statePathCodeName);
 
 		/// <summary>
 		/// Follow a state path for a stateful object, without executing the configured actions for the state path.
@@ -354,6 +334,18 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 			}
 
 			return parameterSpecification;
+		}
+
+		private static async Task<StatePath> LoadStatePathAsync(D domainContainer, string statePathCodeName)
+		{
+			if (domainContainer == null) throw new ArgumentNullException(nameof(domainContainer));
+			if (statePathCodeName == null) throw new ArgumentNullException(nameof(statePathCodeName));
+
+			return await
+				domainContainer.StatePaths
+				.Include(sp => sp.PreviousState.Group.WorkflowGraph)
+				.Include(sp => sp.NextState.Group.WorkflowGraph)
+				.SingleAsync(sp => sp.CodeName == statePathCodeName);
 		}
 
 		#endregion
