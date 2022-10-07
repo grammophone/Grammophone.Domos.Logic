@@ -1194,7 +1194,7 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		/// <param name="actionResult">The funds transfer action result.</param>
 		protected R TryGetTransferRemittance(AccountingSession<U, BST, P, R, J, D>.ActionResult actionResult)
-			=> actionResult.Journal.Remittances.FirstOrDefault(r => r.FundsTransferEvent == actionResult.FundsTransferEvent);
+			=> actionResult.Journal?.Remittances.FirstOrDefault(r => r.FundsTransferEvent == actionResult.FundsTransferEvent);
 
 		#endregion
 
