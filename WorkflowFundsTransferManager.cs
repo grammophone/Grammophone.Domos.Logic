@@ -161,7 +161,7 @@ namespace Grammophone.Domos.Logic
 		/// Thrown to record a funds transfer event with its <see cref="FundsTransferEvent.ExceptionData"/>
 		/// containing the thrown exception.
 		/// </exception>
-		protected abstract string TrySpecifyNextStatePath(
+		protected abstract Task<string> TrySpecifyNextStatePathAsync(
 			SO statefulObject,
 			State stateAfterFundsTransferRequest,
 			FundsResponseLine fundsResponseLine,
@@ -176,7 +176,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Digest a funds transfer response file from a credit system
 		/// and execute the appropriate state paths
-		/// as specified by the <see cref="TrySpecifyNextStatePath(SO, State, FundsResponseLine, FundsTransferRequest)"/> method
+		/// as specified by the <see cref="TrySpecifyNextStatePathAsync(SO, State, FundsResponseLine, FundsTransferRequest)"/> method
 		/// on the corresponding stateful objects.
 		/// The existence of the credit system and
 		/// the collation specified in <paramref name="file"/> is assumed.
@@ -377,7 +377,7 @@ namespace Grammophone.Domos.Logic
 
 				// Attempt to get the next path to be executed. Any exception will be recorded in a funds transfer event with ExceptionData.
 
-				string statePathCodeName = TrySpecifyNextStatePath(statefulObject, stateAfterRequest, line, fundsTransferRequest);
+				string statePathCodeName = await TrySpecifyNextStatePathAsync(statefulObject, stateAfterRequest, line, fundsTransferRequest);
 
 				if (statePathCodeName != null) // Should a path be executed?
 				{
