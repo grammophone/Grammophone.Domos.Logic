@@ -79,6 +79,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Notice of change.
+        /// </summary>
+        public static string NoticeOfChange_Name {
+            get {
+                return ResourceManager.GetString("NoticeOfChange_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Rejected.
         /// </summary>
         public static string Rejected_Name {

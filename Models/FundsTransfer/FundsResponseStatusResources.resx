@@ -123,6 +123,9 @@
   <data name="Failed_Name" xml:space="preserve">
     <value>Failed</value>
   </data>
+  <data name="NoticeOfChange_Name" xml:space="preserve">
+    <value>Notice of change</value>
+  </data>
   <data name="Rejected_Name" xml:space="preserve">
     <value>Rejected</value>
   </data>

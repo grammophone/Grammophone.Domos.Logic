@@ -50,6 +50,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[Display(
 			ResourceType = typeof(FundsResponseStatusResources),
 			Name = nameof(FundsResponseStatusResources.Returned_Name))]
-		Returned
+		Returned,
+
+		/// <summary>
+		/// The transfer request has a notice of change.
+		/// </summary>
+		[Display(
+			ResourceType = typeof(FundsResponseStatusResources),
+			Name = nameof(FundsResponseStatusResources.NoticeOfChange_Name))]
+		NoticeOfChange
+
 	}
 }
