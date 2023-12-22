@@ -83,7 +83,7 @@ namespace Grammophone.Domos.Logic
 
 			private readonly AccessResolver<U> accessResolver;
 
-			private readonly U user;
+			private U user;
 
 			private readonly LogicSession<U, D> logicSession;
 
@@ -171,6 +171,20 @@ namespace Grammophone.Domos.Logic
 				{
 					LogActionAndThrowAccessDenied(entity, "read");
 				}
+			}
+
+			#endregion
+
+			#region Internal methods
+
+			/// <summary>
+			/// Used by impoersonation scopes.
+			/// </summary>
+			internal void SetUser(U user)
+			{
+				if (user == null) throw new ArgumentNullException(nameof(user));
+
+				this.user = user;
 			}
 
 			#endregion
@@ -857,6 +871,63 @@ namespace Grammophone.Domos.Logic
 			return GetEnvironment(this.ConfigurationSectionName);
 		}
 
+		/// <summary>
+		/// Create an impersonation scope. Call <see cref="ImpersonationScope{U}.Dispose"/> to restore the original user.
+		/// </summary>
+		/// <param name="impersonatedUser">The user to impersonate.</param>
+		/// <returns>Returns a scope for impersonating a user until <see cref="ImpersonationScope{U}.Dispose"/> is called to restore the original user.</returns>
+		protected internal ImpersonationScope<U> GetImpersonationScope(U impersonatedUser)
+		{
+			if (impersonatedUser == null) throw new ArgumentNullException(nameof(impersonatedUser));
+
+			var impersonationScope = new ImpersonationScope<U>(impersonatedUser, user, RestoreImpoersonationScope);
+
+			user = impersonatedUser;
+
+			entityListener.SetUser(impersonatedUser);
+
+			return impersonationScope;
+		}
+
+		/// <summary>
+		/// Create an impersonation scope. Call <see cref="ImpersonationScope{U}.Dispose"/> to restore the original user.
+		/// </summary>
+		/// <param name="userQuery">A query to uniquely identify the impersonated user.</param>
+		/// <returns>Returns a scope for impersonating a user until <see cref="ImpersonationScope{U}.Dispose"/> is called to restore the original user.</returns>
+		/// <exception cref="InvalidOperationException">Thrown if the <paramref name="userQuery"/> does not uniquely identity a user.</exception>
+		protected internal async Task<ImpersonationScope<U>> GetImpersonationScopeAsync(IQueryable<U> userQuery)
+		{
+			if (userQuery == null) throw new ArgumentNullException(nameof(userQuery));
+
+			userQuery = IncludeWithUser(userQuery)
+				.Include(u => u.Roles)
+				.Include(u => u.Dispositions.Select(d => d.Type));
+
+			U impersonatedUser;
+
+			using (GetElevatedAccessScope())
+			{
+				impersonatedUser = await userQuery.SingleAsync();
+			}
+
+			return GetImpersonationScope(impersonatedUser);
+		}
+
+		/// <summary>
+		/// Create an impersonation scope. Call <see cref="ImpersonationScope{U}.Dispose"/> to restore the original user.
+		/// </summary>
+		/// <param name="userPickPredicate">A predicate to uniquely identify the impersonated user.</param>
+		/// <returns>Returns a scope for impersonating a user until <see cref="ImpersonationScope{U}.Dispose"/> is called to restore the original user.</returns>
+		/// <exception cref="InvalidOperationException">Thrown if the <paramref name="userPickPredicate"/> does not uniquely identity a user.</exception>
+		protected internal async Task<ImpersonationScope<U>> GetImpersonationScopeAsync(Expression<Func<U, bool>> userPickPredicate)
+		{
+			if (userPickPredicate == null) throw new ArgumentNullException(nameof(userPickPredicate));
+
+			var impersonatedUserQuery = this.DomainContainer.Users.Where(userPickPredicate);
+
+			return await GetImpersonationScopeAsync(impersonatedUserQuery);
+		}
+
 		#endregion
 
 		#region Protected methods
@@ -1347,7 +1418,6 @@ namespace Grammophone.Domos.Logic
 		{
 			if (configurationSectionName == null) throw new ArgumentNullException(nameof(configurationSectionName));
 
-
 			if (sessionEnvironmentsCache.Remove(
 				configurationSectionName, 
 				out LogicSessionEnvironment<U, D> sessionEnvironment))
@@ -1471,6 +1541,18 @@ namespace Grammophone.Domos.Logic
 			{
 				RestoreAccessRights();
 			}
+		}
+
+		/// <summary>
+		/// Called during the <see cref="IDisposable.Dispose"/> method of <see cref="ImpersonationScope{U}"/>.
+		/// </summary>
+		private void RestoreImpoersonationScope(ImpersonationScope<U> impersonationScope)
+		{
+			if (impersonationScope == null) throw new ArgumentNullException(nameof(impersonationScope));
+
+			user = impersonationScope.OverriddenUser;
+
+			entityListener.SetUser(impersonationScope.OverriddenUser);
 		}
 
 		/// <summary>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Grammophone.Caching;
@@ -128,6 +129,35 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 		/// </remarks>
 		protected static void ElevateTransactionAccessRights(S session, ITransaction transaction)
 			=> session.ElevateTransactionAccessRights(transaction);
+
+		/// <summary>
+		/// Create an impersonation scope. Call <see cref="ImpersonationScope{U}.Dispose"/> to restore the original user.
+		/// </summary>
+		/// <param name="session">The session for user impersonation.</param>
+		/// <param name="impersonatedUser">The user to impersonate.</param>
+		/// <returns>Returns a scope for impersonating a user until <see cref="ImpersonationScope{U}.Dispose"/> is called to restore the original user.</returns>
+		protected ImpersonationScope<U> GetImpoersonationScope(S session, U impersonatedUser)
+			=> session.GetImpersonationScope(impersonatedUser);
+
+		/// <summary>
+		/// Create an impersonation scope. Call <see cref="ImpersonationScope{U}.Dispose"/> to restore the original user.
+		/// </summary>
+		/// <param name="session">The session for user impersonation.</param>
+		/// <param name="userQuery">A query to uniquely identify the impersonated user.</param>
+		/// <returns>Returns a scope for impersonating a user until <see cref="ImpersonationScope{U}.Dispose"/> is called to restore the original user.</returns>
+		/// <exception cref="InvalidOperationException">Thrown if the <paramref name="userQuery"/> does not uniquely identity a user.</exception>
+		protected internal Task<ImpersonationScope<U>> GetImpersonationScopeAsync(S session, IQueryable<U> userQuery)
+			=> session.GetImpersonationScopeAsync(userQuery);
+
+		/// <summary>
+		/// Create an impersonation scope. Call <see cref="ImpersonationScope{U}.Dispose"/> to restore the original user.
+		/// </summary>
+		/// <param name="session">The session for user impersonation.</param>
+		/// <param name="userPickPredicate">A predicate to uniquely identify the impersonated user.</param>
+		/// <returns>Returns a scope for impersonating a user until <see cref="ImpersonationScope{U}.Dispose"/> is called to restore the original user.</returns>
+		/// <exception cref="InvalidOperationException">Thrown if the <paramref name="userPickPredicate"/> does not uniquely identity a user.</exception>
+		protected Task<ImpersonationScope<U>> GetImpersonationScopeAsync(S session, Expression<Func<U, bool>> userPickPredicate)
+			=> session.GetImpersonationScopeAsync(userPickPredicate);
 
 		/// <summary>
 		/// Get the value of a parameter inside the action arguments.

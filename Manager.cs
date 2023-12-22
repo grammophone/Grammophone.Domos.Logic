@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Grammophone.DataAccess;
@@ -115,6 +116,36 @@ namespace Grammophone.Domos.Logic
 		/// no security checks are performed by the session.
 		/// </remarks>
 		protected ElevatedAccessScope GetElevatedAccessScope() => this.Session.GetElevatedAccessScope();
+
+		#endregion
+
+		#region Impersonation
+
+		/// <summary>
+		/// Create an impersonation scope. Call <see cref="ImpersonationScope{U}.Dispose"/> to restore the original user.
+		/// </summary>
+		/// <param name="impersonatedUser">The user to impersonate.</param>
+		/// <returns>Returns a scope for impersonating a user until <see cref="ImpersonationScope{U}.Dispose"/> is called to restore the original user.</returns>
+		protected ImpersonationScope<U> GetImpersonationScope(U impersonatedUser)
+			=> this.Session.GetImpersonationScope(impersonatedUser);
+
+		/// <summary>
+		/// Create an impersonation scope. Call <see cref="ImpersonationScope{U}.Dispose"/> to restore the original user.
+		/// </summary>
+		/// <param name="userQuery">A query to uniquely identify the impersonated user.</param>
+		/// <returns>Returns a scope for impersonating a user until <see cref="ImpersonationScope{U}.Dispose"/> is called to restore the original user.</returns>
+		/// <exception cref="InvalidOperationException">Thrown if the <paramref name="userQuery"/> does not uniquely identity a user.</exception>
+		protected internal Task<ImpersonationScope<U>> GetImpersonationScopeAsync(IQueryable<U> userQuery)
+			=> this.Session.GetImpersonationScopeAsync(userQuery);
+
+		/// <summary>
+		/// Create an impersonation scope. Call <see cref="ImpersonationScope{U}.Dispose"/> to restore the original user.
+		/// </summary>
+		/// <param name="userPickPredicate">A predicate to uniquely the impersonated user.</param>
+		/// <returns>Returns a scope for impersonating a user until <see cref="ImpersonationScope{U}.Dispose"/> is called to restore the original user.</returns>
+		/// <exception cref="InvalidOperationException">Thrown if the <paramref name="userPickPredicate"/> does not uniquely identity a user.</exception>
+		protected Task<ImpersonationScope<U>> GetImpersonationScopeAsync(Expression<Func<U, bool>> userPickPredicate)
+			=> this.Session.GetImpersonationScopeAsync(userPickPredicate);
 
 		#endregion
 
