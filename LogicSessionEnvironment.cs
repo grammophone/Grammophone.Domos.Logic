@@ -48,6 +48,8 @@ namespace Grammophone.Domos.Logic
 
 		private readonly Lazy<Logging.LoggersRepository> lazyLoggerRepository;
 
+		private readonly Lazy<Configuration.ContentTypeAssociations> lazyContentTypeAssociations;
+
 		private readonly Lazy<IReadOnlyDictionary<string, int>> lazyContentTypeIDsByMIME;
 
 		private readonly Lazy<IReadOnlyDictionary<string, string>> lazyContentTypesByExtension;
@@ -82,6 +84,10 @@ namespace Grammophone.Domos.Logic
 
 			lazyLoggerRepository = new Lazy<Logging.LoggersRepository>(
 				this.CreateLoggerRepository,
+				true);
+
+			lazyContentTypeAssociations = new Lazy<Configuration.ContentTypeAssociations>(
+				this.LoadContentTypeAssociations,
 				true);
 
 			lazyContentTypeIDsByMIME = new Lazy<IReadOnlyDictionary<string, int>>(
@@ -135,7 +141,7 @@ namespace Grammophone.Domos.Logic
 		public IReadOnlyDictionary<string, string> ContentTypesByExtension => lazyContentTypesByExtension.Value;
 
 		/// <summary>
-		/// Map of file extensions by MIME content types.
+		/// Map of file extensions by MIME content types. If duplicate extensions are specified for the same content type, the first is kept and others are discarded.
 		/// The file extensions include the leading dot and are specified in lower case.
 		/// </summary>
 		public IReadOnlyDictionary<string, string> ExtensionsByContentType => lazyExtensionsByContentType.Value;
@@ -490,7 +496,7 @@ namespace Grammophone.Domos.Logic
 			}
 		}
 
-		private IReadOnlyDictionary<string, string> LoadContentTypesByExtension()
+		private Configuration.ContentTypeAssociations LoadContentTypeAssociations()
 		{
 			var filesConfiguration = this.Settings.Resolve<Configuration.FilesConfiguration>();
 
@@ -508,13 +514,32 @@ namespace Grammophone.Domos.Logic
 				XamlConfiguration<Configuration.ContentTypeAssociations>.LoadSettings(
 					filesConfiguration.ContentTypeAssociationsXamlPath);
 
+			return contentTypeAssociations;
+		}
+
+		private IReadOnlyDictionary<string, string> LoadContentTypesByExtension()
+		{
+			var contentTypeAssociations = lazyContentTypeAssociations.Value;
+
 			return contentTypeAssociations.ToDictionary(
 				a => a.FileExtension.Trim().ToLower(),
 				a => a.MIMEType.Trim());
 		}
 
 		private IReadOnlyDictionary<string, string> LoadExtensionsByContentType()
-			=> this.ContentTypesByExtension.ToDictionary(e => e.Value, e => e.Key);
+		{
+			var contentTypeAssociations = lazyContentTypeAssociations.Value;
+
+			var extensionsByContentType = new Dictionary<string, string>(contentTypeAssociations.Count);
+
+			foreach (var contentTypeAssociation in contentTypeAssociations)
+			{
+				if (!extensionsByContentType.ContainsKey(contentTypeAssociation.MIMEType))
+					extensionsByContentType[contentTypeAssociation.MIMEType] = contentTypeAssociation.FileExtension;
+			}
+
+			return extensionsByContentType;
+		}
 
 		private Logging.LoggersRepository CreateLoggerRepository()
 		{
