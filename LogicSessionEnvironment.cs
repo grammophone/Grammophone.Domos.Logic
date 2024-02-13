@@ -46,15 +46,17 @@ namespace Grammophone.Domos.Logic
 
 		#region Private fields
 
-		private Lazy<Logging.LoggersRepository> lazyLoggerRepository;
+		private readonly Lazy<Logging.LoggersRepository> lazyLoggerRepository;
 
-		private Lazy<IReadOnlyDictionary<string, int>> lazyContentTypeIDsByMIME;
+		private readonly Lazy<IReadOnlyDictionary<string, int>> lazyContentTypeIDsByMIME;
 
-		private Lazy<IReadOnlyDictionary<string, string>> lazyContentTypesByExtension;
+		private readonly Lazy<IReadOnlyDictionary<string, string>> lazyContentTypesByExtension;
 
-		private MRUCache<string, Storage.IStorageProvider> storageProvidersCache;
+		private readonly Lazy<IReadOnlyDictionary<string, string>> lazyExtensionsByContentType;
 
-		private AsyncWorkQueue<System.Net.Mail.MailMessage> mailQueue;
+		private readonly MRUCache<string, Storage.IStorageProvider> storageProvidersCache;
+
+		private readonly AsyncWorkQueue<System.Net.Mail.MailMessage> mailQueue;
 
 		private readonly string channelPostLoggerName;
 
@@ -88,6 +90,10 @@ namespace Grammophone.Domos.Logic
 
 			lazyContentTypesByExtension = new Lazy<IReadOnlyDictionary<string, string>>(
 				this.LoadContentTypesByExtension,
+				true);
+
+			lazyExtensionsByContentType = new Lazy<IReadOnlyDictionary<string, string>>(
+				this.LoadExtensionsByContentType,
 				true);
 
 			storageProvidersCache = new MRUCache<string, Storage.IStorageProvider>(
@@ -127,6 +133,12 @@ namespace Grammophone.Domos.Logic
 		/// The file extensions include the leading dot and are specified in lower case.
 		/// </summary>
 		public IReadOnlyDictionary<string, string> ContentTypesByExtension => lazyContentTypesByExtension.Value;
+
+		/// <summary>
+		/// Map of file extensions by MIME content types.
+		/// The file extensions include the leading dot and are specified in lower case.
+		/// </summary>
+		public IReadOnlyDictionary<string, string> ExtensionsByContentType => lazyExtensionsByContentType.Value;
 
 		/// <summary>
 		/// The Dependency Injection container associated with the environment.
@@ -500,6 +512,9 @@ namespace Grammophone.Domos.Logic
 				a => a.FileExtension.Trim().ToLower(),
 				a => a.MIMEType.Trim());
 		}
+
+		private IReadOnlyDictionary<string, string> LoadExtensionsByContentType()
+			=> this.ContentTypesByExtension.ToDictionary(e => e.Value, e => e.Key);
 
 		private Logging.LoggersRepository CreateLoggerRepository()
 		{
