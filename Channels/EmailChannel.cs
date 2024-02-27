@@ -310,7 +310,10 @@ namespace Grammophone.Domos.Logic.Channels
 				Body = messageBody,
 			};
 
-			message.Headers.Add("Message-ID", messageID);
+			//RFC 2822 format of message-id
+			var rfc2822MessageID = $"{messageID}@lifeaccount.ca";
+
+			message.Headers.Add("Message-ID", rfc2822MessageID);
 
 			using (message)
 			{
