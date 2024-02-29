@@ -310,8 +310,16 @@ namespace Grammophone.Domos.Logic.Channels
 				Body = messageBody,
 			};
 
-			//RFC 2822 format of message-id
-			var rfc2822MessageID = $"{messageID}@lifeaccount.ca";
+			// RFC 2822 format of message-id
+			// get the domain from app settings.
+			var domain = System.Configuration.ConfigurationManager.AppSettings["domain"];
+			if (!string.IsNullOrEmpty(domain) && domain.StartsWith("."))
+			{
+				//remove the '.'
+				domain = domain.Substring(1);
+			}
+
+			var rfc2822MessageID = string.IsNullOrEmpty(domain) ? messageID : $"{messageID}@{domain}";
 
 			message.Headers.Add("Message-ID", rfc2822MessageID);
 
