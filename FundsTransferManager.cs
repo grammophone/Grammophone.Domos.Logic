@@ -172,6 +172,13 @@ namespace Grammophone.Domos.Logic
 																																				 select e;
 
 		/// <summary>
+		/// The state transitions that are associated with the events of the <see cref="FundsTransferRequests"/>.
+		/// </summary>
+		public virtual IQueryable<BST> StateTransitions => from st in this.DomainContainer.StateTransitions
+																											 where this.FundsTransferEvents.Any(e => e.ID == st.FundsTransferEventID)
+																											 select st;
+
+		/// <summary>
 		/// The set of remittances associated with the <see cref="FundsTransferEvents"/>
 		/// handled by this manager.
 		/// </summary>
