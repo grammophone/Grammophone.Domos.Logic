@@ -257,7 +257,7 @@ namespace Grammophone.Domos.Logic.WorkflowActions
 
 			if (actionArguments.TryGetValue(parameterKey, out object valueObject))
 			{
-				return (V)valueObject;
+				return (V?)valueObject;
 			}
 			else
 			{
