@@ -194,6 +194,24 @@ namespace Grammophone.Domos.Logic
 																						 where this.FundsTransferEvents.Any(e => e.ID == j.FundsTransferEventID)
 																						 select j;
 
+		/// <summary>
+		/// The last messages of funds transfer batches.
+		/// </summary>
+		public virtual IQueryable<FundsTransferBatchMessage> LastFundsTransferBatchMessages
+			=> from batch in this.FundsTransferBatches
+				 let lastMessage = batch.Messages.OrderByDescending(m => m.Time).FirstOrDefault()
+				 where lastMessage != null
+				 select lastMessage;
+
+		/// <summary>
+		/// The last events of funds transfer requests.
+		/// </summary>
+		public virtual IQueryable<FundsTransferEvent> LastFundsTransferEvents
+			=> from request in this.FundsTransferRequests
+				 let lastEvent = request.Events.OrderByDescending(e => e.Time).FirstOrDefault()
+				 where lastEvent != null
+				 select lastEvent;
+
 		#endregion
 
 		#region Public methods
@@ -259,9 +277,8 @@ namespace Grammophone.Domos.Logic
 		/// </summary>
 		public async Task<FundsTransferStatistic> GetTotalStatisticAsync()
 		{
-			var query = from b in this.FundsTransferBatches
-									let t = b.Messages.OrderByDescending(m => m.Time).Select(m => m.Type).FirstOrDefault() // The last message of the batch
-									group t by 1 into g
+			var query = from lastMessage in this.LastFundsTransferBatchMessages
+									group lastMessage.Type by 1 into g
 									select new FundsTransferStatistic
 									{
 										PendingBatchesCount = g.Count(t => t == FundsTransferBatchMessageType.Pending),
