@@ -16,6 +16,7 @@ using Grammophone.TemplateRendering;
 using Grammophone.Email;
 using Grammophone.Setup;
 using Grammophone.Logging;
+using Grammophone.Domos.Logic.ChangeLogging;
 
 namespace Grammophone.Domos.Logic
 {
@@ -87,6 +88,8 @@ namespace Grammophone.Domos.Logic
 
 			private readonly LogicSession<U, D> logicSession;
 
+			private readonly IEnumerable<IEntityChangeLogger<U, D>> changeLoggers;
+
 			#endregion
 
 			#region Construction
@@ -103,6 +106,7 @@ namespace Grammophone.Domos.Logic
 				this.logicSession = logicSession;
 				this.user = logicSession.user; // WARNING: Use the backing field, not the property which is null for anonymous users.
 				this.accessResolver = logicSession.AccessResolver;
+				this.changeLoggers = logicSession.Environment.EntityChangeLoggers;
 			}
 
 			#endregion
@@ -142,10 +146,14 @@ namespace Grammophone.Domos.Logic
 				{
 					LogActionAndThrowAccessDenied(entity, "create");
 				}
+
+				LogEntityChange(utcNow, EntityChangeType.Addition, entity);
 			}
 
 			public void OnChanging(object entity)
 			{
+				var utcNow = DateTime.UtcNow;
+
 				if (!this.SupressAccessCheck && !accessResolver.CanUserWriteEntity(user, entity))
 				{
 					LogActionAndThrowAccessDenied(entity, "write");
@@ -153,8 +161,10 @@ namespace Grammophone.Domos.Logic
 
 				if (entity is IChangeLoggingEntity<U> changeLoggingEntity)
 				{
-					changeLoggingEntity.RecordChange(user, DateTime.UtcNow);
+					changeLoggingEntity.RecordChange(user, utcNow);
 				}
+
+				LogEntityChange(utcNow, EntityChangeType.Modification, entity);
 			}
 
 			public void OnDeleting(object entity)
@@ -163,6 +173,8 @@ namespace Grammophone.Domos.Logic
 				{
 					LogActionAndThrowAccessDenied(entity, "delete");
 				}
+
+				LogEntityChange(DateTime.UtcNow, EntityChangeType.Modification, entity);
 			}
 
 			public void OnRead(object entity)
@@ -199,6 +211,26 @@ namespace Grammophone.Domos.Logic
 			#endregion
 
 			#region Private methods
+
+			/// <summary>
+			/// Enumerates the <see cref="IEntityChangeLogger{U, D}"/> implementations and calls them o record a change to an entity.
+			/// </summary>
+			private void LogEntityChange(DateTime utcTime, EntityChangeType changeType, object entity)
+			{
+				foreach (var changeLogger in changeLoggers)
+				{
+					try
+					{
+						changeLogger.LogChange(user, utcTime, changeType, entity, logicSession.DomainContainer);
+					}
+					catch (Exception ex)
+					{
+						this.ClassLogger.Log(
+							LogLevel.Error, 
+							$"Entity change logger {changeLogger.GetType().FullName} failed to log {changeType} for {AccessRight.GetEntityTypeName(entity)}");
+					}
+				}
+			}
 
 			/// <summary>
 			/// Format an access denial message using the <paramref name="action"/> parameter,

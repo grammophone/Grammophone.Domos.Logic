@@ -10,6 +10,7 @@ using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.TemplateRendering;
 using Grammophone.Setup;
+using Grammophone.Domos.Logic.ChangeLogging;
 
 namespace Grammophone.Domos.Logic
 {
@@ -112,6 +113,8 @@ namespace Grammophone.Domos.Logic
 				$"{configurationSectionName}.{EmailQueueLoggerSuffixName}");
 
 			channelPostLoggerName = $"{configurationSectionName}.{ChannelPostLoggerSuffixName}";
+
+			this.EntityChangeLoggers = this.Settings.ResolveAll<IEntityChangeLogger<U, D>>();
 		}
 
 		#endregion
@@ -150,6 +153,15 @@ namespace Grammophone.Domos.Logic
 		/// The Dependency Injection container associated with the environment.
 		/// </summary>
 		public Settings Settings { get; }
+
+		#endregion
+
+		#region Internal properties
+
+		/// <summary>
+		/// The collection of entity change loggers specified in <see cref="Settings"/>.
+		/// </summary>
+		internal IEnumerable<IEntityChangeLogger<U, D>> EntityChangeLoggers { get; }
 
 		#endregion
 
