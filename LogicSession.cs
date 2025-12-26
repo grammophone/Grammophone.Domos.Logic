@@ -17,6 +17,7 @@ using Grammophone.Email;
 using Grammophone.Setup;
 using Grammophone.Logging;
 using Grammophone.Domos.Logic.ChangeLogging;
+using Grammophone.Tasks;
 
 namespace Grammophone.Domos.Logic
 {
@@ -89,6 +90,8 @@ namespace Grammophone.Domos.Logic
 			private readonly LogicSession<U, D> logicSession;
 
 			private readonly IEnumerable<IEntityChangeLogger<U, D>> changeLoggers;
+
+			private ChannelsTaskQueuer<IEntityChangeLogger<U, D>> entityChangeLoggersTaskQueuer;
 
 			#endregion
 
@@ -187,6 +190,18 @@ namespace Grammophone.Domos.Logic
 
 			#endregion
 
+			#region Proteted methods
+
+			protected ChannelsTaskQueuer<IEntityChangeLogger<U, D>> EntityChangeLoggersTaskQueuer
+			{
+				get
+				{
+					return entityChangeLoggersTaskQueuer ?? (entityChangeLoggersTaskQueuer = new ChannelsTaskQueuer<IEntityChangeLogger<U, D>>());
+				}
+			}
+
+			#endregion
+
 			#region Internal methods
 
 			/// <summary>
@@ -221,11 +236,18 @@ namespace Grammophone.Domos.Logic
 				{
 					var entityEntry = logicSession.DomainContainer.Entry<object>(entity);
 
+					var propertyEntries = entityEntry.PropertiesByName.Values;
+
+					var propertyStates = from propertyEntry in propertyEntries
+															 select new PropertyState(propertyEntry.Name, propertyEntry.OriginalValue, propertyEntry.CurrentValue);
+
+					var propertyStatesArray = propertyStates.ToArray();
+
 					foreach (var changeLogger in changeLoggers)
 					{
 						try
 						{
-							changeLogger.LogChange(user, utcTime, changeType, entityEntry);
+							this.EntityChangeLoggersTaskQueuer.QueueAsyncAction(changeLogger, () => changeLogger.LogChangeAsync(user, utcTime, changeType, entity, propertyStatesArray));
 						}
 						catch (Exception ex)
 						{
