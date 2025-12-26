@@ -28,12 +28,10 @@ namespace Grammophone.Domos.Logic.ChangeLogging
 		/// <param name="actingUser">The user changing the entity.</param>
 		/// <param name="utcTime">The date and time, in UTC.</param>
 		/// <param name="changeType">The type of change.</param>
-		/// <param name="entity">The entity being changed.</param>
-		/// <param name="domainContainer">The domain container where the entity resides.</param>
+		/// <param name="entityEntry">The entry got the entity being changed. Use it to access the entity and its changes.</param>
 		/// <remarks>
-		/// Care must be taken to make implementations efficient. Also, the <paramref name="domainContainer"/> should be used only for passive and fast operations,
-		/// like checking the modification state of entity properties. Please do not use it for database or other state changing operations.
+		/// Care must be taken to make implementations efficient.
 		/// </remarks>
-		void LogChange(U actingUser, DateTime utcTime, EntityChangeType changeType, object entity, D domainContainer);
+		void LogChange(U actingUser, DateTime utcTime, EntityChangeType changeType, IEntityEntry<object> entityEntry);
 	}
 }

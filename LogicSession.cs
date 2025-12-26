@@ -217,17 +217,22 @@ namespace Grammophone.Domos.Logic
 			/// </summary>
 			private void LogEntityChange(DateTime utcTime, EntityChangeType changeType, object entity)
 			{
-				foreach (var changeLogger in changeLoggers)
+				if (changeLoggers.Any())
 				{
-					try
+					var entityEntry = logicSession.DomainContainer.Entry<object>(entity);
+
+					foreach (var changeLogger in changeLoggers)
 					{
-						changeLogger.LogChange(user, utcTime, changeType, entity, logicSession.DomainContainer);
-					}
-					catch (Exception ex)
-					{
-						this.ClassLogger.Log(
-							LogLevel.Error, 
-							$"Entity change logger {changeLogger.GetType().FullName} failed to log {changeType} for {AccessRight.GetEntityTypeName(entity)}");
+						try
+						{
+							changeLogger.LogChange(user, utcTime, changeType, entityEntry);
+						}
+						catch (Exception ex)
+						{
+							this.ClassLogger.Log(
+								LogLevel.Error,
+								$"Entity change logger {changeLogger.GetType().FullName} failed to log {changeType} for {AccessRight.GetEntityTypeName(entity)}, reason: {ex.Message}");
+						}
 					}
 				}
 			}
