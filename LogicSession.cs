@@ -243,17 +243,19 @@ namespace Grammophone.Domos.Logic
 
 					var propertyStatesArray = propertyStates.ToArray();
 
-					foreach (var changeLogger in changeLoggers)
+					string entityName = AccessRight.GetEntityTypeName(entity);
+
+					foreach (var logger in changeLoggers)
 					{
 						try
 						{
-							this.EntityChangeLoggersTaskQueuer.QueueAsyncAction(changeLogger, () => changeLogger.LogChangeAsync(user, utcTime, changeType, entity, propertyStatesArray));
+							this.EntityChangeLoggersTaskQueuer.QueueAsyncAction(logger, () => logger.LogChangeAsync(user, utcTime, changeType, entityName, entity, propertyStatesArray));
 						}
 						catch (Exception ex)
 						{
 							this.ClassLogger.Log(
 								LogLevel.Error,
-								$"Entity change logger {changeLogger.GetType().FullName} failed to log {changeType} for {AccessRight.GetEntityTypeName(entity)}, reason: {ex.Message}");
+								$"Entity change logger {logger.GetType().FullName} failed to log {changeType} for {entityName}, reason: {ex.Message}");
 						}
 					}
 				}

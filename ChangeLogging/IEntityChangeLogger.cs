@@ -28,11 +28,12 @@ namespace Grammophone.Domos.Logic.ChangeLogging
 		/// <param name="actingUser">The user changing the entity.</param>
 		/// <param name="utcTime">The date and time, in UTC.</param>
 		/// <param name="changeType">The type of change.</param>
+		/// <param name="entityName">The name of the entity.</param>
 		/// <param name="entity">The entity being modified.</param>
 		/// <param name="propertyStates">The states of the properties of the <paramref name="entity"/>.</param>
 		/// <remarks>
 		/// Care must be taken to make implementations efficient.
 		/// </remarks>
-		Task LogChangeAsync(U actingUser, DateTime utcTime, EntityChangeType changeType, object entity, IReadOnlyList<PropertyState> propertyStates);
+		Task LogChangeAsync(U actingUser, DateTime utcTime, EntityChangeType changeType, string entityName, object entity, IReadOnlyList<PropertyState> propertyStates);
 	}
 }
