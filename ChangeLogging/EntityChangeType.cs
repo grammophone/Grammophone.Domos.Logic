@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Grammophone.Domos.Logic.ChangeLogging
 {
 	/// <summary>
-	/// Type of change recorded via the <see cref="IEntityChangeLogger{U, D}"/> interface.
+	/// Type of change recorded via the <see cref="IEntityChangeLogger{U}"/> interface.
 	/// </summary>
 	public enum EntityChangeType
 	{

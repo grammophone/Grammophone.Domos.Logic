@@ -114,7 +114,7 @@ namespace Grammophone.Domos.Logic
 
 			channelPostLoggerName = $"{configurationSectionName}.{ChannelPostLoggerSuffixName}";
 
-			this.EntityChangeLoggers = this.Settings.ResolveAll<IEntityChangeLogger<U, D>>();
+			this.EntityChangeLoggers = this.Settings.ResolveAll<IEntityChangeLogger<U>>();
 		}
 
 		#endregion
@@ -161,7 +161,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// The collection of entity change loggers specified in <see cref="Settings"/>.
 		/// </summary>
-		internal IEnumerable<IEntityChangeLogger<U, D>> EntityChangeLoggers { get; }
+		internal IEnumerable<IEntityChangeLogger<U>> EntityChangeLoggers { get; }
 
 		#endregion
 

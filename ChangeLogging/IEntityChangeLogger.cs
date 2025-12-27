@@ -15,12 +15,8 @@ namespace Grammophone.Domos.Logic.ChangeLogging
 	/// <typeparam name="U">
 	/// The type of the user, derived from <see cref="User"/>.
 	/// </typeparam>
-	/// <typeparam name="D">
-	/// The type of domain container, derived from <see cref="IUsersDomainContainer{U}"/>.
-	/// </typeparam>
-	public interface IEntityChangeLogger<U, D>
+	public interface IEntityChangeLogger<U>
 		where U : User
-		where D : IUsersDomainContainer<U>
 	{
 		/// <summary>
 		/// Log a change of an entity.

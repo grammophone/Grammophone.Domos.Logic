@@ -89,9 +89,9 @@ namespace Grammophone.Domos.Logic
 
 			private readonly LogicSession<U, D> logicSession;
 
-			private readonly IEnumerable<IEntityChangeLogger<U, D>> changeLoggers;
+			private readonly IEnumerable<IEntityChangeLogger<U>> changeLoggers;
 
-			private ChannelsTaskQueuer<IEntityChangeLogger<U, D>> entityChangeLoggersTaskQueuer;
+			private ChannelsTaskQueuer<IEntityChangeLogger<U>> entityChangeLoggersTaskQueuer;
 
 			#endregion
 
@@ -192,11 +192,11 @@ namespace Grammophone.Domos.Logic
 
 			#region Proteted methods
 
-			protected ChannelsTaskQueuer<IEntityChangeLogger<U, D>> EntityChangeLoggersTaskQueuer
+			protected ChannelsTaskQueuer<IEntityChangeLogger<U>> EntityChangeLoggersTaskQueuer
 			{
 				get
 				{
-					return entityChangeLoggersTaskQueuer ?? (entityChangeLoggersTaskQueuer = new ChannelsTaskQueuer<IEntityChangeLogger<U, D>>());
+					return entityChangeLoggersTaskQueuer ?? (entityChangeLoggersTaskQueuer = new ChannelsTaskQueuer<IEntityChangeLogger<U>>());
 				}
 			}
 
@@ -228,7 +228,7 @@ namespace Grammophone.Domos.Logic
 			#region Private methods
 
 			/// <summary>
-			/// Enumerates the <see cref="IEntityChangeLogger{U, D}"/> implementations and calls them o record a change to an entity.
+			/// Enumerates the <see cref="IEntityChangeLogger{U}"/> implementations and calls them o record a change to an entity.
 			/// </summary>
 			private void LogEntityChange(DateTime utcTime, EntityChangeType changeType, object entity)
 			{
