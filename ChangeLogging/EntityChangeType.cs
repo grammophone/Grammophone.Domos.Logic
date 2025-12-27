@@ -24,6 +24,6 @@ namespace Grammophone.Domos.Logic.ChangeLogging
 		/// <summary>
 		/// Entity is being deleted.
 		/// </summary>
-		Deletetion
+		Deletion
 	}
 }
