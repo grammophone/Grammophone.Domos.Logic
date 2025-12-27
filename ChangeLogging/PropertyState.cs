@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Grammophone.DataAccess;
 
 namespace Grammophone.Domos.Logic.ChangeLogging
 {
@@ -13,11 +14,13 @@ namespace Grammophone.Domos.Logic.ChangeLogging
 	{
 		#region Construction
 
-		internal PropertyState(string name, object originalValue, object currentValue)
+		internal PropertyState(string name, object originalValue, object currentValue, bool isPrimitive, bool isComplexType)
 		{
 			this.Name = name;
 			this.OriginalValue = originalValue;
 			this.CurrentValue = currentValue;
+			this.IsPrimitive = isPrimitive;
+			this.IsComplexType = isComplexType;
 		}
 
 		#endregion
@@ -38,6 +41,16 @@ namespace Grammophone.Domos.Logic.ChangeLogging
 		/// The current value of the property.
 		/// </summary>
 		public object CurrentValue { get; }
+
+		/// <summary>
+		/// If true, the type of the property is a primitive type.
+		/// </summary>
+		public bool IsPrimitive { get; }
+
+		/// <summary>
+		/// If true, the type of the property is a complex type.
+		/// </summary>
+		public bool IsComplexType { get; }
 
 		#endregion
 	}

@@ -239,7 +239,9 @@ namespace Grammophone.Domos.Logic
 					var propertyEntries = entityEntry.PropertiesByName.Values;
 
 					var propertyStates = from propertyEntry in propertyEntries
-															 select new PropertyState(propertyEntry.Name, propertyEntry.OriginalValue, propertyEntry.CurrentValue);
+															 select new PropertyState(
+																 propertyEntry.Name, propertyEntry.OriginalValue, propertyEntry.CurrentValue, 
+																 propertyEntry.IsPrimitive, propertyEntry.IsComplexType);
 
 					var propertyStatesArray = propertyStates.ToArray();
 
