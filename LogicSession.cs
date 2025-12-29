@@ -177,7 +177,7 @@ namespace Grammophone.Domos.Logic
 					LogActionAndThrowAccessDenied(entity, "delete");
 				}
 
-				LogEntityChange(DateTime.UtcNow, EntityChangeType.Modification, entity);
+				LogEntityChange(DateTime.UtcNow, EntityChangeType.Deletion, entity);
 			}
 
 			public void OnRead(object entity)
