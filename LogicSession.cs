@@ -149,8 +149,6 @@ namespace Grammophone.Domos.Logic
 				{
 					LogActionAndThrowAccessDenied(entity, "create");
 				}
-
-				LogEntityChange(utcNow, EntityChangeType.Addition, entity);
 			}
 
 			public void OnChanging(object entity)
@@ -186,6 +184,11 @@ namespace Grammophone.Domos.Logic
 				{
 					LogActionAndThrowAccessDenied(entity, "read");
 				}
+			}
+
+			public void OnAdded(object entity)
+			{
+				LogEntityChange(DateTime.UtcNow, EntityChangeType.Addition, entity);
 			}
 
 			#endregion
