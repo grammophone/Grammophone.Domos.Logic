@@ -15,11 +15,12 @@ namespace Grammophone.Domos.Logic.ChangeLogging
 	{
 		#region Construction
 
-		internal PropertyState(string name, object originalValue, object currentValue)
+		internal PropertyState(string name, object originalValue, object currentValue, bool isModified)
 		{
 			this.Name = name;
 			this.OriginalValue = originalValue;
 			this.CurrentValue = currentValue;
+			this.IsModified = isModified;
 		}
 
 		#endregion
@@ -40,6 +41,11 @@ namespace Grammophone.Domos.Logic.ChangeLogging
 		/// The current value of the property.
 		/// </summary>
 		public object CurrentValue { get; }
+
+		/// <summary>
+		/// True if there has been a modification in the property.
+		/// </summary>
+		public bool IsModified { get; }
 
 		#endregion
 	}
