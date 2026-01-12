@@ -13,40 +13,24 @@ namespace Grammophone.Domos.Logic.ChangeLogging
 	[Serializable]
 	public class PropertyState
 	{
-		#region Construction
-
-		internal PropertyState(string name, object originalValue, object currentValue, bool isModified)
-		{
-			this.Name = name;
-			this.OriginalValue = originalValue;
-			this.CurrentValue = currentValue;
-			this.IsModified = isModified;
-		}
-
-		#endregion
-
-		#region Public properties
-
 		/// <summary>
 		/// The name of the property.
 		/// </summary>
-		public string Name { get; }
+		public string Name { get; set; }
 
 		/// <summary>
 		/// The original value of the property.
 		/// </summary>
-		public object OriginalValue { get; }
+		public object OriginalValue { get; set; }
 
 		/// <summary>
 		/// The current value of the property.
 		/// </summary>
-		public object CurrentValue { get; }
+		public object CurrentValue { get; set; }
 
 		/// <summary>
 		/// True if there has been a modification in the property.
 		/// </summary>
-		public bool IsModified { get; }
-
-		#endregion
+		public bool IsModified { get; set; }
 	}
 }
