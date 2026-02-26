@@ -246,7 +246,8 @@ namespace Grammophone.Domos.Logic
 															 {
 																 Name = propertyEntry.Name,
 																 OriginalValue = changeType != EntityChangeType.Addition ? propertyEntry.OriginalValue : null,
-																 CurrentValue = changeType != EntityChangeType.Deletion ? propertyEntry.CurrentValue : null
+																 CurrentValue = changeType != EntityChangeType.Deletion ? propertyEntry.CurrentValue : null,
+																 IsModified = propertyEntry.IsModified
 															 };
 
 					var propertyStatesArray = propertyStates.ToArray();

@@ -29,7 +29,18 @@ namespace Grammophone.Domos.Logic.ChangeLogging
 		{
 			if (value is JsonElement jsonElement)
 			{
-				var deserializedValue = jsonElement.Deserialize(propertyInfo.PropertyType);
+				object deserializedValue;
+
+				if (propertyInfo.PropertyType.IsEnum)
+				{
+					string enumLiteral = jsonElement.Deserialize<string>();
+
+					deserializedValue = Enum.Parse(propertyInfo.PropertyType, enumLiteral);
+				}
+				else
+				{
+					deserializedValue = jsonElement.Deserialize(propertyInfo.PropertyType);
+				}
 
 				if (deserializedValue != null)
 				{

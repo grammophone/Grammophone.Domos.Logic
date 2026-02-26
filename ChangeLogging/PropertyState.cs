@@ -27,5 +27,10 @@ namespace Grammophone.Domos.Logic.ChangeLogging
 		/// The current value of the property.
 		/// </summary>
 		public object CurrentValue { get; set; }
+		
+		/// <summary>
+		/// True if the property is modified.
+		/// </summary>
+		public bool IsModified { get; set; }
 	}
 }
