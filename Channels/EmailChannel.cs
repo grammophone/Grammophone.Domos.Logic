@@ -145,6 +145,7 @@ namespace Grammophone.Domos.Logic.Channels
 					{
 						await OnSendEmailFailedAsync(
 							channelMessage,
+							messageDestinationIdentities,
 							senderAddress,
 							emailDestinationAddresses,
 							messageBody,
@@ -208,6 +209,7 @@ namespace Grammophone.Domos.Logic.Channels
 					{
 						await OnSendEmailFailedAsync(
 							channelMessage,
+							messageDestinationIdentities,
 							senderAddress,
 							emailDestinationAddresses,
 							messageBody,
@@ -226,6 +228,7 @@ namespace Grammophone.Domos.Logic.Channels
 		/// Called when an exception occurs when sending an e-mail message.
 		/// </summary>
 		/// <param name="channelMessage">The channel message.</param>
+		/// <param name="messageDestinationIdentities">The message destination identitis.</param>
 		/// <param name="senderAddress">The address of the sender.</param>
 		/// <param name="destinationAddresses">Te addresses of the recipients.</param>
 		/// <param name="messageBody">The body of the e-mail message.</param>
@@ -234,6 +237,7 @@ namespace Grammophone.Domos.Logic.Channels
 		/// <remarks>The base iplmentation writes a system trace message for the error.</remarks>
 		protected virtual Task OnSendEmailFailedAsync(
 			IChannelMessage<T> channelMessage,
+			IEnumerable<IChannelIdentity> messageDestinationIdentities,
 			System.Net.Mail.MailAddress senderAddress,
 			IEnumerable<System.Net.Mail.MailAddress> destinationAddresses,
 			string messageBody,
