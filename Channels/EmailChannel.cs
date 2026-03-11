@@ -132,12 +132,25 @@ namespace Grammophone.Domos.Logic.Channels
 
 					string messageID = GetMessageID(channelMessage, messageDestinationIdentities);
 
-					await SendEmailMessageAsync(
-						channelMessage.Subject,
-						senderAddress,
-						emailDestinationAddresses,
-						messageBody,
-						messageID);
+					try
+					{
+						await SendEmailMessageAsync(
+							channelMessage.Subject,
+							senderAddress,
+							emailDestinationAddresses,
+							messageBody,
+							messageID);
+					}
+					catch (Exception exception)
+					{
+						await OnSendEmailFailedAsync(
+							channelMessage,
+							senderAddress,
+							emailDestinationAddresses,
+							messageBody,
+							messageID,
+							exception);
+					}
 				}
 			}
 		}
@@ -182,12 +195,25 @@ namespace Grammophone.Domos.Logic.Channels
 
 					string messageID = GetMessageID(channelMessage, messageDestinationIdentities);
 
-					await SendEmailMessageAsync(
-						channelMessage.Subject,
-						senderAddress,
-						emailDestinationAddresses,
-						messageBody,
-						messageID);
+					try
+					{
+						await SendEmailMessageAsync(
+							channelMessage.Subject,
+							senderAddress,
+							emailDestinationAddresses,
+							messageBody,
+							messageID);
+					}
+					catch (Exception exception)
+					{
+						await OnSendEmailFailedAsync(
+							channelMessage,
+							senderAddress,
+							emailDestinationAddresses,
+							messageBody,
+							messageID,
+							exception);
+					}
 				}
 			}
 		}
@@ -195,6 +221,30 @@ namespace Grammophone.Domos.Logic.Channels
 		#endregion
 
 		#region Protected methods
+
+		/// <summary>
+		/// Called when an exception occurs when sending an e-mail message.
+		/// </summary>
+		/// <param name="channelMessage">The channel message.</param>
+		/// <param name="senderAddress">The address of the sender.</param>
+		/// <param name="destinationAddresses">Te addresses of the recipients.</param>
+		/// <param name="messageBody">The body of the e-mail message.</param>
+		/// <param name="messageID">The ID of the message.</param>
+		/// <param name="exception">The exception that occured.</param>
+		/// <remarks>The base iplmentation writes a system trace message for the error.</remarks>
+		protected virtual Task OnSendEmailFailedAsync(
+			IChannelMessage<T> channelMessage,
+			System.Net.Mail.MailAddress senderAddress,
+			IEnumerable<System.Net.Mail.MailAddress> destinationAddresses,
+			string messageBody,
+			string messageID,
+			Exception exception)
+		{
+			System.Diagnostics.Trace.TraceWarning(
+				$"Could not send e-mail to {destinationAddresses} with subject '{channelMessage.Subject}', reason: {exception.Message} (Source: {exception.Source})");
+
+			return Task.CompletedTask;
+		}
 
 		/// <summary>
 		/// Override to extract e-mail recepients from a destination object and a topic.
