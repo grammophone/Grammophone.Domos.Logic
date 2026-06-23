@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Data.Entity;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Grammophone.Caching;
 using Grammophone.DataAccess;
+using Grammophone.DataAccess.QueryExtensions;
 using Grammophone.Domos.AccessChecking;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
@@ -971,7 +971,8 @@ namespace Grammophone.Domos.Logic
 
 			userQuery = IncludeWithUser(userQuery)
 				.Include(u => u.Roles)
-				.Include(u => u.Dispositions.Select(d => d.Type));
+				.Include(u => u.Dispositions)
+				.ThenInclude(d => d.Type);
 
 			U impersonatedUser;
 
@@ -1517,7 +1518,8 @@ namespace Grammophone.Domos.Logic
 
 			userQuery = IncludeWithUser(userQuery)
 				.Include(u => u.Roles)
-				.Include(u => u.Dispositions.Select(d => d.Type));
+				.Include(u => u.Dispositions)
+				.ThenInclude(d => d.Type);
 
 			user = userQuery.FirstOrDefault();
 

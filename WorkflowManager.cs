@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Grammophone.DataAccess.QueryExtensions;
 using Grammophone.Caching;
 using Grammophone.Domos.AccessChecking;
 using Grammophone.Domos.DataAccess;

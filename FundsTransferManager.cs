@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using Grammophone.DataAccess.QueryExtensions;
 using Grammophone.Domos.Accounting;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
@@ -625,7 +625,9 @@ namespace Grammophone.Domos.Logic
 		{
 			var pendingBatchMessage = await this.FundsTransferBatchMessages
 				.Include(m => m.Batch.CreditSystem)
-				.Include(m => m.Events.Select(e => e.Request.Group))
+				.Include(m => m.Events)
+				.ThenInclude(e => e.Request)
+				.ThenInclude(r => r.Group)
 				.SingleOrDefaultAsync(e => e.BatchID == batchID && e.Type == FundsTransferBatchMessageType.Pending);
 
 			if (pendingBatchMessage == null)
