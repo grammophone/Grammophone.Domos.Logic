@@ -4,6 +4,7 @@ using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Grammophone.DataAccess;
 using Grammophone.Domos.DataAccess;
 using Grammophone.Domos.Domain;
 using Grammophone.Domos.Domain.Files;
@@ -44,7 +45,7 @@ namespace Grammophone.Domos.Logic
 		/// <typeparam name="F">The type of the file.</typeparam>
 		/// <param name="file">The file to delete.</param>
 		/// <param name="filesSet">The entity set from which to remove the file.</param>
-		protected async Task DeleteFileAsync<F>(F file, IDbSet<F> filesSet)
+		protected async Task DeleteFileAsync<F>(F file, IEntitySet<F> filesSet)
 			where F : class, IFile
 		{
 			if (file == null) throw new ArgumentNullException(nameof(file));
