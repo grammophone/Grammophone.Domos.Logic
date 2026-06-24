@@ -17,6 +17,7 @@ It builds on Domos domain containers and access checking to provide logic sessio
 
 - [Overview](documentation/overview.md)
 - [Logic sessions and managers](documentation/logic-sessions-and-managers.md)
+- [Security and permissions](documentation/security-and-permissions.md)
 - [Workflow execution](documentation/workflow-execution.md)
 - [Funds transfer logic](documentation/funds-transfer-logic.md)
 - [Files, channels and change logging](documentation/files-channels-change-logging.md)
