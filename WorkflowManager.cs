@@ -946,7 +946,7 @@ namespace Grammophone.Domos.Logic
 		/// Load the set of IDs of the <see cref="StatePaths"/>.
 		/// </summary>
 		private async Task<ISet<long>> LoadStatePathIDsSet()
-			=> (await this.StatePaths.Select(sp => sp.ID).ToArrayAsync()).ToHashSet();
+			=> new HashSet<long>((await this.StatePaths.Select(sp => sp.ID).ToArrayAsync()));
 
 		/// <summary>
 		/// Execute a collection of workflow actions.
