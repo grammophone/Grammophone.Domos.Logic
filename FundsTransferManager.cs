@@ -968,9 +968,20 @@ namespace Grammophone.Domos.Logic
 		{
 			if (line == null) throw new ArgumentNullException(nameof(line));
 
-			var requestsQuery = from r in this.FundsTransferRequests
-													where r.BatchID == line.BatchID && r.GroupID == line.LineID
-													select r;
+			IQueryable<FundsTransferRequest> requestsQuery;
+
+			if (!line.RequestID.HasValue)
+			{
+				requestsQuery = from r in this.FundsTransferRequests
+												where r.BatchID == line.BatchID && r.GroupID == line.LineID
+												select r;
+			}
+			else
+			{
+				requestsQuery = from r in this.FundsTransferRequests
+												where r.ID == line.RequestID
+												select r;
+			}
 
 			var requests = await requestsQuery
 				.Include(r => r.Batch)
@@ -1032,6 +1043,10 @@ namespace Grammophone.Domos.Logic
 
 				case FundsResponseStatus.NoticeOfChange:
 					eventType = FundsTransferEventType.Info;
+					break;
+
+				case FundsResponseStatus.Aborted:
+					eventType = FundsTransferEventType.Aborted;
 					break;
 
 				default:

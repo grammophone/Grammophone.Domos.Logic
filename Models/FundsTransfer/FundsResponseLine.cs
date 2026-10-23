@@ -183,6 +183,15 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 			Description = nameof(FundsResponseLineResources.Comments_Description))]
 		public string Comments { get; set; }
 
+		/// <summary>
+		/// Optional specification of the funds transfer request ID to constraint action on a single request among many grouped under a <see cref="LineID"/>.
+		/// </summary>
+		[Display(
+			ResourceType = typeof(FundsResponseLineResources),
+			Name = nameof(FundsResponseLineResources.RequestID_Name),
+			Description = nameof(FundsResponseLineResources.RequestID_Description))]
+		public long? RequestID { get; set; }
+
 		#endregion
 	}
 }

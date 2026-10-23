@@ -141,6 +141,9 @@
   <data name="LineID_Name" xml:space="preserve">
     <value>Line ID</value>
   </data>
+  <data name="RequestID_Description" xml:space="preserve">
+    <value>Optional specification of the funds transfer request ID to constraint action on a single request among many grouped under a lind ID.</value>
+  </data>
   <data name="RequestID_Name" xml:space="preserve">
     <value>The ID of the request.</value>
   </data>

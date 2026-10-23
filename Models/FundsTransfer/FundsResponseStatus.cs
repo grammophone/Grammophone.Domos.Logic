@@ -58,7 +58,14 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 		[Display(
 			ResourceType = typeof(FundsResponseStatusResources),
 			Name = nameof(FundsResponseStatusResources.NoticeOfChange_Name))]
-		NoticeOfChange
+		NoticeOfChange,
 
+		/// <summary>
+		/// The transfer request has been aborted.
+		/// </summary>
+		[Display(
+			ResourceType = typeof(FundsResponseStatusResources),
+			Name = nameof(FundsResponseStatusResources.Aborted_Name))]
+		Aborted
 	}
 }

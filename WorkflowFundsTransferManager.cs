@@ -92,6 +92,39 @@ namespace Grammophone.Domos.Logic
 			public ST StateTransition { get; set; }
 		}
 
+		private class FundsTransferEventAssociationView
+		{
+			/// <summary>
+			/// The events of the <see cref="Request"/>.
+			/// </summary>
+			public ICollection<FundsTransferEvent> Events { get; set; }
+
+			/// <summary>
+			/// The funds transfer request.
+			/// </summary>
+			public FundsTransferRequest Request { get; set; }
+
+			/// <summary>
+			/// Optional stateful object of type <typeparamref name="SO"/> .
+			/// </summary>
+			public SH StateHolder { get; set; }
+
+			/// <summary>
+			/// If <see cref="StateHolder"/> is not null, the current state of the <see cref="StateHolder"/>.
+			/// </summary>
+			public State CurrentState { get; set; }
+
+			/// <summary>
+			/// If <see cref="StateHolder"/> is not null, the state transition of the <see cref="StateHolder"/>.
+			/// </summary>
+			public ST StateTransition { get; set; }
+			
+			/// <summary>
+			/// The state after the <see cref="Request"/>.
+			/// </summary>
+			public State StateAfterRequest { get; set; }
+		}
+
 		#endregion
 
 		#region Private fields
@@ -268,18 +301,38 @@ namespace Grammophone.Domos.Logic
 		{
 			if (line == null) throw new ArgumentNullException(nameof(line));
 
-			var associationsQuery = from a in this.FundsTransferEventAssociations
-															where a.Event.Type == FundsTransferEventType.Pending
-															let ftr = a.Event.Request
-															where ftr.GroupID == line.LineID && ftr.BatchID == line.BatchID
-															select new
-															{
-																Request = ftr,
-																ftr.Events,
-																a.StateHolder,
-																a.CurrentState,
-																StateAfterRequest = a.StateTransition != null ? a.StateTransition.Path.NextState : null
-															};
+			IQueryable<FundsTransferEventAssociationView> associationsQuery;
+
+			if (!line.RequestID.HasValue)
+			{
+				associationsQuery = from a in this.FundsTransferEventAssociations
+														where a.Event.Type == FundsTransferEventType.Pending
+														let ftr = a.Event.Request
+														where ftr.GroupID == line.LineID && ftr.BatchID == line.BatchID
+														select new FundsTransferEventAssociationView
+														{
+															Request = ftr,
+															Events = ftr.Events,
+															StateHolder = a.StateHolder,
+															CurrentState = a.CurrentState,
+															StateAfterRequest = a.StateTransition != null ? a.StateTransition.Path.NextState : null
+														};
+			}
+			else
+			{
+				associationsQuery = from a in this.FundsTransferEventAssociations
+														where a.Event.Type == FundsTransferEventType.Pending
+														let ftr = a.Event.Request
+														where ftr.ID == line.RequestID
+														select new FundsTransferEventAssociationView
+														{
+															Request = ftr,
+															Events = ftr.Events,
+															StateHolder = a.StateHolder,
+															CurrentState = a.CurrentState,
+															StateAfterRequest = a.StateTransition != null ? a.StateTransition.Path.NextState : null
+														};
+			}
 
 			var associations = await associationsQuery.ToArrayAsync();
 
