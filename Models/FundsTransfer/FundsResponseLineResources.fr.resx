@@ -141,6 +141,9 @@
   <data name="LineID_Name" xml:space="preserve">
     <value>ID de Ligne</value>
   </data>
+  <data name="RequestID_Description" xml:space="preserve">
+    <value>Spécification optionnelle de l'ID de requête de transfert de fonds pour limiter l'action à une seule demande parmi plusieurs regroupées sous un ID de ligne. Remplace l'ID de ligne et l'ID de lot.</value>
+  </data>
   <data name="RequestID_Name" xml:space="preserve">
     <value>ID de Requête</value>
   </data>

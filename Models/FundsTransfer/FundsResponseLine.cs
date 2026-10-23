@@ -185,6 +185,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer
 
 		/// <summary>
 		/// Optional specification of the funds transfer request ID to constraint action on a single request among many grouped under a <see cref="LineID"/>.
+		/// Overrides <see cref="LineID"/> and <see cref="BatchID"/>.
 		/// </summary>
 		[Display(
 			ResourceType = typeof(FundsResponseLineResources),

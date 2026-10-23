@@ -133,7 +133,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Optional specification of the funds transfer request ID to constraint action on a single request among many grouped under a lind ID..
+        ///   Looks up a localized string similar to Optional specification of the funds transfer request ID to constraint action on a single request among many grouped under a lind ID. Overrides Line ID and Batch ID..
         /// </summary>
         public static string RequestID_Description {
             get {
