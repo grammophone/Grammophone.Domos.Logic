@@ -567,6 +567,38 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Unenroll a set of funds transfer requests from their batches, if possible.
+		/// </summary>
+		/// <param name="requests">The set of funds transfer requests.</param>
+		/// <exception cref="AccountingException">
+		/// Thrown when a request canot be unbatched, or when the batch has been submitted.
+		/// </exception>
+		public async Task UnenrollRequestsFromBatchAsync(IQueryable<FundsTransferRequest> requests)
+		{
+			if (requests == null) throw new ArgumentNullException(nameof(requests));
+
+			using (var accountingSession = CreateAccountingSession())
+			using (GetElevatedAccessScope())
+			{
+				await accountingSession.UnenrollRequestsFromBatchAsync(requests);
+			}
+		}
+
+		/// <summary>
+		/// Unenroll a funds transfer request from its batch, if possible.
+		/// </summary>
+		/// <param name="request">The ID of the funds transfer request.</param>
+		/// <exception cref="AccountingException">
+		/// Thrown when a request canot be unbatched, or when the batch has been submitted.
+		/// </exception>
+		public async Task UnenrollRequestFromBatchAsync(long requestID)
+		{
+			var requestQuery = this.DomainContainer.FundsTransferRequests.Where(r => r.ID == requestID);
+
+			await UnenrollRequestsFromBatchAsync(requestQuery);
+		}
+
+		/// <summary>
 		/// Create a funds request file for a batch.
 		/// </summary>
 		/// <param name="pendingBatchMessage">The 'pending' message for the batch.</param>
