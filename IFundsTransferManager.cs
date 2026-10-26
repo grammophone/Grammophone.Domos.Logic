@@ -152,6 +152,22 @@ namespace Grammophone.Domos.Logic
 		Task<FundsTransferBatchMessage> EnrollRequestsIntoBatchAsync(string creditSystemCodeName, IQueryable<FundsTransferRequest> requests);
 
 		/// <summary>
+		/// Enroll a set of funds transfer requests into an existing <see cref="FundsTransferBatch"/> among <see cref="FundsTransferBatches"/>,
+		/// which must not have been submitted yet.
+		/// The requests must not be already under an existing batch.
+		/// </summary>
+		/// <param name="batchID">The ID of the batch.</param>
+		/// <param name="requests">The set of funds transfer requests.</param>
+		/// <returns>Returns the pending message of the batch, where the requests are attached.</returns>
+		/// <exception cref="AccountingException">
+		/// Thrown when at least one request is already assigned to a batch, or when the batch is no longer changeable.
+		/// </exception>
+		/// <exception cref="UserException">
+		/// When the <paramref name="batchID"/> does not refer to a batch among <see cref="FundsTransferBatches"/>.
+		/// </exception>
+		Task<FundsTransferBatchMessage> EnrollRequestsIntoExistingBatchAsync(long batchID, IQueryable<FundsTransferRequest> requests);
+
+		/// <summary>
 		/// Create a funds request file for a batch.
 		/// </summary>
 		/// <param name="pendingBatchMessage">The 'pending' message for the batch.</param>

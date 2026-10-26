@@ -567,6 +567,36 @@ namespace Grammophone.Domos.Logic
 		}
 
 		/// <summary>
+		/// Enroll a set of funds transfer requests into an existing <see cref="FundsTransferBatch"/> among <see cref="FundsTransferBatches"/>,
+		/// which must not have been submitted yet.
+		/// The requests must not be already under an existing batch.
+		/// </summary>
+		/// <param name="batchID">The ID of the batch.</param>
+		/// <param name="requests">The set of funds transfer requests.</param>
+		/// <returns>Returns the pending message of the batch, where the requests are attached.</returns>
+		/// <exception cref="AccountingException">
+		/// Thrown when at least one request is already assigned to a batch, or when the batch is no longer changeable.
+		/// </exception>
+		/// <exception cref="UserException">
+		/// When the <paramref name="batchID"/> does not refer to a batch among <see cref="FundsTransferBatches"/>.
+		/// </exception>
+		public async Task<FundsTransferBatchMessage> EnrollRequestsIntoExistingBatchAsync(long batchID, IQueryable<FundsTransferRequest> requests)
+		{
+			if (requests == null) throw new ArgumentNullException(nameof(requests));
+
+			bool isBatchAccessible = await this.FundsTransferBatches.AnyAsync(b => b.ID == batchID);
+
+			if (!isBatchAccessible)
+				throw new UserException($"The funds transfer batch with ID {batchID} was not found.");
+
+			using (var accountingSession = CreateAccountingSession())
+			using (GetElevatedAccessScope())
+			{
+				return await accountingSession.EnrollRequestsIntoExistingBatchAsync(batchID, requests);
+			}
+		}
+
+		/// <summary>
 		/// Unenroll a set of funds transfer requests from their batches, if possible.
 		/// </summary>
 		/// <param name="requests">The set of funds transfer requests.</param>
