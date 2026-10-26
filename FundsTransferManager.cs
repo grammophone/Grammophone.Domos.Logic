@@ -625,7 +625,10 @@ namespace Grammophone.Domos.Logic
 			if (creditSystemCodeName == null)
 				throw new LogicException("The Batch of the message is not properly set up.");
 
+			// The pending events keep their message as history even when their request is aborted or unbatched,
+			// so include only the requests currently enlisted in the batch.
 			var items = from e in pendingBatchMessage.Events
+									where e.Type == FundsTransferEventType.Pending && e.Request.BatchID == pendingBatchMessage.BatchID
 									let r = e.Request
 									group r by r.Group into g
 									select new FundsRequestFileItem()
