@@ -587,7 +587,7 @@ namespace Grammophone.Domos.Logic
 		/// <summary>
 		/// Unenroll a funds transfer request from its batch, if possible.
 		/// </summary>
-		/// <param name="request">The ID of the funds transfer request.</param>
+		/// <param name="requestID">The ID of the funds transfer request.</param>
 		/// <exception cref="AccountingException">
 		/// Thrown when a request canot be unbatched, or when the batch has been submitted.
 		/// </exception>
