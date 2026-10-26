@@ -145,7 +145,7 @@
     <value>Optional specification of the funds transfer request ID to constraint action on a single request among many grouped under a lind ID. Overrides Line ID and Batch ID.</value>
   </data>
   <data name="RequestID_Name" xml:space="preserve">
-    <value>The ID of the request.</value>
+    <value>Request ID</value>
   </data>
   <data name="ResponseCode_Description" xml:space="preserve">
     <value>The response code as returned by the Electronic Funds Transfer system.</value>

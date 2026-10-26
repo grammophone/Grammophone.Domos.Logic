@@ -170,7 +170,7 @@ namespace Grammophone.Domos.Logic
 
 				await manager.PostProcessLinesAsync(line.BatchID, managerResults, line.BatchMessageID);
 
-				fundsResponseResults.Concat(managerResults);
+				fundsResponseResults = fundsResponseResults.Concat(managerResults);
 			}
 
 			return fundsResponseResults.ToArray();

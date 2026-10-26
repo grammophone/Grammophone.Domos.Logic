@@ -142,7 +142,7 @@ namespace Grammophone.Domos.Logic.Models.FundsTransfer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The ID of the request..
+        ///   Looks up a localized string similar to Request ID.
         /// </summary>
         public static string RequestID_Name {
             get {
